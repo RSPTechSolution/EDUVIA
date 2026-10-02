@@ -8,9 +8,12 @@ from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 from app.core.database import Base  # noqa: F401  (re-exported)
 
 
+# uuid7 (Python 3.14+) is time-ordered, which keeps B-tree indexes compact.
+_new_id = getattr(uuid, "uuid7", uuid.uuid4)
+
+
 def uuid_pk() -> Mapped[uuid.UUID]:
-    # uuid7 is time-ordered, which keeps B-tree indexes compact.
-    return mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid7)
+    return mapped_column(UUID(as_uuid=True), primary_key=True, default=_new_id)
 
 
 class TimestampMixin:
