@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+api/venv/
+api/.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+# Node
+node_modules/
+.next/
+web/out/
+# Flutter
+mobile/build/
+mobile/.dart_tool/
+mobile/.widget_preview/
+mobile/.flutter-plugins*
+# Env / secrets
+.env
+*.env.local
+api/.env
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
