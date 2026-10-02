@@ -27,3 +27,6 @@ Thumbs.db
 # Playwright
 web/test-results/
 web/playwright-report/
+
+# Flutter generated
+mobile/build/
