@@ -47,6 +47,7 @@ function NewSchoolDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
   const timezones = useMemo(() => Intl.supportedValuesOf("timeZone"), []);
   const { register, handleSubmit, control, reset, setValue, watch, setError, formState: { errors, dirtyFields } } = useForm<Values>({
     resolver: zodResolver(schema),
+    defaultValues: { name: "", slug: "", timezone: "Asia/Kolkata", currency: "INR", admin_full_name: "", admin_email: "", admin_password: "" },
   });
   useEffect(() => {
     if (open) reset({ name: "", slug: "", timezone: "Asia/Kolkata", currency: "INR", admin_full_name: "", admin_email: "", admin_password: generatePassword() });

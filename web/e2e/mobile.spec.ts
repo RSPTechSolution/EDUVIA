@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { loginAsAdmin } from "./helpers";
 
 test("mobile navigation drawer works and the page doesn't scroll sideways", async ({ page }) => {

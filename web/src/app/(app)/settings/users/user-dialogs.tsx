@@ -73,6 +73,7 @@ export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; on
   const queryClient = useQueryClient();
   const form = useForm<CreateValues>({
     resolver: zodResolver(editing ? (editSchema as unknown as typeof createSchema) : createSchema),
+    defaultValues: { full_name: "", phone: "", role: "teacher", email: "", password: "" },
   });
   const { register, handleSubmit, control, reset, setError, formState: { errors } } = form;
 
@@ -143,7 +144,7 @@ export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; on
 
 export function SetPasswordDialog({ open, onOpenChange, user }: { open: boolean; onOpenChange: (o: boolean) => void; user: User | null }) {
   const schema = z.object({ password: newPassword });
-  const { handleSubmit, control, reset, formState: { errors } } = useForm<{ password: string }>({ resolver: zodResolver(schema) });
+  const { handleSubmit, control, reset, formState: { errors } } = useForm<{ password: string }>({ resolver: zodResolver(schema), defaultValues: { password: "" } });
   useEffect(() => {
     if (open) reset({ password: generatePassword() });
   }, [open, reset]);

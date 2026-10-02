@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { DEMO, login, loginAsAdmin, unique } from "./helpers";
 
 test("admin creates a user who must then set their own password", async ({ page, browser }) => {
@@ -76,8 +76,13 @@ test("module toggle persists and is audited", async ({ page }) => {
 
 test("command palette navigates", async ({ page }) => {
   await loginAsAdmin(page);
-  await page.keyboard.press("Control+k");
-  await page.getByPlaceholder("Search pages and actions…").fill("audit");
+  const input = page.getByPlaceholder("Search pages and actions…");
+  // The shortcut listener attaches after hydration (slow on first dev compile), so retry.
+  await expect(async () => {
+    await page.keyboard.press("Control+k");
+    await expect(input).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 20_000 });
+  await input.fill("audit");
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/settings\/audit/);
 });

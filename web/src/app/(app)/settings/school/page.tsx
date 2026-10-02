@@ -52,7 +52,11 @@ function SchoolProfilePage() {
   const router = useRouter();
   const timezones = useMemo(() => Intl.supportedValuesOf("timeZone"), []);
 
-  const form = useForm<Values>({ resolver: zodResolver(schema) });
+  // Every field starts defined so inputs stay controlled while the school loads.
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", phone: "", email: "", address: "", city: "", state: "", timezone: "Asia/Kolkata", currency: "INR" },
+  });
   const { register, handleSubmit, reset, control, setError, formState: { errors, isDirty } } = form;
   useEffect(() => {
     if (school.data) reset(toValues(school.data));

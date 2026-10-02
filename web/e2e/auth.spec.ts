@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { DEMO, login, loginAsAdmin } from "./helpers";
 
 test("login form validates before submitting", async ({ page }) => {
@@ -48,7 +48,10 @@ test("expired access cookie is refreshed transparently", async ({ page, context 
 
 test("sign out ends the session", async ({ page }) => {
   await loginAsAdmin(page);
-  await page.getByRole("button", { name: "Account menu" }).click();
+  await expect(async () => {
+    await page.getByRole("button", { name: "Account menu" }).click();
+    await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 20_000 });
   await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login/);
   await page.goto("/dashboard");
