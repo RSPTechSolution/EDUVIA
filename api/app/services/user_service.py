@@ -105,10 +105,13 @@ async def admin_set_password(db: AsyncSession, school_id: uuid.UUID, user_id: uu
 
 
 async def list_audit(db: AsyncSession, school_id: uuid.UUID, page: PageParams, *,
-                     action: str | None = None) -> tuple[list[AuditLog], PageMeta]:
-    stmt = select(AuditLog).where(AuditLog.school_id == school_id)
+                     action: str | None = None) -> tuple[list[dict], PageMeta]:
+    base = select(AuditLog).where(AuditLog.school_id == school_id)
     if action:
-        stmt = stmt.where(AuditLog.action.like(f"{action}%"))
-    total = await db.scalar(select(func.count()).select_from(stmt.subquery()))
-    rows = await db.scalars(stmt.order_by(AuditLog.created_at.desc()).offset(page.offset).limit(page.page_size))
-    return list(rows.all()), PageMeta(total=total or 0, page=page.page, page_size=page.page_size)
+        base = base.where(AuditLog.action.like(f"{action}%"))
+    total = await db.scalar(select(func.count()).select_from(base.subquery()))
+    stmt = (base.add_columns(User.full_name).outerjoin(User, User.id == AuditLog.user_id)
+            .order_by(AuditLog.created_at.desc()).offset(page.offset).limit(page.page_size))
+    rows = (await db.execute(stmt)).all()
+    items = [{**{c.key: getattr(log, c.key) for c in AuditLog.__table__.columns}, "user_name": name} for log, name in rows]
+    return items, PageMeta(total=total or 0, page=page.page, page_size=page.page_size)

@@ -53,6 +53,8 @@ async def test_super_admin_provisions_school(client, super_headers):
 
     listed = await client.get(f"{API}/schools?search=sunrise", headers=super_headers)
     assert listed.json()["meta"]["total"] == 1
+    suspended = await client.get(f"{API}/schools?is_active=false", headers=super_headers)
+    assert suspended.json()["meta"]["total"] == 0
 
 
 async def test_super_admin_can_suspend_school(client, super_headers, school, admin, admin_headers):

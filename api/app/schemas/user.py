@@ -56,6 +56,7 @@ class AdminSetPassword(BaseModel):
 class AuditLogOut(Schema):
     id: uuid.UUID
     user_id: uuid.UUID | None
+    user_name: str | None = None
     action: str
     entity_type: str | None
     entity_id: str | None

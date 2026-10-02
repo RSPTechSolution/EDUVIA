@@ -40,8 +40,8 @@ async def toggle_module(module: str, body: ModuleToggle, db: DB,
 
 @router.get("", response_model=ApiResponse[list[SchoolOut]])
 async def list_schools(db: DB, page: PageParams = Depends(), search: str | None = Query(None, max_length=100),
-                       _: CurrentUser = require_super_admin()):
-    rows, meta = await school_service.list_schools(db, page, search)
+                       is_active: bool | None = None, _: CurrentUser = require_super_admin()):
+    rows, meta = await school_service.list_schools(db, page, search, is_active)
     return ok([SchoolOut.model_validate(s) for s in rows], meta)
 
 

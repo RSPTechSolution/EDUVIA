@@ -23,3 +23,7 @@ api/.env
 .DS_Store
 Thumbs.db
 .idea/
+
+# Playwright
+web/test-results/
+web/playwright-report/

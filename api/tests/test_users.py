@@ -65,5 +65,7 @@ async def test_admin_set_password_forces_change(client, db, school, admin_header
 async def test_audit_log_records_actions(client, admin_headers):
     await client.post(f"{API}/users", headers=admin_headers, json=NEW)
     res = await client.get(f"{API}/users/audit-log", headers=admin_headers)
-    actions = [r["action"] for r in res.json()["data"]]
+    rows = res.json()["data"]
+    actions = [r["action"] for r in rows]
     assert "user.create" in actions and "auth.login" in actions
+    assert rows[0]["user_name"] == "Admin"

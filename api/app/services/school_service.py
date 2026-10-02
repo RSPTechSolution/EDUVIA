@@ -51,8 +51,11 @@ async def set_module(db: AsyncSession, school_id: uuid.UUID, module: str, enable
     return ModuleOut(module=module, label=MODULES[module]["label"], is_enabled=enabled)
 
 
-async def list_schools(db: AsyncSession, page: PageParams, search: str | None) -> tuple[list[School], PageMeta]:
+async def list_schools(db: AsyncSession, page: PageParams, search: str | None,
+                       is_active: bool | None = None) -> tuple[list[School], PageMeta]:
     stmt = select(School)
+    if is_active is not None:
+        stmt = stmt.where(School.is_active.is_(is_active))
     if search:
         like = f"%{search.lower()}%"
         stmt = stmt.where(or_(func.lower(School.name).like(like), School.slug.like(like)))
