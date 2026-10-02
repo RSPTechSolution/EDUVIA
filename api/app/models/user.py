@@ -1,33 +1,64 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, DateTime, ForeignKey, UniqueConstraint
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, func, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
-from app.models.base import TimestampMixin
-from app.core.database import Base
+from sqlalchemy.orm import Mapped, mapped_column
 
-class User(Base, TimestampMixin):
+from app.models.base import Base, SoftDeleteMixin, TimestampMixin, uuid_pk
+
+
+class User(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "users"
+    __table_args__ = (
+        # Email unique per school; separately unique among platform users (school_id IS NULL).
+        Index("uq_users_school_email", "school_id", "email", unique=True,
+              postgresql_where=text("school_id IS NOT NULL AND deleted_at IS NULL")),
+        Index("uq_users_platform_email", "email", unique=True,
+              postgresql_where=text("school_id IS NULL AND deleted_at IS NULL")),
+    )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    school_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("schools.id"), nullable=True)
-    email: Mapped[str] = mapped_column(String(200))
-    phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    password_hash: Mapped[str] = mapped_column(String(200))
+    id: Mapped[uuid.UUID] = uuid_pk()
+    # NULL only for platform users (super_admin).
+    school_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("schools.id", ondelete="CASCADE"), index=True)
+    email: Mapped[str] = mapped_column(String(200))  # stored lower-case
+    phone: Mapped[str | None] = mapped_column(String(20))
+    full_name: Mapped[str] = mapped_column(String(200))
+    password_hash: Mapped[str] = mapped_column(String(100))
     role: Mapped[str] = mapped_column(String(50))
-    is_active: Mapped[bool] = mapped_column(default=True)
-    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    school = relationship("School", back_populates="users")
-    __table_args__ = (UniqueConstraint("school_id", "email", name="uq_school_user_email"),)
 
 class UserSession(Base):
+    """One row per signed-in device. Refresh tokens are stored hashed and rotated
+    on every use; presenting an already-rotated token revokes the session."""
     __tablename__ = "user_sessions"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
-    refresh_token: Mapped[str] = mapped_column(String(500), unique=True)
+    id: Mapped[uuid.UUID] = uuid_pk()
+    school_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("schools.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    refresh_token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    previous_token_hash: Mapped[str | None] = mapped_column(String(64), index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    ip_address: Mapped[str | None] = mapped_column(String(45))
+    user_agent: Mapped[str | None] = mapped_column(String(300))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_used_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    school_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("schools.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

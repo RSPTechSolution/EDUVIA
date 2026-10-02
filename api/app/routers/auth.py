@@ -1,40 +1,64 @@
-from fastapi import APIRouter, Depends, Request, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db
-from app.schemas.auth import LoginRequest, LoginResponse
-from app.schemas.base import ApiResponse
+from fastapi import APIRouter, Request
+
+from app.core import ratelimit
+from app.core.config import settings
+from app.core.deps import DB, Auth, client_ip
+from app.core.errors import TooManyRequests
+from app.schemas.auth import (
+    ChangePasswordRequest, LoginRequest, LoginResponse, MeOut, PasswordResetConfirm,
+    PasswordResetRequest, RefreshRequest, TokenPair,
+)
+from app.schemas.common import ApiResponse, Message, ok
 from app.services import auth_service
-from app.core.dependencies import get_current_user
-from app.core.exceptions import UnauthorizedException
 
 router = APIRouter()
 
+
 @router.post("/login", response_model=ApiResponse[LoginResponse])
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
-    try:
-        result = await auth_service.login(db, body.email, body.password, body.school_slug)
-        return ApiResponse(data=result)
-    except UnauthorizedException as e:
-        raise HTTPException(status_code=401, detail=e.message)
+async def login(body: LoginRequest, request: Request, db: DB):
+    ip = client_ip(request)
+    key = f"rl:login:{ip}:{body.email.lower()}"
+    if not await ratelimit.hit(key, settings.LOGIN_RATE_LIMIT, settings.LOGIN_RATE_WINDOW_SECONDS):
+        raise TooManyRequests("Too many login attempts. Try again in 15 minutes.", code="RATE_LIMITED")
+    result = await auth_service.login(db, body.email, body.password, body.school_slug,
+                                      ip=ip, user_agent=request.headers.get("user-agent"))
+    await ratelimit.reset(key)
+    return ok(result)
 
-@router.post("/logout")
-async def logout(db: AsyncSession = Depends(get_db), current_user=Depends(get_current_user)):
-    await auth_service.logout(db, current_user.id)
-    return ApiResponse(data={"message": "Logged out"})
 
-@router.post("/refresh", response_model=ApiResponse)
-async def refresh(body: dict, db: AsyncSession = Depends(get_db)):
-    result = await auth_service.refresh_token(db, body.get("refresh_token"))
-    return ApiResponse(data=result)
+@router.post("/refresh", response_model=ApiResponse[TokenPair])
+async def refresh(body: RefreshRequest, request: Request, db: DB):
+    return ok(await auth_service.refresh(db, body.refresh_token, ip=client_ip(request)))
 
-@router.get("/me", response_model=ApiResponse)
-async def me(current_user=Depends(get_current_user)):
-    # Create dictionary representing the user schema to pass Pydantic serialization
-    user_dict = {
-        "id": current_user.id,
-        "email": current_user.email,
-        "role": current_user.role,
-        "school_id": current_user.school_id,
-        "is_active": current_user.is_active
-    }
-    return ApiResponse(data=user_dict)
+
+@router.post("/logout", response_model=ApiResponse[Message])
+async def logout(current: Auth, db: DB):
+    await auth_service.revoke_session(db, current.session_id)
+    return ok(Message(message="Logged out"))
+
+
+@router.get("/me", response_model=ApiResponse[MeOut])
+async def me(current: Auth, db: DB):
+    return ok(await auth_service.build_me(db, current.user))
+
+
+@router.post("/change-password", response_model=ApiResponse[Message])
+async def change_password(body: ChangePasswordRequest, current: Auth, db: DB):
+    await auth_service.change_password(db, current.user, current.session_id, body.current_password, body.new_password)
+    return ok(Message(message="Password changed"))
+
+
+@router.post("/password-reset/request", response_model=ApiResponse[Message])
+async def password_reset_request(body: PasswordResetRequest, request: Request, db: DB):
+    key = f"rl:reset:{client_ip(request)}"
+    if not await ratelimit.hit(key, 5, 3600):
+        raise TooManyRequests("Too many reset requests. Try again later.", code="RATE_LIMITED")
+    await auth_service.request_password_reset(db, body.email, body.school_slug)
+    # Same response whether or not the account exists.
+    return ok(Message(message="If that account exists, a reset link has been sent."))
+
+
+@router.post("/password-reset/confirm", response_model=ApiResponse[Message])
+async def password_reset_confirm(body: PasswordResetConfirm, db: DB):
+    await auth_service.confirm_password_reset(db, body.token, body.new_password)
+    return ok(Message(message="Password updated. Please sign in."))

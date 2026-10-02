@@ -1,70 +1,177 @@
-from datetime import datetime, timedelta, timezone
-from jose import jwt, JWTError
-from passlib.context import CryptContext
+import logging
+import uuid
+from datetime import UTC, datetime, timedelta
+
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.models.school import School
-from app.models.user import User, UserSession
+
 from app.core.config import settings
-from app.core.exceptions import UnauthorizedException
+from app.core.database import set_tenant
+from app.core.deps import enabled_modules
+from app.core.errors import BadRequest, Unauthorized
+from app.core.permissions import PERMISSIONS, Role, has_permission
+from app.core.security import (
+    DUMMY_HASH, create_access_token, hash_password, hash_token, new_opaque_token, verify_password,
+)
+from app.models import PasswordResetToken, School, User, UserSession
+from app.schemas.auth import LoginResponse, MeOut, SchoolBrief, TokenPair
+from app.services import audit_service
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+log = logging.getLogger("eduvia.auth")
+INVALID = "Invalid email, password or school"
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+def _now() -> datetime:
+    return datetime.now(UTC)
 
-def create_access_token(data: dict) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    return jwt.encode({**data, "exp": expire}, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
-def create_refresh_token(data: dict) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    return jwt.encode({**data, "exp": expire}, settings.JWT_REFRESH_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+async def build_me(db: AsyncSession, user: User) -> MeOut:
+    me = MeOut.model_validate(user)
+    if user.school_id:
+        school = await db.get(School, user.school_id)
+        me.school = SchoolBrief.model_validate(school)
+        me.modules = await enabled_modules(db, user.school_id)
+    me.permissions = sorted(p for p in PERMISSIONS if has_permission(user.role, p))
+    return me
 
-async def login(db: AsyncSession, email: str, password: str, school_slug: str | None):
-    school_id = None
+
+async def _find_user(db: AsyncSession, email: str, school_slug: str | None) -> tuple[User | None, School | None]:
+    school = None
     if school_slug:
         school = await db.scalar(select(School).where(School.slug == school_slug))
         if not school:
-            raise UnauthorizedException("Invalid credentials")
-        school_id = school.id
+            return None, None
+    stmt = select(User).where(User.email == email.lower(), User.deleted_at.is_(None))
+    stmt = stmt.where(User.school_id == school.id) if school else stmt.where(User.school_id.is_(None))
+    return await db.scalar(stmt), school
 
-    stmt = select(User).where(
-        User.email == email,
-        User.is_active == True,
-        User.deleted_at == None,
-    )
-    if school_id:
-        stmt = stmt.where(User.school_id == school_id)
 
-    user = await db.scalar(stmt)
-    if not user or not verify_password(password, user.password_hash):
-        raise UnauthorizedException("Invalid credentials")
-
-    payload = {"sub": str(user.id), "school_id": str(user.school_id) if user.school_id else None, "role": user.role}
-    access_token = create_access_token(payload)
-    refresh_token = create_refresh_token({"sub": str(user.id)})
-
+async def _issue_tokens(db: AsyncSession, user: User, *, ip: str | None, user_agent: str | None) -> TokenPair:
+    refresh = new_opaque_token()
     session = UserSession(
-        user_id=user.id,
-        refresh_token=refresh_token,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        school_id=user.school_id, user_id=user.id, refresh_token_hash=hash_token(refresh),
+        expires_at=_now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        ip_address=ip, user_agent=(user_agent or "")[:300] or None,
     )
     db.add(session)
-    user.last_login_at = datetime.now(timezone.utc)
-    await db.commit()
+    await db.flush()
+    access, ttl = create_access_token(user_id=user.id, session_id=session.id, school_id=user.school_id, role=user.role)
+    return TokenPair(access_token=access, refresh_token=refresh, expires_in=ttl)
 
-    return {"tokens": {"access_token": access_token, "refresh_token": refresh_token}, "user": user}
 
-async def logout(db: AsyncSession, user_id):
-    # Just a placeholder for actual session cleanup
-    await db.execute(
-        select(UserSession).where(UserSession.user_id == user_id)
-    )
-    await db.commit()
+async def login(db: AsyncSession, email: str, password: str, school_slug: str | None,
+                *, ip: str | None = None, user_agent: str | None = None) -> LoginResponse:
+    await set_tenant(db, None, bypass=True)
+    user, school = await _find_user(db, email, school_slug)
 
-async def refresh_token(db: AsyncSession, refresh_token: str):
-    pass # Implementation for refresh token
+    # Always run bcrypt so response time does not reveal whether the email exists.
+    valid = verify_password(password, user.password_hash if user else DUMMY_HASH)
+    if not user or not valid:
+        raise Unauthorized(INVALID, code="INVALID_CREDENTIALS")
+    if not user.is_active:
+        raise Unauthorized("This account is disabled", code="ACCOUNT_DISABLED")
+    if school and not school.is_active:
+        raise Unauthorized("This school is inactive", code="SCHOOL_INACTIVE")
+
+    tokens = await _issue_tokens(db, user, ip=ip, user_agent=user_agent)
+    user.last_login_at = _now()
+    await audit_service.record(db, "auth.login", school_id=user.school_id, user_id=user.id, ip=ip)
+    await db.flush()
+    await set_tenant(db, user.school_id, bypass=user.role == Role.SUPER_ADMIN)
+    return LoginResponse(tokens=tokens, user=await build_me(db, user))
+
+
+async def refresh(db: AsyncSession, token: str, *, ip: str | None = None) -> TokenPair:
+    await set_tenant(db, None, bypass=True)
+    token_hash = hash_token(token)
+    session = await db.scalar(select(UserSession).where(UserSession.refresh_token_hash == token_hash).with_for_update())
+
+    if not session:
+        # A rotated-out token being replayed means it may have been stolen: kill that session.
+        reused = await db.scalar(select(UserSession).where(UserSession.previous_token_hash == token_hash))
+        if reused and not reused.revoked_at:
+            reused.revoked_at = _now()
+            await audit_service.record(db, "auth.refresh_reuse", school_id=reused.school_id,
+                                       user_id=reused.user_id, ip=ip)
+            await db.commit()  # persist the revocation even though we raise below
+        raise Unauthorized("Invalid refresh token", code="INVALID_REFRESH_TOKEN")
+
+    if session.revoked_at or session.expires_at <= _now():
+        raise Unauthorized("Session expired", code="SESSION_REVOKED")
+
+    user = await db.get(User, session.user_id)
+    if not user or not user.is_active or user.deleted_at:
+        raise Unauthorized("Account disabled", code="ACCOUNT_DISABLED")
+    if user.school_id:
+        school = await db.get(School, user.school_id)
+        if not school or not school.is_active:
+            raise Unauthorized("This school is inactive", code="SCHOOL_INACTIVE")
+
+    new_refresh = new_opaque_token()
+    session.previous_token_hash = token_hash
+    session.refresh_token_hash = hash_token(new_refresh)
+    session.last_used_at = _now()
+    if ip:
+        session.ip_address = ip
+    await db.flush()
+    access, ttl = create_access_token(user_id=user.id, session_id=session.id, school_id=user.school_id, role=user.role)
+    return TokenPair(access_token=access, refresh_token=new_refresh, expires_in=ttl)
+
+
+async def revoke_session(db: AsyncSession, session_id: uuid.UUID) -> None:
+    await set_tenant(db, None, bypass=True)
+    await db.execute(update(UserSession).where(UserSession.id == session_id, UserSession.revoked_at.is_(None))
+                     .values(revoked_at=_now()))
+
+
+async def revoke_user_sessions(db: AsyncSession, user_id: uuid.UUID, *, except_session: uuid.UUID | None = None) -> None:
+    stmt = update(UserSession).where(UserSession.user_id == user_id, UserSession.revoked_at.is_(None))
+    if except_session:
+        stmt = stmt.where(UserSession.id != except_session)
+    await db.execute(stmt.values(revoked_at=_now()))
+
+
+async def change_password(db: AsyncSession, user: User, session_id: uuid.UUID, current: str, new: str) -> None:
+    if not verify_password(current, user.password_hash):
+        raise BadRequest("Current password is incorrect", code="WRONG_PASSWORD")
+    if verify_password(new, user.password_hash):
+        raise BadRequest("New password must differ from the current one", code="PASSWORD_REUSED")
+    user.password_hash = hash_password(new)
+    user.must_change_password = False
+    await revoke_user_sessions(db, user.id, except_session=session_id)
+    await audit_service.record(db, "auth.password_change", school_id=user.school_id, user_id=user.id)
+
+
+async def request_password_reset(db: AsyncSession, email: str, school_slug: str | None) -> str | None:
+    """Creates a reset token. Returns the raw token (for delivery) or None if no such user.
+    Callers must respond identically either way to avoid account enumeration."""
+    await set_tenant(db, None, bypass=True)
+    user, _ = await _find_user(db, email, school_slug.strip().lower() if school_slug else None)
+    if not user or not user.is_active:
+        return None
+    token = new_opaque_token()
+    db.add(PasswordResetToken(
+        school_id=user.school_id, user_id=user.id, token_hash=hash_token(token),
+        expires_at=_now() + timedelta(minutes=settings.PASSWORD_RESET_EXPIRE_MINUTES),
+    ))
+    await audit_service.record(db, "auth.password_reset_requested", school_id=user.school_id, user_id=user.id)
+    await db.flush()
+    # Email delivery is wired up in the communication phase; until then the link is logged.
+    log.info("Password reset link for %s: %s/reset-password?token=%s", user.email, settings.APP_URL, token)
+    return token
+
+
+async def confirm_password_reset(db: AsyncSession, token: str, new_password: str) -> None:
+    await set_tenant(db, None, bypass=True)
+    row = await db.scalar(select(PasswordResetToken).where(
+        PasswordResetToken.token_hash == hash_token(token)).with_for_update())
+    if not row or row.used_at or row.expires_at <= _now():
+        raise BadRequest("Reset link is invalid or has expired", code="INVALID_RESET_TOKEN")
+    user = await db.get(User, row.user_id)
+    if not user or not user.is_active or user.deleted_at:
+        raise BadRequest("Reset link is invalid or has expired", code="INVALID_RESET_TOKEN")
+    user.password_hash = hash_password(new_password)
+    user.must_change_password = False
+    row.used_at = _now()
+    await revoke_user_sessions(db, user.id)
+    await audit_service.record(db, "auth.password_reset", school_id=user.school_id, user_id=user.id)

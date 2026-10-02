@@ -1,47 +1,66 @@
-import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy import select
-from app.core.database import Base, engine, AsyncSessionLocal
-from app.models.user import User
-from app.models.school import School
-from app.models.audit_log import AuditLog
-from app.services.auth_service import hash_password
+"""Development seed data. Safe to run repeatedly.
 
-async def seed():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        
-    async with AsyncSessionLocal() as session:
-        # Create demo school
-        school = await session.scalar(select(School).where(School.slug == "demo"))
+    python -m app.seed
+"""
+import asyncio
+
+from sqlalchemy import select
+
+from app.core.config import settings
+from app.core.database import system_session
+from app.core.permissions import MODULES, Role
+from app.core.security import hash_password
+from app.models import School, SchoolModule, User
+
+DEMO_PASSWORD = "Demo@1234"
+SUPER_ADMIN = ("superadmin@eduvia.com", "Platform Admin", "Admin@1234")
+
+DEMO_SCHOOL = dict(slug="demo", name="Green Valley Public School", city="Chandigarh", state="Punjab",
+                   phone="+91 172 400 1234", email="office@greenvalley.edu", timezone="Asia/Kolkata",
+                   currency="INR")
+
+DEMO_USERS = [
+    ("admin@demo.com", "Anita Sharma", Role.SCHOOL_ADMIN),
+    ("principal@demo.com", "Dr. Rajesh Kumar", Role.PRINCIPAL),
+    ("teacher@demo.com", "Priya Verma", Role.TEACHER),
+    ("accounts@demo.com", "Vikram Singh", Role.ACCOUNTANT),
+    ("reception@demo.com", "Neha Gupta", Role.RECEPTIONIST),
+    ("parent@demo.com", "Suresh Patel", Role.PARENT),
+    ("student@demo.com", "Aarav Patel", Role.STUDENT),
+    ("driver@demo.com", "Harpreet Singh", Role.DRIVER),
+]
+
+
+async def seed() -> None:
+    if settings.ENVIRONMENT == "production":
+        raise SystemExit("Refusing to seed demo data in production")
+    async with system_session() as db:
+        if not await db.scalar(select(User).where(User.email == SUPER_ADMIN[0], User.school_id.is_(None))):
+            db.add(User(email=SUPER_ADMIN[0], full_name=SUPER_ADMIN[1], password_hash=hash_password(SUPER_ADMIN[2]),
+                        role=Role.SUPER_ADMIN))
+
+        school = await db.scalar(select(School).where(School.slug == DEMO_SCHOOL["slug"]))
         if not school:
-            school = School(name="Demo School", slug="demo")
-            session.add(school)
-            await session.flush()
-        
-        # Create super admin
-        admin = await session.scalar(select(User).where(User.email == "admin@demo.com"))
-        if not admin:
-            admin = User(
-                email="admin@demo.com",
-                password_hash=hash_password("admin123"),
-                role="super_admin"
-            )
-            session.add(admin)
-        
-        # Create school admin
-        school_admin = await session.scalar(select(User).where(User.email == "school@demo.com"))
-        if not school_admin:
-            school_admin = User(
-                email="school@demo.com",
-                password_hash=hash_password("School@123"),
-                role="school_admin",
-                school_id=school.id
-            )
-            session.add(school_admin)
-            
-        await session.commit()
-        print("Seed completed.")
+            school = School(**DEMO_SCHOOL)
+            db.add(school)
+            await db.flush()
+        existing_modules = set((await db.scalars(select(SchoolModule.module).where(SchoolModule.school_id == school.id))).all())
+        for module in MODULES:
+            if module not in existing_modules:
+                db.add(SchoolModule(school_id=school.id, module=module, is_enabled=True))
+
+        existing = set((await db.scalars(select(User.email).where(User.school_id == school.id))).all())
+        pw = hash_password(DEMO_PASSWORD)
+        for email, name, role in DEMO_USERS:
+            if email not in existing:
+                db.add(User(school_id=school.id, email=email, full_name=name, role=role, password_hash=pw))
+
+    print("Seed complete.")
+    print(f"  Super admin : {SUPER_ADMIN[0]} / {SUPER_ADMIN[2]}  (no school ID)")
+    print(f"  Demo school : school ID 'demo', password {DEMO_PASSWORD} for:")
+    for email, _, role in DEMO_USERS:
+        print(f"    {role:<14} {email}")
+
 
 if __name__ == "__main__":
     asyncio.run(seed())

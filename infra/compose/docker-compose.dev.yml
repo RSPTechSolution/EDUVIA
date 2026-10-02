@@ -1,21 +1,37 @@
-version: '3.8'
+name: eduvia
 
 services:
-  db:
-    image: postgres:16
+  postgres:
+    image: postgres:16-alpine
+    container_name: eduvia_pg
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: schoolerp
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: schoolerp
-    ports:
-      - "5433:5432"
+      POSTGRES_USER: eduvia            # owner / migration role (superuser)
+      POSTGRES_PASSWORD: eduvia_owner_dev
+      POSTGRES_DB: eduvia
+    ports: ["5433:5432"]
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eduvia -d eduvia"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
+    image: redis:7-alpine
+    container_name: eduvia_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports: ["6380:6379"]
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+
 
 volumes:
-  db_data:
+  pg_data:
+  redis_data:
