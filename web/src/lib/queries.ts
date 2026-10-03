@@ -3,7 +3,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AttendanceOverview, AuditEntry, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
+  AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
+  MarksSheetRef, MyHomework, Notice, ReportCard, SectionResults, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
   SectionCard, SectionReport, StructureMatrix, StudentAttendance, ClassItem, DashboardSummary, ModuleState, Period, RoleRules, School, Student, StudentDetail, StudentOption, Subject,
   Subscription, TeacherInfo, TimetableView, User, UserDetail,
 } from "@/lib/api/types";
@@ -246,4 +247,87 @@ export function useReceipt(id: string) {
 
 export function useMyFees(enabled = true) {
   return useQuery({ queryKey: ["fees", "my"], enabled, queryFn: async () => (await api<MyFees>("/fees/my")).data });
+}
+
+// ---- exams -----------------------------------------------------------------------------------
+
+export function useExams(enabled = true) {
+  return useQuery({ queryKey: ["exams", "list"], enabled, queryFn: async () => (await api<Exam[]>("/exams")).data });
+}
+
+export function useExam(id: string) {
+  return useQuery({ queryKey: ["exams", "detail", id], queryFn: async () => (await api<ExamDetail>(`/exams/${id}`)).data });
+}
+
+export function useMarksSheets(examId: string) {
+  return useQuery({ queryKey: ["exams", "sheets", examId], queryFn: async () => (await api<MarksSheetRef[]>(`/exams/${examId}/marks-sheets`)).data });
+}
+
+export function useMarksSheet(paperId: string, sectionId: string) {
+  return useQuery({
+    queryKey: ["exams", "sheet", paperId, sectionId],
+    queryFn: async () => (await api<MarksSheet>(`/exams/papers/${paperId}/sections/${sectionId}`)).data,
+  });
+}
+
+export function useSectionResults(examId: string, sectionId: string | null) {
+  return useQuery({
+    queryKey: ["exams", "results", examId, sectionId],
+    enabled: Boolean(sectionId),
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<SectionResults>(`/exams/${examId}/results/${sectionId}`)).data,
+  });
+}
+
+export function useReportCard(examId: string, studentId: string) {
+  return useQuery({ queryKey: ["exams", "report", examId, studentId], queryFn: async () => (await api<ReportCard>(`/exams/${examId}/report/${studentId}`)).data });
+}
+
+export function useMyResults(enabled = true) {
+  return useQuery({ queryKey: ["exams", "my"], enabled, queryFn: async () => (await api<ChildResults[]>("/exams/my")).data });
+}
+
+// ---- notices & homework ----------------------------------------------------------------------
+
+export function useNotices(page: number, unread = false, enabled = true) {
+  return useQuery({
+    queryKey: ["notices", "list", page, unread],
+    enabled,
+    placeholderData: keepPreviousData,
+    queryFn: () => api<Notice[]>("/notices", { query: { page, page_size: 20, unread: unread || undefined } }),
+  });
+}
+
+export function useUnreadNotices(enabled = true) {
+  return useQuery({
+    queryKey: ["notices", "unread"],
+    enabled,
+    refetchInterval: 120_000,
+    queryFn: async () => (await api<{ count: number }>("/notices/unread-count")).data.count,
+  });
+}
+
+export function useNoticeSections(enabled = true) {
+  return useQuery({ queryKey: ["notices", "sections"], enabled, queryFn: async () => (await api<{ id: string; label: string }[]>("/notices/sections")).data });
+}
+
+export function useHomeworkList(page: number, sectionId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: ["homework", "list", page, sectionId],
+    enabled,
+    placeholderData: keepPreviousData,
+    queryFn: () => api<HomeworkItem[]>("/homework", { query: { page, page_size: 20, section_id: sectionId } }),
+  });
+}
+
+export function useHomework(id: string) {
+  return useQuery({ queryKey: ["homework", "detail", id], queryFn: async () => (await api<HomeworkDetail>(`/homework/${id}`)).data });
+}
+
+export function useHomeworkTargets(enabled = true) {
+  return useQuery({ queryKey: ["homework", "targets"], enabled, queryFn: async () => (await api<HomeworkTarget[]>("/homework/targets")).data });
+}
+
+export function useMyHomework(enabled = true) {
+  return useQuery({ queryKey: ["homework", "my"], enabled, queryFn: async () => (await api<MyHomework[]>("/homework/my")).data });
 }

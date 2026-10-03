@@ -5,22 +5,22 @@ import 'package:go_router/go_router.dart';
 import '../../core/auth/models.dart';
 import '../../core/auth/session.dart';
 
-/// Branch order in the router. The bar shows only the ones this user can use.
-enum Tab { home, attendance, fees, timetable, profile }
+/// Branch order in the router. The bar shows only the ones this user can use; everything else is under More.
+enum Tab { home, attendance, homework, fees, more }
 
 bool tabVisible(Tab tab, Me me) => switch (tab) {
-      Tab.home || Tab.profile => true,
+      Tab.home || Tab.more => true,
       Tab.attendance => me.hasModule('attendance') && (me.isFamily || me.can('attendance.view')),
+      Tab.homework => me.hasModule('academics') && (me.isFamily || me.can('homework.manage')),
       Tab.fees => me.hasModule('fees') && (me.isFamily || me.can('fees.view')),
-      Tab.timetable => me.hasModule('academics') && (me.isFamily || me.teaches),
     };
 
 const _destinations = {
   Tab.home: NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Home'),
   Tab.attendance: NavigationDestination(icon: Icon(Icons.fact_check_outlined), selectedIcon: Icon(Icons.fact_check_rounded), label: 'Attendance'),
+  Tab.homework: NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book_rounded), label: 'Homework'),
   Tab.fees: NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet_rounded), label: 'Fees'),
-  Tab.timetable: NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month_rounded), label: 'Timetable'),
-  Tab.profile: NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person_rounded), label: 'Profile'),
+  Tab.more: NavigationDestination(icon: Icon(Icons.grid_view_outlined), selectedIcon: Icon(Icons.grid_view_rounded), label: 'More'),
 };
 
 class HomeShell extends ConsumerWidget {
@@ -30,7 +30,7 @@ class HomeShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final me = ref.watch(meProvider);
-    final tabs = me == null ? [Tab.home, Tab.profile] : Tab.values.where((t) => tabVisible(t, me)).toList();
+    final tabs = me == null ? [Tab.home, Tab.more] : Tab.values.where((t) => tabVisible(t, me)).toList();
     final current = Tab.values[shell.currentIndex];
     final selected = tabs.indexOf(current);
     return Scaffold(

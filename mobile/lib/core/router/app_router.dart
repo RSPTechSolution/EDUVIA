@@ -10,7 +10,11 @@ import '../../features/auth/login_screen.dart';
 import '../../features/auth/splash_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/home/home_shell.dart';
+import '../../features/exams/exam_screens.dart';
 import '../../features/fees/fees_screens.dart';
+import '../../features/home/more_screen.dart';
+import '../../features/homework/homework_screens.dart';
+import '../../features/notices/notices_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/timetable/timetable_screen.dart';
 import '../auth/auth_controller.dart';
@@ -62,15 +66,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/fees/invoice/:id', builder: (_, st) => InvoiceScreen(id: st.pathParameters['id']!)),
       GoRoute(path: '/fees/receipt/:id', builder: (_, st) => ReceiptScreen(id: st.pathParameters['id']!)),
+      GoRoute(path: '/timetable', builder: (_, _) => const TimetableScreen()),
+      GoRoute(path: '/notices', builder: (_, _) => const NoticesScreen()),
+      GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
+      GoRoute(path: '/results', builder: (_, _) => const ResultsScreen()),
+      GoRoute(path: '/results/:exam/:student', builder: (_, st) => ReportCardScreen(examId: st.pathParameters['exam']!, studentId: st.pathParameters['student']!)),
+      GoRoute(path: '/marks', builder: (_, _) => const MarksHomeScreen()),
+      GoRoute(path: '/marks/:paper/:section', builder: (_, st) => MarksEntryScreen(paperId: st.pathParameters['paper']!, sectionId: st.pathParameters['section']!)),
+      GoRoute(path: '/homework/:id', builder: (_, st) => HomeworkCheckScreen(id: st.pathParameters['id']!)),
       // Branch order matches the Tab enum in home_shell.dart.
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => HomeShell(shell: shell),
         branches: [
           StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (_, _) => const HomeScreen())]),
           StatefulShellBranch(routes: [GoRoute(path: '/attendance', builder: (_, _) => const AttendanceScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/homework', builder: (_, _) => const HomeworkScreen())]),
           StatefulShellBranch(routes: [GoRoute(path: '/fees', builder: (_, _) => const FeesScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/timetable', builder: (_, _) => const TimetableScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/more', builder: (_, _) => const MoreScreen())]),
         ],
       ),
     ],

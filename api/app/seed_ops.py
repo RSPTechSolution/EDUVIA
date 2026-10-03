@@ -1,5 +1,6 @@
 """Demo attendance history and fee records for the seeded school. Called from app.seed."""
 import random
+import uuid
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
@@ -8,8 +9,8 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import select
 
 from app.models import (
-    AttendanceRecord, FeeCategory, FeeInvoice, FeeInvoiceItem, FeePayment, FeeStructure, School, SchoolClass, Section,
-    Student, StudentGuardian, User,
+    AttendanceRecord, Exam, ExamMark, ExamPaper, ExamRemark, FeeCategory, FeeInvoice, FeeInvoiceItem, FeePayment, FeeStructure,
+    Homework, HomeworkStatus, Notice, NoticeRead, School, SchoolClass, Section, Student, StudentGuardian, Subject, TimetableEntry, User,
 )
 
 HOLIDAYS = {date(2026, 8, 15), date(2026, 8, 28), date(2026, 10, 2)}  # Independence Day, Raksha Bandhan, Gandhi Jayanti
@@ -177,3 +178,190 @@ async def seed_fees(db, school: School, today: date) -> None:
         inv.status = "paid" if bal <= 0 else "partial" if inv.paid > 0 else "unpaid"
     await db.flush()
     print(f"  Fees: {len(invoices)} invoices across {len([t for t in TERMS if t[1] <= today])} terms, {len(payments)} payments")
+
+
+# ---- exams, notices, homework --------------------------------------------------------------------
+
+ACADEMIC = {"English", "Hindi", "Punjabi", "Mathematics", "EVS", "Science", "Social Science", "Computer Science", "Physics",
+            "Chemistry", "Biology", "Accountancy", "Business Studies", "Economics"}
+
+EXAMS = [  # (name, kind, start, end, max, pass, published)
+    ("Unit Test 1", "unit_test", date(2026, 7, 20), date(2026, 7, 25), 25, 8, datetime(2026, 7, 31, 16, 0)),
+    ("Half-Yearly", "term", date(2026, 9, 14), date(2026, 9, 25), 80, 27, datetime(2026, 10, 1, 17, 0)),
+    ("Unit Test 2", "unit_test", date(2026, 11, 16), date(2026, 11, 21), 25, 8, None),
+]
+
+REMARKS = [
+    (90, ["Outstanding performance. Keep it up!", "Excellent work across subjects. A pleasure to teach.", "Consistently brilliant. Well done!"]),
+    (75, ["Very good progress. Aim higher in your weaker subjects.", "Sincere and hardworking. Keep going.", "Good effort; revise regularly to reach the top."]),
+    (60, ["Good work. More practice will improve your scores.", "Shows interest in class. Needs to revise regularly.", "Steady progress. Focus on written answers."]),
+    (45, ["Can do better with regular study.", "Needs to complete homework on time and revise daily.", "Must pay more attention in class."]),
+    (0, ["Needs a lot of support. Please meet the class teacher.", "Requires regular practice at home. Parents please help.", "Has the ability but must work much harder."]),
+]
+
+
+def _school_days(start: date, end: date) -> list[date]:
+    out, d = [], start
+    while d <= end:
+        if d.weekday() != 6 and d not in HOLIDAYS:
+            out.append(d)
+        d += timedelta(days=1)
+    return out
+
+
+async def seed_exams(db, school: School, today: date) -> None:
+    if await db.scalar(select(Exam.id).where(Exam.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(23)
+    tz = ZoneInfo(school.timezone)
+    subjects = {s.id: s for s in (await db.scalars(select(Subject).where(Subject.school_id == school.id))).all()}
+    classes = {c.id: c for c in (await db.scalars(select(SchoolClass).where(SchoolClass.school_id == school.id))).all()}
+    sections = (await db.scalars(select(Section).where(Section.school_id == school.id))).all()
+    teacher_of: dict[tuple, uuid.UUID] = {}
+    class_subjects: dict[uuid.UUID, set] = defaultdict(set)
+    sec_class = {s.id: s.class_id for s in sections}
+    for sid, subj, tid in (await db.execute(select(TimetableEntry.section_id, TimetableEntry.subject_id, TimetableEntry.teacher_id)
+                                            .where(TimetableEntry.school_id == school.id))).all():
+        if subjects[subj].name in ACADEMIC and classes[sec_class[sid]].name not in ("Nursery", "LKG", "UKG"):
+            class_subjects[sec_class[sid]].add(subj)
+            if tid:
+                teacher_of[(sid, subj)] = tid
+    students = (await db.scalars(select(Student).where(Student.school_id == school.id, Student.status == "active"))).all()
+    ability = {st.id: 0.86 if (st.first_name, st.last_name) == ("Aarav", "Patel") else 0.82 if (st.first_name, st.last_name) == ("Diya", "Patel")
+               else min(0.97, max(0.3, rnd.gauss(0.68, 0.14))) for st in students}
+    by_class = defaultdict(list)
+    for st in students:
+        by_class[st.class_id].append(st)
+    class_teacher = {s.id: s.class_teacher_id for s in sections}
+
+    n_marks = 0
+    for name, kind, start, end, mx, ps, published in EXAMS:
+        exam = Exam(school_id=school.id, name=name, kind=kind, academic_year="2026-27", start_date=start, end_date=end,
+                    published_at=published.replace(tzinfo=tz) if published else None)
+        db.add(exam)
+        await db.flush()
+        days = _school_days(start, end)
+        for cid, subj_ids in class_subjects.items():
+            ordered = sorted(subj_ids, key=lambda s: subjects[s].name)
+            for i, sid in enumerate(ordered):
+                paper = ExamPaper(school_id=school.id, exam_id=exam.id, class_id=cid, subject_id=sid, exam_date=days[i % len(days)],
+                                  max_marks=Decimal(mx), pass_marks=Decimal(ps))
+                db.add(paper)
+                await db.flush()
+                if end >= today:
+                    continue  # not sat yet
+                for st in by_class[cid]:
+                    absent = rnd.random() < 0.01
+                    score = min(1.0, max(0.0, ability[st.id] + rnd.uniform(-0.09, 0.09)))
+                    db.add(ExamMark(school_id=school.id, paper_id=paper.id, student_id=st.id, absent=absent,
+                                    marks=None if absent else Decimal(round(mx * score * 2) / 2),
+                                    entered_by=teacher_of.get((st.section_id, sid)) or class_teacher.get(st.section_id),
+                                    entered_at=datetime.combine(end + timedelta(days=rnd.randint(1, 4)), time(15, rnd.randint(0, 59)), tz)))
+                    n_marks += 1
+        if published and kind == "term":
+            for cid in class_subjects:
+                for st in by_class[cid]:
+                    band = next(r for floor, r in REMARKS if ability[st.id] * 100 >= floor)
+                    db.add(ExamRemark(school_id=school.id, exam_id=exam.id, student_id=st.id, remark=rnd.choice(band)))
+    await db.flush()
+    print(f"  Exams: {len(EXAMS)} exams, {n_marks} marks entered (Unit Test 1 and Half-Yearly published)")
+
+
+NOTICES = [  # (days ago, title, body, audience, priority, pinned, author email)
+    (1, "Diwali vacation", "School will remain closed from 20 to 25 October for Diwali. Classes resume on Monday, 26 October. Wishing all our families a happy and safe Diwali!", "everyone", "important", True, "principal@demo.com"),
+    (2, "Half-Yearly results are out", "Report cards for the Half-Yearly exams are now available in the app. Parent–teacher meetings will be held on Saturday, 10 October from 9 am to 12 noon.", "families", "important", False, "admin@demo.com"),
+    (3, "Quarter 3 fees due by 15 October", "Quarter 3 fees are due by 15 October. You can pay online in the EDUVIA app or at the school office (9 am to 1 pm). A late fee applies after the due date.", "families", "normal", False, "accounts@demo.com"),
+    (4, "Staff meeting on Monday", "All teaching staff: a meeting on Monday at 2:15 pm in the conference room to plan Unit Test 2 and the annual day programme.", "staff", "normal", False, "principal@demo.com"),
+    (6, "Annual Sports Day", "Our Annual Sports Day will be held on 14 November. Students should register for events with their PE teacher by 30 October.", "everyone", "normal", False, "admin@demo.com"),
+    (8, "Science exhibition – Classes 6 to 10", "Students of Classes 6 to 10 can submit project ideas for the inter-school science exhibition to their science teacher by 15 October.", "sections:Class 6,Class 7,Class 8,Class 9,Class 10", "normal", False, "rajiv.menon@demo.com"),
+    (10, "Board exam registration – Class 10 and 12", "Please verify your child's name, date of birth and subjects on the board registration form sent home today and return it signed by 9 October.", "sections:Class 10,Class 12", "urgent", False, "principal@demo.com"),
+    (12, "Gandhi Jayanti holiday", "School will remain closed on Friday, 2 October for Gandhi Jayanti.", "everyone", "normal", False, "admin@demo.com"),
+    (16, "Library week", "Library week runs from 21 to 26 September. Students can borrow two extra books during the week.", "families", "normal", False, "librarian@demo.com"),
+    (20, "Uniform reminder", "Students must wear the winter uniform from 1 November. Uniforms are available at the school store.", "families", "normal", False, "reception@demo.com"),
+]
+
+HOMEWORK_TASKS = {
+    "English": ["Read the next chapter and write a summary", "Write a paragraph on 'My favourite festival'", "Learn the new vocabulary words", "Complete the grammar worksheet on tenses"],
+    "Hindi": ["पाठ पढ़ें और प्रश्नों के उत्तर लिखें", "सुलेख का एक पृष्ठ लिखें", "नए शब्दों के अर्थ याद करें"],
+    "Punjabi": ["ਪਾਠ ਪੜ੍ਹੋ ਅਤੇ ਪ੍ਰਸ਼ਨ ਲਿਖੋ", "ਸੁੰਦਰ ਲਿਖਾਈ ਦਾ ਇੱਕ ਪੰਨਾ"],
+    "Mathematics": ["Exercise {n}, questions 1–10", "Practice sums from the worksheet", "Revise tables 2 to 12", "Solve the word problems on page {p}"],
+    "EVS": ["Draw and label the parts of a plant", "Collect five different leaves and paste them", "Write five lines on saving water"],
+    "Science": ["Answer the questions at the end of the chapter", "Draw a labelled diagram of the experiment", "Revise the chapter for a class test"],
+    "Social Science": ["Learn the map work for the chapter", "Answer the long questions in the notebook", "Make a timeline of the events"],
+    "Computer Science": ["Practise the program from class", "Write the steps to create a folder", "Revise the shortcuts"],
+    "Physics": ["Solve the numericals from exercise {n}", "Derive the formula done in class"],
+    "Chemistry": ["Balance the equations in the worksheet", "Learn the periodic table for the first 20 elements"],
+    "Biology": ["Draw a labelled diagram of the cell", "Answer the NCERT questions"],
+    "Accountancy": ["Prepare the journal entries for question {n}", "Post the entries to the ledger"],
+    "Business Studies": ["Answer the case study questions", "Revise the principles of management"],
+    "Economics": ["Prepare a frequency table from the data", "Answer the short questions"],
+}
+
+
+async def seed_notices_homework(db, school: School, today: date) -> None:
+    if await db.scalar(select(Notice.id).where(Notice.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(31)
+    tz = ZoneInfo(school.timezone)
+    users = {u.email: u for u in (await db.scalars(select(User).where(User.school_id == school.id))).all()}
+    sections = (await db.execute(select(Section, SchoolClass.name).join(SchoolClass, SchoolClass.id == Section.class_id)
+                                 .where(Section.school_id == school.id))).all()
+    families = [u for u in users.values() if u.role in ("parent", "student")]
+    for ago, title, body, audience, priority, pinned, author in NOTICES:
+        section_ids = []
+        if audience.startswith("sections:"):
+            wanted = set(audience.split(":", 1)[1].split(","))
+            section_ids = [s.id for s, cname in sections if cname in wanted]
+            audience = "sections"
+        created = datetime.combine(today - timedelta(days=ago), time(rnd.randint(8, 16), rnd.randint(0, 59)), tz)
+        n = Notice(school_id=school.id, title=title, body=body, audience=audience, section_ids=section_ids, priority=priority,
+                   pinned=pinned, created_by=users[author].id if author in users else None, created_at=created, updated_at=created)
+        db.add(n)
+        await db.flush()
+        # Older notices have been read by more people; the Patels haven't seen the two newest.
+        readers = [u for u in families if rnd.random() < min(0.9, 0.25 + ago * 0.06)]
+        readers += [u for u in users.values() if u.role not in ("parent", "student") and rnd.random() < 0.7]
+        for u in readers:
+            if ago <= 2 and u.email in ("parent@demo.com", "mother@demo.com", "student@demo.com"):
+                continue
+            db.add(NoticeRead(school_id=school.id, notice_id=n.id, user_id=u.id, read_at=created + timedelta(hours=rnd.randint(1, 30))))
+
+    # Homework for the last two weeks and the next few days.
+    subjects = {s.id: s for s in (await db.scalars(select(Subject).where(Subject.school_id == school.id))).all()}
+    lessons = defaultdict(list)  # (section, weekday) -> [(subject, teacher)]
+    for sid, day, subj, tid in (await db.execute(select(TimetableEntry.section_id, TimetableEntry.day, TimetableEntry.subject_id, TimetableEntry.teacher_id)
+                                                  .where(TimetableEntry.school_id == school.id))).all():
+        if subjects[subj].name in HOMEWORK_TASKS:
+            lessons[(sid, day)].append((subj, tid))
+    students = defaultdict(list)
+    for st in (await db.scalars(select(Student).where(Student.school_id == school.id, Student.status == "active"))).all():
+        students[st.section_id].append(st)
+    days = _school_days(today - timedelta(days=16), today)
+    hw_count = st_count = 0
+    for s, cname in sections:
+        if cname in ("Nursery", "LKG", "UKG"):
+            continue
+        for d in days:
+            todays = list({subj: tid for subj, tid in lessons[(s.id, d.isoweekday())]}.items())
+            for subj, tid in rnd.sample(todays, min(2, len(todays))):
+                due = d + timedelta(days=rnd.choice([1, 2, 2, 3]))
+                due += timedelta(days=1) if due.weekday() == 6 else timedelta(0)
+                task = rnd.choice(HOMEWORK_TASKS[subjects[subj].name]).format(n=f"{rnd.randint(2, 9)}.{rnd.randint(1, 4)}", p=rnd.randint(20, 140))
+                h = Homework(school_id=school.id, section_id=s.id, subject_id=subj, title=task, details=None, assigned_on=d, due_date=due,
+                             created_by=tid, created_at=datetime.combine(d, time(13, 30), tz), updated_at=datetime.combine(d, time(13, 30), tz))
+                db.add(h)
+                await db.flush()
+                hw_count += 1
+                for st in students[s.id]:
+                    r = rnd.random()
+                    if due < today:
+                        status = "checked" if r < 0.8 else "incomplete" if r < 0.9 else None
+                    else:
+                        status = "done" if r < 0.3 else None
+                    if status:
+                        db.add(HomeworkStatus(school_id=school.id, homework_id=h.id, student_id=st.id, status=status,
+                                              remark="Incomplete – please finish and show" if status == "incomplete" else None,
+                                              updated_at=datetime.combine(min(due, today), time(12, 0), tz)))
+                        st_count += 1
+    await db.flush()
+    print(f"  Notices: {len(NOTICES)}; homework: {hw_count} pieces, {st_count} student statuses")

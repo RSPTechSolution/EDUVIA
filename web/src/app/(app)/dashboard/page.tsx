@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Activity, ArrowRight, Building2, CalendarClock, CalendarDays, ClipboardCheck, Wallet, CheckCircle2, Circle, Clock, CreditCard, Inbox, LayoutGrid, PartyPopper,
+  Activity, ArrowRight, Building2, CalendarClock, CalendarDays, ClipboardCheck, Megaphone, Wallet, CheckCircle2, Circle, Clock, CreditCard, Inbox, LayoutGrid, PartyPopper,
   Settings2, UserPlus, Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -21,11 +21,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api/client";
 import type { Lead, TimetableView } from "@/lib/api/types";
 import { describeAudit } from "@/lib/audit-labels";
-import { formatDateTime, greeting, inr, roleLabel, timeAgo } from "@/lib/format";
+import { formatDate, formatDateTime, greeting, inr, roleLabel, timeAgo } from "@/lib/format";
 import { modulesReviewed } from "@/lib/local-flags";
 import {
   useAttendanceOverview, useAttendanceSections, useAudit, useCurrentSchool, useDashboardSummary, useFeeSummary, useMyAttendance, useMyFees,
-  useMyTimetables, useSchools, useUsers,
+  useMyHomework, useMyTimetables, useNotices, useSchools, useUsers,
 } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
@@ -215,6 +215,7 @@ function SchoolDashboard() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <SetupChecklist />
+        <LatestNotices />
         {can("audit.view") && <RecentActivity />}
         {s && (
           <Card>
@@ -246,6 +247,71 @@ function nextLesson(view: TimetableView, day: number) {
     .filter((p) => !p.is_break && mins(p.end_time) > m)
     .map((p) => ({ p, e: view.entries.find((e) => e.day === day && e.period_id === p.id) }))
     .find((x) => x.e);
+}
+
+/** The newest notices for this user, unread first. */
+function LatestNotices() {
+  const me = useSession();
+  const notices = useNotices(1, false, me.modules.includes("communication"));
+  if (!me.modules.includes("communication")) return null;
+  const list = (notices.data?.data ?? []).slice(0, 4);
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div><CardTitle>Notices</CardTitle><CardDescription>From the school</CardDescription></div>
+        <Link href="/notices" className="text-sm font-medium text-primary hover:underline">All notices</Link>
+      </CardHeader>
+      <CardContent>
+        {notices.isLoading ? <Skeleton className="h-40" /> : list.length === 0 ? <p className="py-4 text-center text-sm text-muted-foreground">No notices yet.</p> : (
+          <ul className="divide-y">
+            {list.map((n) => (
+              <li key={n.id}>
+                <Link href="/notices" className="-mx-2 flex items-start gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50">
+                  <Megaphone className={cn("mt-0.5 size-4 shrink-0", n.priority === "urgent" ? "text-destructive" : n.priority === "important" ? "text-warning" : "text-muted-foreground")} aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className={cn("block truncate text-sm", !n.read ? "font-semibold" : "text-muted-foreground")}>{n.title}</span>
+                    <span className="block text-xs text-muted-foreground">{n.author ?? "School"} · {timeAgo(n.created_at)}</span>
+                  </span>
+                  {!n.read && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Parents and students: homework still to do. */
+function HomeworkDue() {
+  const me = useSession();
+  const hw = useMyHomework(me.modules.includes("academics"));
+  const todo = (hw.data ?? []).filter((h) => h.status === "pending").sort((a, b) => a.due_date.localeCompare(b.due_date)).slice(0, 5);
+  if (!me.modules.includes("academics") || !hw.data) return null;
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div><CardTitle>Homework to do</CardTitle><CardDescription>{todo.length ? `${(hw.data ?? []).filter((h) => h.status === "pending").length} not done yet` : "All caught up"}</CardDescription></div>
+        <Link href="/my-homework" className="text-sm font-medium text-primary hover:underline">All homework</Link>
+      </CardHeader>
+      <CardContent>
+        {todo.length === 0 ? <p className="py-4 text-center text-sm text-muted-foreground">Nothing pending. 🎉</p> : (
+          <ul className="space-y-2">
+            {todo.map((h) => (
+              <li key={h.id + h.student_id} className="flex items-start gap-3 text-sm">
+                <span className={cn("mt-1 size-2 shrink-0 rounded-full", h.overdue ? "bg-destructive" : "bg-primary")} aria-hidden />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{h.subject_name}: {h.title}</span>
+                  <span className={cn("block text-xs", h.overdue ? "text-destructive" : "text-muted-foreground")}>{h.overdue ? "Overdue" : `Due ${formatDate(h.due_date, "EEE d MMM")}`}{hw.data && new Set(hw.data.map((x) => x.student_id)).size > 1 ? ` · ${h.student_name.split(" ")[0]}` : ""}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 /** Parents and students: this month's attendance and what's owed, per child. */
@@ -390,6 +456,11 @@ function PersonalDashboard() {
       </Stagger>
 
       {teacher ? <AttendanceToTake /> : <FamilySummary />}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <LatestNotices />
+        {!teacher && <HomeworkDue />}
+      </div>
 
       {views.isLoading ? <Skeleton className="h-72 rounded-xl" /> : !all.length ? (
         <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">

@@ -11,7 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'support/fake_api.dart';
 
 ProviderContainer makeContainer(FakeApi fake, MemoryTokenStore tokens, {AppFlavor flavor = AppFlavor.parent}) {
-  return ProviderContainer(overrides: [
+  return ProviderContainer(retry: apiRetry, overrides: [
     appConfigProvider.overrideWithValue(AppConfig(flavor: flavor, apiBaseUrl: 'http://test')),
     tokenStoreProvider.overrideWithValue(tokens),
     apiClientProvider.overrideWith((ref) {

@@ -12,6 +12,8 @@ import '../../shared/widgets/common.dart';
 import '../attendance/attendance_data.dart';
 import '../attendance/attendance_screens.dart' show statusColor;
 import '../fees/fees_data.dart';
+import '../homework/homework_screens.dart';
+import '../notices/notices_screen.dart';
 import '../timetable/timetable_screen.dart';
 
 String greeting(DateTime now) => now.hour < 12 ? 'Good morning' : (now.hour < 17 ? 'Good afternoon' : 'Good evening');
@@ -33,6 +35,7 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         titleSpacing: 16,
         title: Row(children: [const BrandMark(size: 32), const SizedBox(width: 10), Wordmark(fontSize: 20, suffix: flavor.suffix)]),
+        actions: [if (me.hasModule('communication')) const NoticeBell(), const SizedBox(width: 4)],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -41,6 +44,8 @@ class HomeScreen extends ConsumerWidget {
           ref.invalidate(myTimetablesProvider);
           ref.invalidate(attendanceSectionsProvider(isoDay(DateTime.now())));
           ref.invalidate(feeSummaryProvider);
+          ref.invalidate(myHomeworkProvider);
+          ref.invalidate(unreadNoticesProvider);
           await ref.read(authControllerProvider.notifier).refreshProfile();
         },
         child: ListView(
@@ -54,6 +59,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             if (me.isFamily) ...[
               if (me.hasModule('attendance') || me.hasModule('fees')) const _FamilyCards(),
+              if (me.hasModule('academics')) const _HomeworkDue(),
               if (me.hasModule('academics')) const _TodayLessons(),
             ] else ...[
               if (me.hasModule('attendance') && me.can('attendance.mark')) const _AttendanceToTake(),
@@ -220,6 +226,38 @@ class _MiniStat extends StatelessWidget {
       );
 }
 
+class _HomeworkDue extends ConsumerWidget {
+  const _HomeworkDue();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final list = ref.watch(myHomeworkProvider).value;
+    if (list == null) return const SizedBox.shrink();
+    final todo = list.where((h) => h.status == 'pending').toList()..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+    final many = {for (final h in list) h.studentId}.length > 1;
+    final s = statusColors(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      _Heading('Homework to do', action: 'All', onAction: () => context.go('/homework')),
+      Card(
+        child: todo.isEmpty
+            ? ListTile(leading: Icon(Icons.celebration_outlined, color: s.success), title: const Text('All caught up'))
+            : Column(children: [
+                for (final h in todo.take(4))
+                  ListTile(
+                    dense: true,
+                    leading: Icon(Icons.circle, size: 10, color: h.overdue ? s.danger : Theme.of(context).colorScheme.primary),
+                    title: Text('${h.subject}: ${h.title}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                    subtitle: Text([h.overdue ? 'Overdue' : dueText(h.dueDate), if (many) h.studentName!.split(' ').first].join(' · '),
+                        style: TextStyle(color: h.overdue ? s.danger : null)),
+                    onTap: () => context.go('/homework'),
+                  ),
+                if (todo.length > 4) ListTile(dense: true, title: Text('and ${todo.length - 4} more'), onTap: () => context.go('/homework')),
+              ]),
+      ),
+    ]);
+  }
+}
+
 class _TodayLessons extends ConsumerWidget {
   const _TodayLessons();
 
@@ -230,7 +268,7 @@ class _TodayLessons extends ConsumerWidget {
     if (views == null || views.isEmpty) return const SizedBox.shrink();
     final v = views.first;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      _Heading(views.length > 1 ? "Today · ${v.title}" : (v.kind == 'teacher' ? "Today's classes" : "Today's lessons"), action: 'Week', onAction: () => context.go('/timetable')),
+      _Heading(views.length > 1 ? "Today · ${v.title}" : (v.kind == 'teacher' ? "Today's classes" : "Today's lessons"), action: 'Week', onAction: () => context.push('/timetable')),
       Card(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: DayLessons(view: v, day: DateTime.now().weekday, compact: true))),
     ]);
   }

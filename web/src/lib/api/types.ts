@@ -495,3 +495,171 @@ export interface MyFees {
 }
 
 export interface PaymentOrder { order_id: string; amount: number; gateway: string; test_mode: boolean; invoice_no: string; description: string }
+
+// ---- exams -----------------------------------------------------------------------------------
+
+export type ExamStatus = "draft" | "upcoming" | "ongoing" | "marks_entry" | "published";
+
+export interface Exam {
+  id: string;
+  name: string;
+  kind: "unit_test" | "term" | "final";
+  academic_year: string;
+  start_date: string | null;
+  end_date: string | null;
+  published_at: string | null;
+  status: ExamStatus;
+  classes: number;
+  papers: number;
+  marks_entered: number;
+  marks_expected: number;
+}
+
+export interface ExamPaper {
+  id: string;
+  class_id: string;
+  subject_id: string;
+  subject_name: string;
+  subject_color: string;
+  exam_date: string | null;
+  max_marks: number;
+  pass_marks: number;
+  marks_entered: number;
+  students: number;
+}
+
+export interface ExamDetail extends Exam {
+  classes_detail: { class_id: string; class_name: string; papers: ExamPaper[] }[];
+}
+
+export interface MarksSheetRef {
+  paper_id: string;
+  section_id: string;
+  section_label: string;
+  subject_name: string;
+  subject_color: string;
+  exam_date: string | null;
+  max_marks: number;
+  entered: number;
+  students: number;
+}
+
+export interface MarksSheet {
+  paper_id: string;
+  section_id: string;
+  exam_name: string;
+  section_label: string;
+  subject_name: string;
+  max_marks: number;
+  pass_marks: number;
+  editable: boolean;
+  locked_reason: string | null;
+  rows: { student_id: string; name: string; roll_no: number | null; marks: number | null; absent: boolean }[];
+}
+
+export interface SubjectResult { subject_name: string; max_marks: number; pass_marks: number; marks: number | null; absent: boolean; grade: string | null; passed: boolean | null }
+
+export interface StudentResult {
+  student_id: string;
+  name: string;
+  roll_no: number | null;
+  subjects: SubjectResult[];
+  total: number;
+  max_total: number;
+  percent: number | null;
+  grade: string | null;
+  passed: boolean;
+  rank: number | null;
+  remark: string | null;
+}
+
+export interface SectionResults {
+  exam_id: string;
+  exam_name: string;
+  section_label: string;
+  published: boolean;
+  students: StudentResult[];
+  subjects: { subject_name: string; average: number | null; highest: number | null; pass_rate: number | null }[];
+  average_percent: number | null;
+  pass_rate: number | null;
+}
+
+export interface ReportCard {
+  exam_id: string;
+  exam_name: string;
+  academic_year: string;
+  school_name: string;
+  school_address: string | null;
+  student_name: string;
+  admission_no: string;
+  class_section: string;
+  roll_no: number | null;
+  date_of_birth: string;
+  class_teacher: string | null;
+  result: StudentResult;
+  class_size: number;
+  attendance_percent: number | null;
+  published: boolean;
+}
+
+export interface ChildResults {
+  student_id: string;
+  name: string;
+  class_section: string;
+  exams: { exam_id: string; exam_name: string; kind: string; published_at: string; percent: number | null; grade: string | null; rank: number | null; class_size: number; passed: boolean }[];
+  upcoming: ExamPaper[];
+}
+
+// ---- notices & homework ----------------------------------------------------------------------
+
+export interface Notice {
+  id: string;
+  title: string;
+  body: string;
+  audience: "everyone" | "staff" | "families" | "sections";
+  audience_label: string;
+  section_ids: string[];
+  priority: "normal" | "important" | "urgent";
+  pinned: boolean;
+  created_at: string;
+  author: string | null;
+  read: boolean;
+  can_edit: boolean;
+  reads: number | null;
+  recipients: number | null;
+}
+
+export interface HomeworkItem {
+  id: string;
+  section_id: string;
+  section_label: string;
+  subject_id: string;
+  subject_name: string;
+  subject_color: string;
+  title: string;
+  details: string | null;
+  assigned_on: string;
+  due_date: string;
+  teacher: string | null;
+  students: number;
+  done: number;
+  checked: number;
+  can_edit: boolean;
+}
+
+export type HomeworkState = "pending" | "done" | "checked" | "incomplete";
+
+export interface HomeworkDetail extends HomeworkItem {
+  roster: { student_id: string; name: string; roll_no: number | null; status: HomeworkState; note: string | null; remark: string | null }[];
+}
+
+export interface MyHomework extends HomeworkItem {
+  student_id: string;
+  student_name: string;
+  status: HomeworkState;
+  note: string | null;
+  remark: string | null;
+  overdue: boolean;
+}
+
+export interface HomeworkTarget { section_id: string; section_label: string; subjects: { id: string; name: string; color: string }[] }

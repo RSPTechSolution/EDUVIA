@@ -46,6 +46,12 @@ PERMISSIONS: dict[str, list[Role]] = {
     "fees.view": ADMINS + [Role.ACCOUNTANT, Role.RECEPTIONIST],
     "fees.collect": ADMINS + [Role.ACCOUNTANT, Role.RECEPTIONIST],
     "fees.manage": [Role.SCHOOL_ADMIN, Role.ACCOUNTANT],
+    "exams.view": ADMINS + [Role.TEACHER],
+    "exams.marks": ADMINS + [Role.TEACHER],  # teachers: papers for sections they teach that subject in
+    "exams.manage": ADMINS,  # create exams, date sheets, publish results
+    "notices.post": ADMINS + [Role.TEACHER, Role.RECEPTIONIST],  # teachers: only to classes they teach
+    "notices.manage": ADMINS + [Role.RECEPTIONIST],  # any audience, edit or remove any notice
+    "homework.manage": ADMINS + [Role.TEACHER],
     "billing.manage": [Role.SCHOOL_ADMIN],
     "schools.manage": [],  # platform level: super_admin only
 }

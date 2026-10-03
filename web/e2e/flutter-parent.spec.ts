@@ -34,10 +34,18 @@ test("flutter parent app end to end", async ({ page }) => {
   await expect(page.getByText(/Total due for all children/)).toBeVisible({ timeout: 15_000 });
   await page.getByRole("tab", { name: "Attendance" }).click();
   await expect(page.getByLabel(/attendance this year/).first()).toBeVisible({ timeout: 15_000 });
-  await page.getByRole("tab", { name: "Timetable" }).click();
-  await expect(page.getByText(/Assembly/)).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("tab", { name: "Homework" }).click();
+  await expect(page.getByText(/To do|Done|Overdue/).first()).toBeVisible({ timeout: 15_000 });
 
-  await page.getByRole("tab", { name: "Profile" }).click();
+  // Everything else lives under More.
+  await page.getByRole("tab", { name: "More" }).click();
+  await page.getByRole("button", { name: /Timetable/ }).click();
+  await expect(page.getByText(/Assembly/)).toBeVisible({ timeout: 15_000 });
+  await page.goBack();
+  await page.getByRole("button", { name: /Results/ }).click();
+  await expect(page.getByText(/Half-Yearly/).first()).toBeVisible({ timeout: 15_000 });
+  await page.goBack();
+  await page.getByRole("button", { name: /Profile & settings/ }).click();
   await expect(page.getByRole("button", { name: /Change password/ })).toBeVisible();
   await page.waitForTimeout(500);
 

@@ -136,9 +136,9 @@ What each app shows (tabs appear only when the school has the module and the acc
 
 | App | Tabs |
 |---|---|
-| **EDUVIA** (parents, students) | Home (each child's attendance today, fees due, today's lessons) · Attendance (calendar, yearly %, days away) · Fees (dues, online payment, receipts) · Timetable · Profile |
-| **EDUVIA Staff** | Home (classes left to mark, today's classes, fee tiles for the office) · Attendance (teachers mark P/A/L/½/Leave with reasons) · Fees (office staff: search invoices, collect cash/UPI/cheque/card, receipts) · Timetable (teachers) · Profile |
-| **EDUVIA Driver** | Home · Profile (trips and boarding come with the transport module) |
+| **EDUVIA** (parents, students) | Home (each child's attendance today, fees due, homework to do, today's lessons, notice bell) · Attendance · Homework (tick it off) · Fees (pay online, receipts) · More: Results & report cards, Timetable, Notices, Profile |
+| **EDUVIA Staff** | Home (classes left to mark, today's classes, notice bell) · Attendance (mark P/A/L/½/Leave) · Homework (teachers: set it, check it) · Fees (office: search, collect, receipts) · More: Marks entry, Timetable, Notices, Profile |
+| **EDUVIA Driver** | Home · More: Notices, Profile (trips and boarding come with the transport module) |
 
 ### Stopping and starting again
 
@@ -172,6 +172,11 @@ quarterly invoices per student for 2026-27 with realistic payments: Quarter 1 mo
 Quarter 2 invoices overdue or part-paid, Quarter 3 just issued. Aarav Patel owes ₹3,000 from Quarter 2,
 so the parent account can try paying online.
 
+Exams: **Unit Test 1** (July) and **Half-Yearly** (September) have marks for every student and published
+results with class-teacher remarks; **Unit Test 2** (November) has only a date sheet, so teachers can try
+entering marks. There are ten notices for different audiences (some unread), and two weeks of homework
+for every class, most of it already checked by the teachers.
+
 Run `python -m app.seed --reset` at any time to wipe the demo school and rebuild it (handy after
 running the e2e tests, which add records). The data is the same on every machine.
 
@@ -182,15 +187,15 @@ Every school account uses the password **Demo@1234** and school ID **demo**.
 | Platform admin | superadmin@eduvia.com (password `Admin@1234`, school ID blank) | Schools, plans, leads |
 | School admin | admin@demo.com | Everything: students, classes, timetable editing, users, billing |
 | Principal | principal@demo.com | Students, classes, timetable editing; can view users and billing but not change school settings, users or billing |
-| Teacher | teacher@demo.com (Priya Verma, Maths, class teacher of Class 5 A) | Take today's attendance (web or staff app), today's classes, My timetable |
+| Teacher | teacher@demo.com (Priya Verma, Maths, class teacher of Class 5 A) | Take attendance, set and check homework, enter Unit Test 2 marks, write report-card remarks, post a notice to her classes |
 | Other teachers | e.g. amit.saxena@demo.com, anjali.mehta@demo.com, arijit.sen@demo.com (part-time, off Saturdays) | Each sees their own week |
 | Accountant | accounts@demo.com | Fees: dashboard, fee setup, generating invoices, concessions, collecting payments |
 | Receptionist | reception@demo.com | Add and edit students, collect fees at the counter, view attendance and timetables |
 | Librarian / HR / transport / security / office staff | librarian@ · hr@ · transport@ · security@ · staff@demo.com | Basic access (their modules come in later phases) |
 | Driver | driver@ · driver2@ · driver3@demo.com | Basic access |
-| Parent | parent@demo.com (Suresh Patel) and mother@demo.com (Kavita Patel) | Aarav (Class 5 A) and Diya (Class 1 A): attendance calendar, fees with online payment (test mode), receipts, timetable |
+| Parent | parent@demo.com (Suresh Patel) and mother@demo.com (Kavita Patel) | Aarav (Class 5 A) and Diya (Class 1 A): attendance, homework, results and report cards, notices, fees with online payment (test mode), timetable |
 | Other parents | e.g. ajay.sandhu@demo.com (Class 11 and Class 2), archana.gupta@demo.com (Class 7 and UKG) | Parents with two children |
-| Student | student@demo.com (Aarav Patel) | Own attendance, fees and timetable |
+| Student | student@demo.com (Aarav Patel) | Own attendance, homework, results, notices, fees and timetable |
 | Senior students | e.g. yash.kohli@students.demo.com (Class 12 Science), aditya.chopra@students.demo.com (Class 12 Commerce) | Own timetable |
 
 Every user is listed under **Settings → Users & roles** when signed in as the admin.
@@ -222,8 +227,14 @@ The end-to-end tests run against the dev database and create a few users and sch
 - **Fees:** fee categories and per-class fees per term (*Fees → Fee setup*), one-click invoice generation for a term (never twice for the same student and term), counter collection by cash/UPI/cheque/card/bank transfer with numbered receipts, concessions with a reason, overdue tracking and a collections dashboard. Parents see dues per child and pay online; every payment has a printable receipt.
 - **Online payment:** `PAYMENT_GATEWAY=test` (the default in development) simulates a gateway so you can try the full flow without money; the API refuses to start with it in production. Set `PAYMENT_GATEWAY=none` to hide online payment. Razorpay plugs in behind the same order/confirm flow once you have keys.
 
+## Exams, notices and homework
+
+- **Exams:** create an exam (unit test, term or final), build the date sheet class by class or in one click from the timetable, and teachers enter marks only for the subjects and classes they teach (with live CBSE grades A1–E and out-of-range checks). Results show totals, percentages, grades, ranks, subject averages and pass rates, with CSV export; class teachers add report-card remarks. Publishing locks the marks and shows printable report cards to parents and students; unpublishing hides them again.
+- **Notices:** the office posts to everyone, staff, parents & students, or chosen classes; teachers post to the classes they teach. Notices can be important/urgent and pinned. Authors see "read by X of Y"; everyone gets an unread badge on the web and a bell in the apps.
+- **Homework:** teachers set it for their classes and subjects with a due date; parents or students tick it off (with an optional note); teachers mark it checked or incomplete with a remark, which families see.
+
 ## Build status
 
-Built so far: authentication, roles and permissions, schools, users, modules, audit log, plans and billing, the public website, the web design system, dashboard and app shell, students, classes and sections, timetables, attendance and fees — on the web and in the mobile apps. The remaining module phases (exams, communication, transport, HR, library, …) follow the plan in `skills/`.
+Built so far: authentication, roles and permissions, schools, users, modules, audit log, plans and billing, the public website, the web design system, dashboard and app shell, students, classes and sections, timetables, attendance, fees, exams and report cards, notices and homework — on the web and in the mobile apps. Still to come from the plan in `skills/`: transport and bus tracking, HR and leave, library, hostel, inventory, gate security, messaging/SMS, online tests, and AI and analytics.
 
-Not verifiable on this development machine yet: Android builds (no Android SDK installed) and iOS builds (need a Mac; iOS flavors also need Xcode schemes — until then use `--dart-define=FLAVOR=…`). Real online payment (Razorpay), PDF receipts, and biometric/QR attendance are not connected yet.
+Not verifiable on this development machine yet: Android builds (no Android SDK installed) and iOS builds (need a Mac; iOS flavors also need Xcode schemes — until then use `--dart-define=FLAVOR=…`). Real online payment (Razorpay), PDF receipts and report cards (use the browser's print-to-PDF for now), and biometric/QR attendance are not connected yet.

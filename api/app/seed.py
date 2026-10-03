@@ -17,10 +17,10 @@ from app.core.config import settings
 from app.core.database import system_session
 from app.core.permissions import MODULES, Role
 from app.core.security import hash_password
-from app.seed_ops import seed_attendance, seed_fees
+from app.seed_ops import seed_attendance, seed_exams, seed_fees, seed_notices_homework
 from app.services.family_service import school_today
 from app.models import (
-    Period, Plan, School, SchoolClass, SchoolModule, Section, Student, StudentGuardian, Subject, TeacherSubject,
+    ExamPaper, Homework, Period, Plan, School, SchoolClass, SchoolModule, Section, Student, StudentGuardian, Subject, TeacherSubject,
     TeacherUnavailability, TimetableEntry, User,
 )
 
@@ -174,6 +174,8 @@ async def wipe_demo_school(db) -> None:
         return
     # Tables with RESTRICT foreign keys first; everything else cascades from the school.
     await db.execute(delete(TimetableEntry).where(TimetableEntry.school_id == school.id))
+    await db.execute(delete(ExamPaper).where(ExamPaper.school_id == school.id))
+    await db.execute(delete(Homework).where(Homework.school_id == school.id))
     await db.execute(delete(StudentGuardian).where(StudentGuardian.school_id == school.id))
     await db.execute(delete(Student).where(Student.school_id == school.id))
     await db.delete(school)
@@ -451,6 +453,8 @@ async def seed(reset: bool = False) -> None:
         today = await school_today(db, school.id)
         await seed_attendance(db, school, today)
         await seed_fees(db, school, today)
+        await seed_exams(db, school, today)
+        await seed_notices_homework(db, school, today)
 
     print("Seed complete.")
     print(f"  Super admin : {SUPER_ADMIN[0]} / {SUPER_ADMIN[2]}  (no school ID)")

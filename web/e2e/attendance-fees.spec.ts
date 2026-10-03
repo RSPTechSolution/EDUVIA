@@ -1,18 +1,21 @@
 import { expect, test } from "./fixtures";
-import { DEMO, login, loginAsAdmin } from "./helpers";
+import { DEMO, apiAs, login, loginAsAdmin, unique } from "./helpers";
 
 test("teacher takes attendance for their class", async ({ page }) => {
   await login(page, DEMO.teacher, DEMO.password);
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByText("Attendance today")).toBeVisible();
-  await page.goto("/attendance");
+  // Sundays are holidays: use the last school day.
+  const day = new Date();
+  if (day.getDay() === 0) day.setDate(day.getDate() - 1);
+  const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+  await page.goto(`/attendance?date=${iso}`);
   await page.getByRole("link", { name: /Class 5 – A/ }).first().click();
   await expect(page.getByRole("heading", { name: "Class 5 – A" })).toBeVisible();
 
   const absent = page.getByRole("radiogroup").nth(1);
   await absent.getByRole("radio", { name: "Absent" }).click();
-  await page.getByRole("textbox", { name: /Reason for/ }).first().fill("Fever");
-  await page.getByRole("button", { name: "Mark rest present" }).click();
+  await page.getByRole("textbox", { name: /Reason for/ }).first().fill(unique("Fever "));  // a change on every run
   await page.getByRole("button", { name: /Save attendance|Save changes/ }).click();
   await expect(page.getByText(/Attendance saved for Class 5 – A/)).toBeVisible();
   await expect(absent.getByRole("radio", { name: "Absent" })).toHaveAttribute("aria-checked", "true");
@@ -51,6 +54,12 @@ test("office collects a fee and opens the receipt", async ({ page }) => {
 });
 
 test("parent sees attendance and pays online in test mode", async ({ page }) => {
+  // Bill Class 5 a one-off term so Aarav always has something due, however often this runs.
+  const admin = await apiAs(DEMO.admin);
+  const classes = (await admin("GET", "/classes")) as { id: string; name: string }[];
+  const due = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+  await admin("POST", "/fees/invoices/generate", { term: unique("E2E term "), due_date: due, class_ids: [classes.find((c) => c.name === "Class 5")!.id] });
+
   await login(page, "parent@demo.com", DEMO.password);
   await expect(page).toHaveURL(/\/dashboard/);
   await page.goto("/my-attendance");

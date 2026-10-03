@@ -1,5 +1,5 @@
 import {
-  Building2, CalendarDays, ClipboardCheck, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Award, BookOpenCheck, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -13,6 +13,8 @@ export interface NavItem {
   permission?: string;
   /** Only shown to these roles. */
   roles?: string[];
+  /** Show a live count next to the label. */
+  badge?: "notices";
   superAdminOnly?: boolean;
   keywords?: string[];
 }
@@ -45,7 +47,17 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Attendance", href: "/attendance", icon: ClipboardCheck, module: "attendance", permission: "attendance.view", keywords: ["absent", "present", "roll call", "register"] },
       { label: "Attendance", href: "/my-attendance", icon: ClipboardCheck, module: "attendance", roles: ["parent", "student"], keywords: ["absent", "present"] },
       { label: "Fees", href: "/my-fees", icon: Wallet, module: "fees", roles: ["parent", "student"], keywords: ["pay", "dues", "receipt", "invoice"] },
+      { label: "Exams", href: "/exams", icon: FileSpreadsheet, module: "exams", permission: "exams.view", keywords: ["marks", "results", "report card", "date sheet"] },
+      { label: "Homework", href: "/homework", icon: BookOpenCheck, module: "academics", permission: "homework.manage", keywords: ["assignment", "classwork"] },
+      { label: "Homework", href: "/my-homework", icon: BookOpenCheck, module: "academics", roles: ["parent", "student"], keywords: ["assignment"] },
+      { label: "Results", href: "/my-results", icon: Award, module: "exams", roles: ["parent", "student"], keywords: ["report card", "marks", "exam"] },
       { label: "My timetable", href: "/my-timetable", icon: CalendarDays, module: "academics", roles: ["teacher", "principal", "parent", "student"], keywords: ["schedule", "today", "classes"] },
+    ],
+  },
+  {
+    label: "Communication",
+    items: [
+      { label: "Notices", href: "/notices", icon: Megaphone, module: "communication", badge: "notices", keywords: ["announcements", "circular", "news"] },
     ],
   },
   {

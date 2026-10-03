@@ -46,6 +46,14 @@ class ApiException implements Exception {
   }
 }
 
+/// Riverpod retry policy: retry network failures a few times; never retry an answer
+/// from the server (a 404 or 403 won't change by asking again).
+Duration? apiRetry(int retryCount, Object error) {
+  if (error is ApiException && !error.isNetwork) return null;
+  if (retryCount >= 3) return null;
+  return Duration(milliseconds: 400 * (1 << retryCount));
+}
+
 class ApiResult<T> {
   ApiResult(this.data, this.meta);
   final T data;

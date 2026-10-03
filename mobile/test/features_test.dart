@@ -3,6 +3,7 @@ import 'package:eduvia/core/auth/auth_controller.dart';
 import 'package:eduvia/core/auth/token_store.dart';
 import 'package:eduvia/core/config/app_config.dart';
 import 'package:eduvia/features/attendance/attendance_screens.dart';
+import 'package:eduvia/features/exams/exam_screens.dart';
 import 'package:eduvia/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,7 +14,7 @@ import 'support/fake_api.dart';
 
 ProviderContainer container(FakeApi fake, {AppFlavor flavor = AppFlavor.parent}) {
   final tokens = MemoryTokenStore()..access = 'a'..refresh = 'r';
-  return ProviderContainer(overrides: [
+  return ProviderContainer(retry: apiRetry, overrides: [
     appConfigProvider.overrideWithValue(AppConfig(flavor: flavor, apiBaseUrl: 'http://test')),
     tokenStoreProvider.overrideWithValue(tokens),
     apiClientProvider.overrideWith((ref) => ApiClient(baseUrl: 'http://test', tokens: tokens, adapter: fake)),
@@ -38,11 +39,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('tabs follow the role: parents get attendance, fees and timetable', (tester) async {
+  testWidgets('tabs follow the role: parents get attendance, homework and fees', (tester) async {
     final fake = FakeApi()..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson())));
     await pump(tester, container(fake));
     final bar = find.byType(NavigationBar);
-    for (final label in ['Home', 'Attendance', 'Fees', 'Timetable', 'Profile']) {
+    for (final label in ['Home', 'Attendance', 'Homework', 'Fees', 'More']) {
       expect(find.descendant(of: bar, matching: find.text(label)), findsOneWidget);
     }
   });
@@ -146,5 +147,110 @@ void main() {
     await tester.scrollUntilVisible(find.text('Friday, 2 Oct'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Friday, 2 Oct'), findsOneWidget);
     expect(find.text('Absent · Fever'), findsOneWidget);
+  });
+
+  testWidgets('parent ticks off homework and sees notices from the bell', (tester) async {
+    var done = false;
+    Map<String, dynamic> hw() => {
+          'id': 'h1', 'section_id': 'sec', 'section_label': 'Class 5 – A', 'subject_id': 'm', 'subject_name': 'Mathematics', 'subject_color': 'blue',
+          'title': 'Exercise 3.1', 'details': null, 'assigned_on': '2026-10-01', 'due_date': '2099-10-06', 'teacher': 'Priya Verma',
+          'students': 8, 'done': 0, 'checked': 0, 'can_edit': false, 'student_id': 's1', 'student_name': 'Aarav Patel',
+          'status': done ? 'done' : 'pending', 'note': null, 'remark': null, 'overdue': false,
+        };
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson()..['modules'] = ['attendance', 'fees', 'academics', 'communication', 'exams'])))
+      ..on('GET /homework/my', (_) => (200, FakeApi.ok([hw()])))
+      ..on('POST /homework/h1/done', (req) {
+        expect(req.data['student_id'], 's1');
+        done = true;
+        return (200, FakeApi.ok({'message': 'ok'}));
+      })
+      ..on('GET /notices/unread-count', (_) => (200, FakeApi.ok({'count': 2})))
+      ..on('GET /notices', (_) => (200, FakeApi.ok([
+            {'id': 'n1', 'title': 'Diwali vacation', 'body': 'School closed 20–25 Oct', 'audience': 'everyone', 'audience_label': 'Everyone', 'section_ids': [],
+             'priority': 'important', 'pinned': true, 'created_at': '2026-10-02T10:00:00Z', 'author': 'Principal', 'read': false, 'can_edit': false},
+          ])))
+      ..on('POST /notices/n1/read', (_) => (200, FakeApi.ok({'message': 'ok'})));
+    await pump(tester, container(fake));
+    expect(find.text('Homework to do'), findsOneWidget);
+    expect(find.byTooltip('Notices, 2 unread'), findsOneWidget);
+
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Homework')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Mark as done'));
+    await tester.pumpAndSettle();
+    expect(done, isTrue);
+    expect(find.textContaining('Marked done'), findsOneWidget);
+
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Home')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Notices, 2 unread'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Diwali vacation'));
+    await tester.pumpAndSettle();
+    expect(find.text('School closed 20–25 Oct'), findsWidgets);
+    expect(fake.calls, contains('POST /notices/n1/read'));
+  });
+
+  testWidgets('results list opens the report card', (tester) async {
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson()..['modules'] = ['academics', 'exams'])))
+      ..on('GET /exams/my', (_) => (200, FakeApi.ok([{
+            'student_id': 's1', 'name': 'Aarav Patel', 'class_section': 'Class 5 – A',
+            'exams': [{'exam_id': 'e1', 'exam_name': 'Half-Yearly', 'kind': 'term', 'published_at': '2026-10-01T10:00:00Z', 'percent': 83.9, 'grade': 'A2', 'rank': 2, 'class_size': 8, 'passed': true}],
+            'upcoming': [],
+          }])))
+      ..on('GET /exams/e1/report/s1', (_) => (200, FakeApi.ok({
+            'exam_id': 'e1', 'exam_name': 'Half-Yearly', 'academic_year': '2026-27', 'school_name': 'GVPS', 'school_address': null,
+            'student_name': 'Aarav Patel', 'admission_no': 'GV1', 'class_section': 'Class 5 – A', 'roll_no': 1, 'date_of_birth': '2015-08-21',
+            'class_teacher': 'Priya Verma', 'class_size': 8, 'attendance_percent': 90.8, 'published': true,
+            'result': {'student_id': 's1', 'name': 'Aarav Patel', 'roll_no': 1, 'total': 402.5, 'max_total': 480, 'percent': 83.9, 'grade': 'A2',
+              'passed': true, 'rank': 2, 'remark': 'Very good progress.',
+              'subjects': [{'subject_name': 'Mathematics', 'max_marks': 80, 'pass_marks': 27, 'marks': 66.5, 'absent': false, 'grade': 'A2', 'passed': true}]},
+          })));
+    await pump(tester, container(fake));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Results'));
+    await tester.pumpAndSettle();
+    expect(find.text('Rank 2 of 8'), findsOneWidget);
+    await tester.tap(find.text('Half-Yearly'));
+    await tester.pumpAndSettle();
+    expect(find.text('66.5/80'), findsOneWidget);
+    expect(find.text('Very good progress.'), findsOneWidget);
+  });
+
+  testWidgets('teacher enters marks and an absence', (tester) async {
+    Map<String, dynamic>? sent;
+    final me = meJson(role: 'teacher')..['permissions'] = ['school.view', 'exams.view', 'exams.marks'];
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(me)))
+      ..on('GET /exams/papers/p1/sections/s1', (_) => (200, FakeApi.ok({
+            'paper_id': 'p1', 'section_id': 's1', 'exam_name': 'Unit Test 2', 'section_label': 'Class 5 – A', 'subject_name': 'Mathematics',
+            'max_marks': 25, 'pass_marks': 8, 'editable': true, 'locked_reason': null,
+            'rows': [
+              {'student_id': 'a', 'name': 'Aarav Patel', 'roll_no': 1, 'marks': null, 'absent': false},
+              {'student_id': 'b', 'name': 'Diya Shah', 'roll_no': 2, 'marks': null, 'absent': false},
+            ],
+          })))
+      ..on('PUT /exams/papers/p1/sections/s1', (req) {
+        sent = (req.data as Map).cast();
+        return (200, FakeApi.ok({}));
+      });
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container(fake, flavor: AppFlavor.staff),
+      child: const MaterialApp(home: MarksEntryScreen(paperId: 'p1', sectionId: 's1')),
+    ));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, '23');
+    await tester.pump();
+    expect(find.text('A1'), findsOneWidget); // 92%
+    await tester.tap(find.byType(Checkbox).last);
+    await tester.pump();
+    await tester.tap(find.text('Save marks'));
+    await tester.pumpAndSettle();
+    final entries = {for (final e in (sent!['entries'] as List).cast<Map>()) e['student_id']: e};
+    expect(entries['a']!['marks'], 23.0);
+    expect(entries['b']!['absent'], isTrue);
   });
 }

@@ -7,6 +7,7 @@ import { BrandMark, Wordmark } from "@/components/brand/logo";
 import { useCan, useSession } from "@/components/session-provider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { visibleGroups, type NavItem } from "@/config/navigation";
+import { useUnreadNotices } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 export function isActive(pathname: string, href: string) {
@@ -17,6 +18,8 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
   const pathname = usePathname();
   const active = isActive(pathname, item.href);
   const Icon = item.icon;
+  const unread = useUnreadNotices(item.badge === "notices");
+  const count = item.badge === "notices" ? unread.data ?? 0 : 0;
   const link = (
     <Link
       href={item.href}
@@ -31,9 +34,16 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
         collapsed && "justify-center px-0",
       )}
     >
-      <Icon className="size-[18px] shrink-0" aria-hidden />
+      <span className="relative">
+        <Icon className="size-[18px] shrink-0" aria-hidden />
+        {collapsed && count > 0 && <span className="absolute -top-1 -right-1 size-2 rounded-full bg-destructive" aria-hidden />}
+      </span>
       {!collapsed && <span className="truncate">{item.label}</span>}
+      {!collapsed && count > 0 && (
+        <span className="ml-auto rounded-full bg-destructive px-1.5 text-[11px] leading-5 font-bold text-white tabular">{count > 99 ? "99+" : count}</span>
+      )}
       {collapsed && <span className="sr-only">{item.label}</span>}
+      {count > 0 && <span className="sr-only">, {count} unread</span>}
     </Link>
   );
   if (!collapsed) return link;
