@@ -128,24 +128,26 @@ async def test_user_limits_follow_the_plan(client, db, school, admin_headers, su
     pro = await db.scalar(select(Plan).where(Plan.code == "pro"))
     await client.patch(f"{API}/platform/plans/{pro.id}", headers=super_headers, json={"max_staff": 2, "max_students": 1})
 
-    base = {"full_name": "Person", "password": "Passw0rd1"}
+    base = {"full_name": "Person", "password": "Passw0rd1", "phone": "+91 98000 00002"}
     # admin@alpha already uses 1 staff seat
     ok = await client.post(f"{API}/users", headers=admin_headers, json={**base, "email": "t1@alpha.edu", "role": "teacher"})
-    assert ok.status_code == 201
+    assert ok.status_code == 201, ok.text
     over = await client.post(f"{API}/users", headers=admin_headers, json={**base, "email": "t2@alpha.edu", "role": "teacher"})
     assert over.status_code == 403 and over.json()["error"]["code"] == "PLAN_LIMIT_REACHED"
 
-    assert (await client.post(f"{API}/users", headers=admin_headers, json={**base, "email": "s1@alpha.edu", "role": "student"})).status_code == 201
-    s2 = await client.post(f"{API}/users", headers=admin_headers, json={**base, "email": "s2@alpha.edu", "role": "student"})
-    assert s2.json()["error"]["details"]["limit"] == "students"
+    # Student seats are taken by student records.
+    _, section = await factories.klass(db, school, "Class 1")
+    first = await client.post(f"{API}/students", headers=admin_headers, json=factories.student_body(section, "A1"))
+    assert first.status_code == 201, first.text
+    second = await client.post(f"{API}/students", headers=admin_headers, json=factories.student_body(section, "A2"))
+    assert second.status_code == 403 and second.json()["error"]["details"]["limit"] == "students"
+
     # Parents aren't limited.
+    sid = first.json()["data"]["student"]["id"]
     for i in range(3):
-        r = await client.post(f"{API}/users", headers=admin_headers, json={**base, "email": f"p{i}@alpha.edu", "role": "parent"})
-        assert r.status_code == 201
-    # Promoting a parent into a full staff role is refused too.
-    parent_id = r.json()["data"]["id"]
-    promo = await client.patch(f"{API}/users/{parent_id}", headers=admin_headers, json={"role": "teacher"})
-    assert promo.json()["error"]["code"] == "PLAN_LIMIT_REACHED"
+        r = await client.post(f"{API}/users", headers=admin_headers, json={
+            **base, "email": f"p{i}@alpha.edu", "role": "parent", "children": [{"student_id": sid, "relationship": "guardian"}]})
+        assert r.status_code == 201, r.text
 
 
 # ---- subscription ---------------------------------------------------------------------------

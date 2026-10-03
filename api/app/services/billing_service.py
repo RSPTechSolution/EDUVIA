@@ -19,7 +19,7 @@ from app.core.database import elevated, set_tenant
 from app.core.errors import BadRequest, Conflict, Forbidden, NotFound
 from app.core.permissions import MODULES, STAFF_ROLES, Role
 from app.core.security import hash_password
-from app.models import Lead, Plan, School, SchoolModule, User
+from app.models import Lead, Plan, School, SchoolModule, Student, User
 from app.services import audit_service
 
 STAFF_ROLE_VALUES = {r.value for r in STAFF_ROLES}
@@ -81,15 +81,16 @@ def custom_plan_from_quote(q: pricing.Quote, label: str) -> Plan:
 # ---- usage and limits -----------------------------------------------------------------
 
 async def usage(db: AsyncSession, school_id: uuid.UUID) -> dict[str, int]:
-    # Counted from user accounts for now; the students module (next phase) will count student records.
     rows = (await db.execute(
         select(User.role, func.count()).where(
             User.school_id == school_id, User.is_active.is_(True), User.deleted_at.is_(None)
         ).group_by(User.role)
     )).all()
     by_role = {r: n for r, n in rows}
+    students = await db.scalar(select(func.count()).select_from(Student).where(
+        Student.school_id == school_id, Student.status == "active")) or 0
     return {
-        "students": by_role.get(Role.STUDENT, 0),
+        "students": students,
         "staff": sum(n for r, n in by_role.items() if r in STAFF_ROLE_VALUES),
     }
 
@@ -98,11 +99,7 @@ async def check_capacity(db: AsyncSession, school: School, role: str) -> None:
     """Refuse adding one more active user of `role` beyond the plan limit."""
     used = await usage(db, school.id)
     plan = school.plan
-    if role == Role.STUDENT and plan.max_students is not None and used["students"] >= plan.max_students:
-        raise Forbidden(
-            f"Your {plan.name} plan allows {plan.max_students} students. Upgrade to add more.",
-            code="PLAN_LIMIT_REACHED", details={"limit": "students", "max": plan.max_students},
-        )
+    # Student seats are taken by student records (student_service), not by logins.
     if role in STAFF_ROLE_VALUES and plan.max_staff is not None and used["staff"] >= plan.max_staff:
         raise Forbidden(
             f"Your {plan.name} plan allows {plan.max_staff} staff accounts. Upgrade to add more.",

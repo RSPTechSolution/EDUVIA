@@ -1,7 +1,7 @@
 from tests import factories
 from tests.factories import API, PASSWORD
 
-NEW = {"email": "New.Teacher@alpha.edu", "full_name": "New Teacher", "role": "teacher", "password": "Teach1234"}
+NEW = {"email": "New.Teacher@alpha.edu", "full_name": "New Teacher", "role": "teacher", "password": "Teach1234", "phone": "+91 98000 00001"}
 
 
 async def test_user_crud(client, admin_headers):

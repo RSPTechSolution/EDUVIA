@@ -10,7 +10,8 @@ from app.core.database import engine
 from app.core.errors import install_error_handlers
 from app.core.permissions import MODULES
 from app.core.redis import close_redis, get_redis
-from app.routers import auth, billing, dashboard, platform, public, schools, users
+from app.core import roles
+from app.routers import academics, auth, billing, dashboard, platform, public, schools, users
 from app.schemas.common import ok
 
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -45,6 +46,8 @@ API = "/api/v1"
 app.include_router(auth.router, prefix=f"{API}/auth", tags=["Auth"])
 app.include_router(schools.router, prefix=f"{API}/schools", tags=["Schools"])
 app.include_router(users.router, prefix=f"{API}/users", tags=["Users"])
+app.include_router(academics.classes, prefix=f"{API}/classes", tags=["Classes"])
+app.include_router(academics.students, prefix=f"{API}/students", tags=["Students"])
 app.include_router(billing.router, prefix=f"{API}/subscription", tags=["Subscription"])
 app.include_router(dashboard.router, prefix=f"{API}/dashboard", tags=["Dashboard"])
 app.include_router(platform.router, prefix=f"{API}/platform", tags=["Platform"])
@@ -71,3 +74,14 @@ async def health():
 @app.get(f"{API}/meta/modules", tags=["Meta"])
 async def module_registry():
     return ok([{"module": k, "label": v["label"], "default": v["default"]} for k, v in MODULES.items()])
+
+
+@app.get(f"{API}/meta/roles", tags=["Meta"])
+async def role_rules():
+    """What each role must and may provide; the web forms are built from this."""
+    return ok({
+        "roles": {r: {"required": v["required"], "optional": v["optional"]} for r, v in roles.ROLE_RULES.items()},
+        "labels": roles.FIELD_LABELS,
+        "relationships": roles.RELATIONSHIPS,
+        "linked_roles": sorted(roles.LINKED_ROLES),
+    })

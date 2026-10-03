@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from app.core.permissions import MODULES
 from app.core.security import hash_password
-from app.models import Plan, School, SchoolModule, User
+from app.models import Plan, SchoolClass, School, SchoolModule, Section, User
 
 PASSWORD = "Passw0rd!x"
 API = "/api/v1"
@@ -38,3 +38,21 @@ async def login_headers(client: AsyncClient, email: str, password: str, slug: st
     res = await login(client, email, password, slug)
     assert res.status_code == 200, res.text
     return {"Authorization": f"Bearer {res.json()['data']['tokens']['access_token']}"}
+
+
+async def klass(db, school: School, name: str, sections: tuple[str, ...] = ("A",), capacity: int | None = None):
+    c = SchoolClass(school_id=school.id, name=name, sort_order=1)
+    db.add(c)
+    await db.flush()
+    secs = [Section(school_id=school.id, class_id=c.id, name=n, capacity=capacity) for n in sections]
+    db.add_all(secs)
+    await db.commit()
+    return c, secs[0]
+
+
+def student_body(section: Section, admission_no: str, **extra) -> dict:
+    return {
+        "first_name": "Riya", "last_name": "Sharma", "gender": "female", "date_of_birth": "2016-04-12",
+        "admission_no": admission_no, "admission_date": "2024-04-01",
+        "class_id": str(section.class_id), "section_id": str(section.id), **extra,
+    }
