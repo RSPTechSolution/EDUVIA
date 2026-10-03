@@ -1,5 +1,6 @@
-import { CalendarCheck, GraduationCap, ShieldCheck, Wallet } from "lucide-react";
+import { Bus, CalendarCheck, GraduationCap, ShieldCheck, Wallet } from "lucide-react";
 import { BrandMark, FullLogo, Wordmark } from "@/components/brand/logo";
+import { OrbitGraphic } from "@/components/illustrations";
 
 const POINTS = [
   { icon: GraduationCap, text: "Students, classes and timetables in one place" },
@@ -15,19 +16,25 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         aria-hidden
         className="relative hidden overflow-hidden bg-sidebar p-12 text-sidebar-foreground lg:flex lg:flex-col lg:justify-between"
       >
-        <div className="pointer-events-none absolute -top-40 -right-40 size-[520px] rounded-full bg-[radial-gradient(circle,oklch(0.6_0.17_250/0.35),transparent_65%)]" />
-        <div className="pointer-events-none absolute -bottom-48 -left-32 size-[480px] rounded-full bg-[radial-gradient(circle,oklch(0.75_0.16_150/0.22),transparent_65%)]" />
+        <div className="grid-fade pointer-events-none absolute inset-0 text-white" />
+        <div className="blob -top-40 -right-40 size-[520px] bg-[radial-gradient(circle,oklch(0.6_0.17_250/0.45),transparent_65%)]" />
+        <div className="blob blob-delay -bottom-48 -left-32 size-[480px] bg-[radial-gradient(circle,oklch(0.75_0.16_150/0.3),transparent_65%)]" />
+        <div className="blob top-1/3 left-1/2 size-[360px] bg-[radial-gradient(circle,oklch(0.65_0.15_300/0.25),transparent_65%)]" />
         <div className="relative flex items-center gap-3">
           <BrandMark size={44} />
           <Wordmark tagline className="text-sidebar-foreground [&_span:first-child]:text-2xl" />
         </div>
         <div className="relative max-w-md">
+          <OrbitGraphic
+            className="mb-10 w-56 xl:w-64 [&_.border-primary\/15]:border-white/15 [&_.border-primary\/25]:border-white/25"
+            icons={[<GraduationCap key="a" className="size-5" />, <CalendarCheck key="b" className="size-5" />, <Wallet key="c" className="size-5" />, <ShieldCheck key="d" className="size-5" />, <Bus key="e" className="size-5" />]}
+          />
           <h2 className="text-3xl leading-tight font-bold text-white">
             Run your whole school from one calm, reliable workspace.
           </h2>
           <ul className="mt-8 space-y-4">
-            {POINTS.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3 text-sidebar-foreground/90">
+            {POINTS.map(({ icon: Icon, text }, i) => (
+              <li key={text} className="flex items-center gap-3 text-sidebar-foreground/90 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-3 [animation-fill-mode:both]" style={{ animationDelay: `${200 + i * 120}ms`, animationDuration: "600ms" }}>
                 <span className="flex size-9 items-center justify-center rounded-lg bg-white/10">
                   <Icon className="size-[18px]" />
                 </span>

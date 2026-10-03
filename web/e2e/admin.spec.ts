@@ -11,6 +11,7 @@ test("admin creates a user who must then set their own password", async ({ page,
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Full name").fill(name);
   await dialog.getByLabel("Email").fill(email);
+  await dialog.getByLabel("Phone").fill("+91 98765 43210");
   const tempPassword = await dialog.getByLabel("Temporary password").inputValue();
   await dialog.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByText(`Account created for ${name}`)).toBeVisible();
@@ -43,6 +44,7 @@ test("duplicate email is reported on the field", async ({ page }) => {
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Full name").fill("Duplicate Person");
   await dialog.getByLabel("Email").fill(DEMO.teacher);
+  await dialog.getByLabel("Phone").fill("+91 98765 43210");
   await dialog.getByRole("button", { name: "Create account" }).click();
   await expect(dialog.getByText("A user with this email already exists")).toBeVisible();
 });

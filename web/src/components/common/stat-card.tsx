@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { AnimatedNumber } from "@/components/motion/primitives";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -27,8 +28,8 @@ export function StatCard({
   const body = (
     <div
       className={cn(
-        "flex h-full items-start justify-between gap-4 rounded-xl border bg-card p-5 shadow-xs transition",
-        href && "hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm",
+        "flex h-full items-start justify-between gap-4 rounded-xl border bg-card p-5 shadow-xs",
+        href && "card-lift",
       )}
     >
       <div className="min-w-0 space-y-1">
@@ -36,17 +37,19 @@ export function StatCard({
         {loading ? (
           <Skeleton className="h-8 w-24" />
         ) : (
-          <p className="font-heading text-2xl font-bold tabular text-foreground">{value}</p>
+          <p className="font-heading text-2xl font-bold tabular text-foreground">
+            {typeof value === "number" ? <AnimatedNumber value={value} /> : value}
+          </p>
         )}
         {hint && !loading && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
-      <div className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", ACCENTS[accent])}>
+      <div className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6", ACCENTS[accent])}>
         <Icon className="size-5" aria-hidden />
       </div>
     </div>
   );
   return href ? (
-    <Link href={href} className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <Link href={href} className="group block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring">
       {body}
     </Link>
   ) : (

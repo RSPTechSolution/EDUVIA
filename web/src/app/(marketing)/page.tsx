@@ -5,6 +5,7 @@ import {
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { OrbitGraphic } from "@/components/illustrations";
 import { Faq, GlowBackdrop, PRICING_FAQ, Section, SectionHeading } from "@/components/marketing/section";
 import { buttonVariants } from "@/components/ui/button";
 import { getPlans } from "@/lib/api/public";
@@ -69,6 +70,18 @@ const STEPS = [
   { icon: Smartphone, title: "Go live", text: "Staff sign in on the web, parents and drivers install the app." },
 ];
 
+function HeroChip({ className, icon, tint, title, value }: { className: string; icon: React.ReactNode; tint: string; title: string; value: string }) {
+  return (
+    <div aria-hidden className={cn("absolute z-10 hidden items-center gap-3 rounded-2xl border bg-card/90 px-4 py-3 shadow-xl backdrop-blur md:flex", className)}>
+      <span className={cn("flex size-9 items-center justify-center rounded-xl", tint)}>{icon}</span>
+      <span className="text-left">
+        <span className="block text-sm font-semibold">{title}</span>
+        <span className="block text-xs text-muted-foreground">{value}</span>
+      </span>
+    </div>
+  );
+}
+
 export default async function HomePage() {
   const plans = await getPlans().catch(() => []);
 
@@ -85,7 +98,7 @@ export default async function HomePage() {
             </Link>
             <h1 className="mt-6 font-heading text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-6xl">
               Run your whole school{" "}
-              <span className="bg-gradient-to-r from-primary via-[oklch(0.65_0.13_200)] to-[oklch(0.7_0.17_145)] bg-clip-text text-transparent">from one place</span>
+              <span className="shimmer-text bg-gradient-to-r from-primary via-[oklch(0.7_0.17_145)] to-primary bg-clip-text text-transparent">from one place</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-pretty text-muted-foreground sm:text-xl">
               Admissions, attendance, fees, exams, transport and parent communication — in one secure platform, with apps for parents, staff and drivers.
@@ -107,6 +120,9 @@ export default async function HomePage() {
 
           <div className="relative mx-auto mt-16 max-w-6xl">
             <div className="absolute -inset-x-6 -top-6 -bottom-10 -z-10 rounded-[2rem] bg-gradient-to-b from-primary/20 via-primary/5 to-transparent blur-2xl" aria-hidden />
+            <HeroChip className="float-chip -top-6 -left-4 xl:-left-14" icon={<CalendarCheck className="size-4" />} tint="bg-success/15 text-success" title="Attendance marked" value="Class 5-A · 38/40 present" />
+            <HeroChip className="float-chip float-chip-2 top-1/3 -right-4 xl:-right-16" icon={<Wallet className="size-4" />} tint="bg-primary/15 text-primary" title="Fee received" value="₹12,500 · Receipt sent" />
+            <HeroChip className="float-chip float-chip-3 -bottom-6 left-1/4" icon={<Bus className="size-4" />} tint="bg-warning/15 text-warning" title="Bus 4 is 5 min away" value="Parents notified" />
             <div className="overflow-hidden rounded-2xl border bg-card shadow-2xl ring-1 ring-black/5">
               <div className="flex h-9 items-center gap-1.5 border-b bg-muted/60 px-4" aria-hidden>
                 <span className="size-2.5 rounded-full bg-[#ff5f57]" /><span className="size-2.5 rounded-full bg-[#febc2e]" /><span className="size-2.5 rounded-full bg-[#28c840]" />
@@ -174,7 +190,8 @@ export default async function HomePage() {
             </ul>
           </div>
           <div className="relative mx-auto w-full max-w-sm">
-            <div className="absolute inset-0 -z-10 translate-y-6 scale-110 rounded-full bg-[radial-gradient(closest-side,oklch(0.75_0.14_200/0.35),transparent)]" aria-hidden />
+            <OrbitGraphic className="absolute top-1/2 left-1/2 -z-10 w-[150%] max-w-none -translate-x-1/2 -translate-y-1/2"
+              icons={[<CalendarCheck key="a" />, <Wallet key="b" />, <Bus key="c" />, <MessageSquare key="d" />, <GraduationCap key="e" />, <BellRing key="f" />]} />
             <div className="overflow-hidden rounded-[2.5rem] border-8 border-foreground/90 bg-card shadow-2xl">
               <Image src="/marketing/app-parent.png" alt="The EDUVIA parent app home screen" width={412} height={860} className="block w-full" />
             </div>

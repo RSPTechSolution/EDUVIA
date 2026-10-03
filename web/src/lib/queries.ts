@@ -2,7 +2,9 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import type { AuditEntry, DashboardSummary, ModuleState, School, Subscription, User } from "@/lib/api/types";
+import type {
+  AuditEntry, ClassItem, DashboardSummary, ModuleState, RoleRules, School, Student, StudentDetail, StudentOption, Subscription, User, UserDetail,
+} from "@/lib/api/types";
 
 export const qk = {
   school: ["school", "current"] as const,
@@ -72,4 +74,45 @@ export function usePricingCatalog() {
     staleTime: 10 * 60_000,
     queryFn: async () => (await api<import("@/lib/api/types").PricingCatalog>("/public/pricing")).data,
   });
+}
+
+export function useClasses(enabled = true) {
+  return useQuery({ queryKey: ["classes"], enabled, queryFn: async () => (await api<ClassItem[]>("/classes")).data });
+}
+
+export interface StudentListParams {
+  page: number;
+  search?: string;
+  class_id?: string;
+  section_id?: string;
+  status?: string;
+}
+
+export function useStudents(params: StudentListParams) {
+  return useQuery({
+    queryKey: ["students", params],
+    placeholderData: keepPreviousData,
+    queryFn: () => api<Student[]>("/students", { query: { page_size: 25, ...params } }),
+  });
+}
+
+export function useStudent(id: string) {
+  return useQuery({ queryKey: ["student", id], queryFn: async () => (await api<StudentDetail>(`/students/${id}`)).data });
+}
+
+export function useStudentOptions(search: string, withoutLogin = false, enabled = true) {
+  return useQuery({
+    queryKey: ["students", "options", search, withoutLogin],
+    enabled,
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<StudentOption[]>("/students/options", { query: { search, without_login: withoutLogin } })).data,
+  });
+}
+
+export function useRoleRules() {
+  return useQuery({ queryKey: ["meta", "roles"], staleTime: Infinity, queryFn: async () => (await api<RoleRules>("/meta/roles")).data });
+}
+
+export function useUserDetail(id: string | null) {
+  return useQuery({ queryKey: ["user", id], enabled: Boolean(id), queryFn: async () => (await api<UserDetail>(`/users/${id}`)).data });
 }

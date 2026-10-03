@@ -9,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/common/stat-card";
+import { Stagger, StaggerItem } from "@/components/motion/primitives";
 import { UsageBar } from "@/components/common/usage-bar";
 import { RolesDonut, SigninsChart } from "@/components/dashboard/charts";
 import { useCan, useSession } from "@/components/session-provider";
@@ -26,7 +27,7 @@ import { cn } from "@/lib/utils";
 function Hero({ subtitle, children }: { subtitle: string; children?: React.ReactNode }) {
   const me = useSession();
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.3_0.08_264)] via-[oklch(0.4_0.14_258)] to-[oklch(0.5_0.13_220)] p-6 text-white shadow-lg sm:p-8 dark:from-[oklch(0.22_0.05_264)] dark:via-[oklch(0.3_0.1_258)] dark:to-[oklch(0.36_0.1_220)]">
+    <div className="aurora relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.3_0.08_264)] via-[oklch(0.4_0.14_258)] to-[oklch(0.5_0.13_220)] p-6 text-white shadow-lg sm:p-8 dark:from-[oklch(0.22_0.05_264)] dark:via-[oklch(0.3_0.1_258)] dark:to-[oklch(0.36_0.1_220)]">
       <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-[radial-gradient(closest-side,oklch(0.8_0.15_160/0.35),transparent)]" />
       <div aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 size-80 rounded-full bg-[radial-gradient(closest-side,oklch(0.75_0.14_230/0.3),transparent)]" />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -165,20 +166,28 @@ function SchoolDashboard() {
         </Link>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StaggerItem>
         <StatCard label="Active accounts" value={s?.active_users ?? 0} loading={summary.isLoading} icon={Users} hint="Staff, parents and students" href={can("users.view") ? "/settings/users" : undefined} />
+        </StaggerItem>
+        <StaggerItem>
         <StatCard label="Sign-ins" value={s?.signins_total ?? 0} loading={summary.isLoading} icon={Activity} accent="info" hint="Last 14 days" />
+        </StaggerItem>
+        <StaggerItem>
         <StatCard label="Modules on" value={s ? `${s.modules_enabled} / ${s.modules_in_plan}` : "—"} loading={summary.isLoading} icon={LayoutGrid} accent="success" hint={`Included in ${s?.plan.name ?? "your"} plan`} href={can("modules.manage") ? "/settings/modules" : undefined} />
+        </StaggerItem>
+        <StaggerItem>
         <StatCard
-          label="Staff seats"
-          value={s ? (s.staff.limit === null ? `${s.staff.used}` : `${s.staff.used} / ${s.staff.limit}`) : "—"}
-          loading={summary.isLoading}
-          icon={CreditCard}
-          accent={s && s.staff.limit !== null && s.staff.used / s.staff.limit >= 0.8 ? "warning" : "primary"}
-          hint={s?.staff.limit === null ? "Unlimited on your plan" : "Used of your plan's limit"}
-          href={can("billing.view") ? "/settings/billing" : undefined}
-        />
-      </div>
+            label="Staff seats"
+            value={s ? (s.staff.limit === null ? `${s.staff.used}` : `${s.staff.used} / ${s.staff.limit}`) : "—"}
+            loading={summary.isLoading}
+            icon={CreditCard}
+            accent={s && s.staff.limit !== null && s.staff.used / s.staff.limit >= 0.8 ? "warning" : "primary"}
+            hint={s?.staff.limit === null ? "Unlimited on your plan" : "Used of your plan's limit"}
+            href={can("billing.view") ? "/settings/billing" : undefined}
+          />
+        </StaggerItem>
+      </Stagger>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">

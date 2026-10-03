@@ -1,5 +1,5 @@
 import {
-  Building2, CreditCard, Inbox, KeyRound, LayoutDashboard, Layers, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Building2, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -32,6 +32,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Schools", href: "/platform/schools", icon: Building2, superAdminOnly: true, keywords: ["tenants", "provision"] },
       { label: "Plans", href: "/platform/plans", icon: Layers, superAdminOnly: true, keywords: ["pricing", "subscription"] },
       { label: "Leads", href: "/platform/leads", icon: Inbox, superAdminOnly: true, keywords: ["enquiries", "contact", "upgrade requests"] },
+    ],
+  },
+  {
+    label: "Academics",
+    items: [
+      { label: "Students", href: "/students", icon: GraduationCap, module: "students", permission: "students.view", keywords: ["admission", "pupils", "children"] },
+      { label: "Classes & sections", href: "/academics/classes", icon: School, module: "students", permission: "students.view", keywords: ["grades", "sections", "class teacher"] },
     ],
   },
   {

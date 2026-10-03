@@ -88,6 +88,9 @@ export interface User {
   full_name: string;
   phone: string | null;
   role: string;
+  employee_id: string | null;
+  designation: string | null;
+  license_no: string | null;
   is_active: boolean;
   must_change_password: boolean;
   last_login_at: string | null;
@@ -191,4 +194,87 @@ export interface DashboardSummary {
   staff: { used: number; limit: number | null };
   modules_enabled: number;
   modules_in_plan: number;
+}
+
+export interface SectionItem {
+  id: string;
+  class_id: string;
+  name: string;
+  capacity: number | null;
+  class_teacher_id: string | null;
+  class_teacher_name: string | null;
+  student_count: number;
+}
+
+export interface ClassItem {
+  id: string;
+  name: string;
+  sort_order: number;
+  sections: SectionItem[];
+  student_count: number;
+}
+
+export interface Guardian {
+  user_id: string;
+  full_name: string;
+  phone: string | null;
+  email: string;
+  relationship: string;
+  is_primary: boolean;
+}
+
+export interface Student {
+  id: string;
+  admission_no: string;
+  first_name: string;
+  last_name: string;
+  gender: "male" | "female" | "other";
+  date_of_birth: string;
+  admission_date: string;
+  class_id: string;
+  section_id: string;
+  class_name: string | null;
+  section_name: string | null;
+  roll_no: number | null;
+  blood_group: string | null;
+  address: string | null;
+  status: "active" | "inactive" | "alumni";
+  user_id: string | null;
+  guardian_count: number;
+  created_at: string;
+}
+
+export interface StudentDetail extends Student {
+  guardians: Guardian[];
+  login_email: string | null;
+}
+
+export interface StudentOption {
+  id: string;
+  name: string;
+  admission_no: string;
+  class_section: string;
+  has_login: boolean;
+}
+
+export interface RoleRules {
+  roles: Record<string, { required: string[]; optional: string[] }>;
+  labels: Record<string, string>;
+  relationships: string[];
+  linked_roles: string[];
+}
+
+export interface UserDetail {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string | null;
+  role: string;
+  employee_id: string | null;
+  designation: string | null;
+  license_no: string | null;
+  is_active: boolean;
+  children: { student_id: string; name: string; class_section: string; relationship: string }[];
+  student_id: string | null;
+  student_name: string | null;
 }

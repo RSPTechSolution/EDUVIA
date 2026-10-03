@@ -95,6 +95,13 @@ test("login and dashboard have no serious accessibility violations", async ({ pa
 
   await loginAsAdmin(page);
   await expect(page.getByText("Set up your school")).toBeVisible();
+  // Let entrance animations settle; axe measures contrast on half-faded elements otherwise.
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll(".card-lift")].every((el) => {
+      for (let n: Element | null = el; n; n = n.parentElement) if (getComputedStyle(n).opacity !== "1") return false;
+      return true;
+    }),
+  );
   const dash = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(dash.violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""))).toEqual([]);
 });
