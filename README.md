@@ -149,14 +149,36 @@ The parent app accepts parent/student accounts, the staff app accepts staff role
 | Login says "Too many login attempts" | Wait 15 minutes, or clear Redis: `docker exec eduvia_redis redis-cli flushdb`. |
 | Flutter web can't reach the API | Its port must be listed in `CORS_ORIGINS` in `api/.env`; restart the API after changing it. |
 
-### Demo accounts (created by `python -m app.seed`)
+### Demo data and accounts (created by `python -m app.seed`)
 
-| Who | School ID | Email | Password |
-|---|---|---|---|
-| Platform admin | *(blank)* | superadmin@eduvia.com | Admin@1234 |
-| School admin | demo | admin@demo.com | Demo@1234 |
-| Principal / teacher / accountant / receptionist | demo | principal@ · teacher@ · accounts@ · reception@demo.com | Demo@1234 |
-| Parent / student / driver | demo | parent@ · student@ · driver@demo.com | Demo@1234 |
+The seed builds **Green Valley Public School** (school ID `demo`, Max plan, every module on):
+Nursery to Class 12 (Classes 11–12 have Science and Commerce sections), ~200 students with
+roll numbers and blood groups, ~160 parent accounts (some families have two children), 38 teachers
+with subjects, a bell schedule and a complete, clash-free Monday–Saturday timetable.
+A few lessons are deliberately left without a teacher so you can try **Timetable → Free teachers**.
+
+Run `python -m app.seed --reset` at any time to wipe the demo school and rebuild it (handy after
+running the e2e tests, which add records). The data is the same on every machine.
+
+Every school account uses the password **Demo@1234** and school ID **demo**.
+
+| Role | Email | What to try |
+|---|---|---|
+| Platform admin | superadmin@eduvia.com (password `Admin@1234`, school ID blank) | Schools, plans, leads |
+| School admin | admin@demo.com | Everything: students, classes, timetable editing, users, billing |
+| Principal | principal@demo.com | Students, classes, timetable editing; can view users and billing but not change school settings, users or billing |
+| Teacher | teacher@demo.com (Priya Verma, Maths, class teacher of Class 5 A) | Today's classes on the dashboard, My timetable, read-only timetables |
+| Other teachers | e.g. amit.saxena@demo.com, anjali.mehta@demo.com, arijit.sen@demo.com (part-time, off Saturdays) | Each sees their own week |
+| Accountant | accounts@demo.com | Students (view), billing (view) |
+| Receptionist | reception@demo.com | Add and edit students, view timetables |
+| Librarian / HR / transport / security / office staff | librarian@ · hr@ · transport@ · security@ · staff@demo.com | Basic access (their modules come in later phases) |
+| Driver | driver@ · driver2@ · driver3@demo.com | Basic access |
+| Parent | parent@demo.com (Suresh Patel) and mother@demo.com (Kavita Patel) | Aarav (Class 5 A) and Diya (Class 1 A): dashboard and children's timetable |
+| Other parents | e.g. ajay.sandhu@demo.com (Class 11 and Class 2), archana.gupta@demo.com (Class 7 and UKG) | Parents with two children |
+| Student | student@demo.com (Aarav Patel) | Own timetable |
+| Senior students | e.g. yash.kohli@students.demo.com (Class 12 Science), aditya.chopra@students.demo.com (Class 12 Commerce) | Own timetable |
+
+Every user is listed under **Settings → Users & roles** when signed in as the admin.
 
 ## Tests
 

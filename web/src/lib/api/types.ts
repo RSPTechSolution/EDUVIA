@@ -278,3 +278,66 @@ export interface UserDetail {
   student_id: string | null;
   student_name: string | null;
 }
+
+// ---- timetable -------------------------------------------------------------------------------
+
+export interface Subject {
+  id: string;
+  name: string;
+  code: string | null;
+  color: string;
+  teacher_count: number;
+  periods_per_week: number;
+}
+
+export interface Period {
+  id: string;
+  name: string;
+  start_time: string; // "08:00:00"
+  end_time: string;
+  sort_order: number;
+  is_break: boolean;
+}
+
+export interface TimetableEntry {
+  id: string;
+  day: number; // 1 = Monday .. 6 = Saturday
+  period_id: string;
+  section_id: string;
+  section_label: string;
+  subject_id: string;
+  subject_name: string;
+  subject_color: string;
+  teacher_id: string | null;
+  teacher_name: string | null;
+  room: string | null;
+}
+
+export interface TimetableView {
+  title: string;
+  subtitle: string | null;
+  kind: "section" | "teacher";
+  owner_id: string;
+  periods: Period[];
+  entries: TimetableEntry[];
+}
+
+export interface TeacherInfo {
+  id: string;
+  full_name: string;
+  designation: string | null;
+  employee_id: string | null;
+  subject_ids: string[];
+  periods_per_week: number;
+  unavailable: { day: number; period_id: string }[];
+}
+
+export interface AvailableTeacher {
+  id: string;
+  full_name: string;
+  status: "free" | "busy" | "unavailable" | "current";
+  busy_with: string | null;
+  qualified: boolean;
+  periods_per_week: number;
+  periods_that_day: number;
+}

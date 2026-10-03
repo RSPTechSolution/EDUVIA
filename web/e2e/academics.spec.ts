@@ -70,9 +70,9 @@ test("staff need a phone, parents need at least one child", async ({ page }) => 
   await dialog.getByRole("button", { name: "Create account" }).click();
   await expect(dialog.getByText(/Link at least one child/)).toBeVisible();
 
-  await dialog.getByLabel("Search students").fill("GV2024014");
-  await dialog.getByRole("button", { name: /Ishaan Iyer/ }).first().click();
-  await expect(dialog.getByLabel(/Relationship to Ishaan/)).toBeVisible();
+  await dialog.getByLabel("Search students").fill("GV20160125");
+  await dialog.getByRole("button", { name: /Sanya Oberoi/ }).first().click();
+  await expect(dialog.getByLabel(/Relationship to Sanya/)).toBeVisible();
   await dialog.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByText(`Account created for ${name}`)).toBeVisible();
 });

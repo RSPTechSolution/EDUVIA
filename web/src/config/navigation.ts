@@ -1,5 +1,5 @@
 import {
-  Building2, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Building2, CalendarDays, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -11,6 +11,8 @@ export interface NavItem {
   module?: string;
   /** Hidden unless the user holds this permission. */
   permission?: string;
+  /** Only shown to these roles. */
+  roles?: string[];
   superAdminOnly?: boolean;
   keywords?: string[];
 }
@@ -39,6 +41,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Students", href: "/students", icon: GraduationCap, module: "students", permission: "students.view", keywords: ["admission", "pupils", "children"] },
       { label: "Classes & sections", href: "/academics/classes", icon: School, module: "students", permission: "students.view", keywords: ["grades", "sections", "class teacher"] },
+      { label: "Timetable", href: "/timetable", icon: CalendarRange, module: "academics", permission: "timetable.view", keywords: ["schedule", "periods", "free teacher", "substitute"] },
+      { label: "My timetable", href: "/my-timetable", icon: CalendarDays, module: "academics", roles: ["teacher", "principal", "parent", "student"], keywords: ["schedule", "today", "classes"] },
     ],
   },
   {
@@ -65,6 +69,7 @@ export function canSee(item: NavItem, me: Me) {
   if (isSuper) return !item.module && !item.permission; // super admin has no school context
   if (item.module && !me.modules.includes(item.module)) return false;
   if (item.permission && !me.permissions.includes(item.permission)) return false;
+  if (item.roles && !item.roles.includes(me.role)) return false;
   return true;
 }
 

@@ -3,7 +3,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AuditEntry, ClassItem, DashboardSummary, ModuleState, RoleRules, School, Student, StudentDetail, StudentOption, Subscription, User, UserDetail,
+  AuditEntry, AvailableTeacher, ClassItem, DashboardSummary, ModuleState, Period, RoleRules, School, Student, StudentDetail, StudentOption, Subject,
+  Subscription, TeacherInfo, TimetableView, User, UserDetail,
 } from "@/lib/api/types";
 
 export const qk = {
@@ -115,4 +116,49 @@ export function useRoleRules() {
 
 export function useUserDetail(id: string | null) {
   return useQuery({ queryKey: ["user", id], enabled: Boolean(id), queryFn: async () => (await api<UserDetail>(`/users/${id}`)).data });
+}
+
+// ---- timetable -------------------------------------------------------------------------------
+
+export function useSubjects(enabled = true) {
+  return useQuery({ queryKey: ["timetable", "subjects"], enabled, queryFn: async () => (await api<Subject[]>("/timetable/subjects")).data });
+}
+
+export function usePeriods() {
+  return useQuery({ queryKey: ["timetable", "periods"], queryFn: async () => (await api<Period[]>("/timetable/periods")).data });
+}
+
+export function useTimetableTeachers(enabled = true) {
+  return useQuery({ queryKey: ["timetable", "teachers"], enabled, queryFn: async () => (await api<TeacherInfo[]>("/timetable/teachers")).data });
+}
+
+export function useSectionTimetable(sectionId: string | null) {
+  return useQuery({
+    queryKey: ["timetable", "section", sectionId],
+    enabled: Boolean(sectionId),
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<TimetableView>(`/timetable/sections/${sectionId}`)).data,
+  });
+}
+
+export function useTeacherTimetable(teacherId: string | null) {
+  return useQuery({
+    queryKey: ["timetable", "teacher", teacherId],
+    enabled: Boolean(teacherId),
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<TimetableView>(`/timetable/teachers/${teacherId}`)).data,
+  });
+}
+
+export function useMyTimetables(enabled = true) {
+  return useQuery({ queryKey: ["timetable", "my"], enabled, queryFn: async () => (await api<TimetableView[]>("/timetable/my")).data });
+}
+
+export function useAvailableTeachers(params: { day: number; period_id: string; subject_id?: string; section_id?: string } | null) {
+  return useQuery({
+    queryKey: ["timetable", "available", params],
+    enabled: Boolean(params),
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<AvailableTeacher[]>("/timetable/available-teachers", { query: params! })).data,
+  });
 }

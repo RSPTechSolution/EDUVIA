@@ -34,7 +34,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange} title="Search EDUVIA" description="Jump to a page or run an action">
-      <Command>
+      <Command filter={matchScore}>
       <CommandInput placeholder="Search pages and actions…" />
       <CommandList>
         <CommandEmpty>No matches.</CommandEmpty>
@@ -65,6 +65,21 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       </Command>
     </CommandDialog>
   );
+}
+
+/** Every typed word must appear in the item; earlier and word-start matches rank higher. */
+function matchScore(value: string, search: string) {
+  const text = value.toLowerCase();
+  const words = search.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return 1;
+  let score = 0;
+  for (const w of words) {
+    const at = text.indexOf(w);
+    if (at < 0) return 0;
+    const wordStart = at === 0 || text[at - 1] === " ";
+    score += (wordStart ? 1 : 0.5) * (at === 0 ? 1.5 : 1);
+  }
+  return score / words.length / 1.5;
 }
 
 export async function signOut() {

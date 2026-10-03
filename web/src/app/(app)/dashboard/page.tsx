@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Activity, ArrowRight, Building2, CalendarClock, CheckCircle2, Circle, Clock, CreditCard, Inbox, LayoutGrid, PartyPopper,
+  Activity, ArrowRight, Building2, CalendarClock, CalendarDays, CheckCircle2, Circle, Clock, CreditCard, Inbox, LayoutGrid, PartyPopper,
   Settings2, UserPlus, Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -12,16 +12,17 @@ import { StatCard } from "@/components/common/stat-card";
 import { Stagger, StaggerItem } from "@/components/motion/primitives";
 import { UsageBar } from "@/components/common/usage-bar";
 import { RolesDonut, SigninsChart } from "@/components/dashboard/charts";
+import { DAY_NAMES, TodayList, formatTime } from "@/components/timetable/grid";
 import { useCan, useSession } from "@/components/session-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api/client";
-import type { Lead } from "@/lib/api/types";
+import type { Lead, TimetableView } from "@/lib/api/types";
 import { describeAudit } from "@/lib/audit-labels";
 import { formatDateTime, greeting, roleLabel, timeAgo } from "@/lib/format";
 import { modulesReviewed } from "@/lib/local-flags";
-import { useAudit, useCurrentSchool, useDashboardSummary, useSchools, useUsers } from "@/lib/queries";
+import { useAudit, useCurrentSchool, useDashboardSummary, useMyTimetables, useSchools, useUsers } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 function Hero({ subtitle, children }: { subtitle: string; children?: React.ReactNode }) {
@@ -229,6 +230,82 @@ function SchoolDashboard() {
   );
 }
 
+const PERSONAL_ROLES = ["teacher", "parent", "student"];
+
+function nextLesson(view: TimetableView, day: number) {
+  const now = new Date();
+  const m = now.getHours() * 60 + now.getMinutes();
+  const mins = (t: string) => { const [h, mm] = t.split(":").map(Number); return h * 60 + mm; };
+  return view.periods
+    .filter((p) => !p.is_break && mins(p.end_time) > m)
+    .map((p) => ({ p, e: view.entries.find((e) => e.day === day && e.period_id === p.id) }))
+    .find((x) => x.e);
+}
+
+function PersonalDashboard() {
+  const me = useSession();
+  const views = useMyTimetables();
+  const [day, setDay] = useState(0);
+  useEffect(() => setDay(new Date().getDay()), []);
+  const teacher = me.role === "teacher";
+  const all = views.data ?? [];
+  const first = all[0];
+  const todayCount = all.reduce((n, v) => n + v.entries.filter((e) => e.day === day).length, 0);
+  const next = first ? nextLesson(first, day) : undefined;
+  const sections = new Set(first?.entries.map((e) => e.section_id)).size;
+  const subjects = new Set(first?.entries.map((e) => e.subject_id)).size;
+
+  return (
+    <div className="space-y-6">
+      <Hero subtitle={`${me.school?.name} · ${roleLabel(me.role)}`}>
+        <Link href="/my-timetable" className={heroButton}><CalendarDays className="size-4" aria-hidden />{me.role === "parent" ? "Children's timetable" : "My timetable"}</Link>
+        <Link href="/account" className={heroButton}><Settings2 className="size-4" aria-hidden />My account</Link>
+      </Hero>
+
+      <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StaggerItem>
+          <StatCard label={teacher ? "Lessons today" : "Periods today"} value={todayCount} loading={views.isLoading} icon={CalendarDays} href="/my-timetable" />
+        </StaggerItem>
+        <StaggerItem>
+          <StatCard label="Next up" value={next ? next.e!.subject_name : "Done for today"} loading={views.isLoading} icon={Clock} accent="info"
+            hint={next ? `${next.p.name} · ${formatTime(next.p.start_time)}${teacher ? ` · ${next.e!.section_label}` : next.e!.teacher_name ? ` · ${next.e!.teacher_name}` : ""}` : undefined} />
+        </StaggerItem>
+        <StaggerItem>
+          {teacher
+            ? <StatCard label="This week" value={first?.entries.length ?? 0} loading={views.isLoading} icon={Activity} accent="success" hint={`Across ${sections} sections`} />
+            : <StatCard label={me.role === "parent" ? "Children" : "Subjects"} value={me.role === "parent" ? all.length : subjects} loading={views.isLoading} icon={Users} accent="success" />}
+        </StaggerItem>
+        <StaggerItem>
+          {teacher
+            ? <StatCard label="Subjects taught" value={subjects} loading={views.isLoading} icon={LayoutGrid} accent="warning" />
+            : <StatCard label="Teachers" value={new Set(all.flatMap((v) => v.entries.map((e) => e.teacher_id).filter(Boolean))).size} loading={views.isLoading} icon={LayoutGrid} accent="warning" hint="Teaching your week" />}
+        </StaggerItem>
+      </Stagger>
+
+      {views.isLoading ? <Skeleton className="h-72 rounded-xl" /> : !all.length ? (
+        <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
+          {me.role === "parent" ? "No children are linked to your account yet. Please contact the school office." : "Nothing is scheduled for you yet."}
+        </CardContent></Card>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+          {all.map((v) => (
+            <Card key={v.owner_id + v.title}>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle>{teacher ? "Today's classes" : me.role === "parent" ? v.title : "Today"}</CardTitle>
+                  <CardDescription>{me.role === "parent" ? v.subtitle : day >= 1 && day <= 6 ? DAY_NAMES[day - 1] : "Sunday"}</CardDescription>
+                </div>
+                <Link href="/my-timetable" className="text-sm font-medium text-primary hover:underline">Week</Link>
+              </CardHeader>
+              <CardContent><TodayList view={v} day={day} /></CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PlatformDashboard() {
   const all = useSchools({ page: 1, page_size: 1 });
   const active = useSchools({ page: 1, page_size: 1, is_active: true });
@@ -274,5 +351,6 @@ function PlatformDashboard() {
 
 export default function DashboardPage() {
   const me = useSession();
-  return me.role === "super_admin" ? <PlatformDashboard /> : <SchoolDashboard />;
+  if (me.role === "super_admin") return <PlatformDashboard />;
+  return PERSONAL_ROLES.includes(me.role) ? <PersonalDashboard /> : <SchoolDashboard />;
 }

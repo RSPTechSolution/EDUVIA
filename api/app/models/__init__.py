@@ -4,6 +4,8 @@ from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.billing import Lead, Plan
 from app.models.school import School, SchoolModule
+from app.models.timetable import Period, Subject, TeacherSubject, TeacherUnavailability, TimetableEntry
 from app.models.user import PasswordResetToken, User, UserSession
 
-__all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan", "Lead", "School", "SchoolModule", "User", "UserSession", "PasswordResetToken", "AuditLog"]
+__all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan", "Lead", "School", "SchoolModule", "User", "UserSession", "PasswordResetToken", "AuditLog",
+           "Subject", "Period", "TeacherSubject", "TeacherUnavailability", "TimetableEntry"]
