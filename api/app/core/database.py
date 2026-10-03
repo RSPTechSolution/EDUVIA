@@ -8,6 +8,7 @@ current school -- even if a service forgets to filter by ``school_id``.
 """
 import uuid
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
 from sqlalchemy import event, text
@@ -62,6 +63,18 @@ async def set_tenant(session: AsyncSession, school_id: uuid.UUID | None, *, bypa
     session.info["tenant"] = ctx
     if session.in_transaction():
         await session.execute(_SET_CONTEXT, _context_params(ctx))
+
+
+@asynccontextmanager
+async def elevated(session: AsyncSession):
+    """Temporarily bypass RLS (for platform tables such as plans and leads), then
+    restore the request's own tenant context."""
+    previous: TenantContext = session.info.get("tenant") or TenantContext()
+    await set_tenant(session, previous.school_id, bypass=True)
+    try:
+        yield session
+    finally:
+        await set_tenant(session, previous.school_id, bypass=previous.bypass)
 
 
 async def get_db() -> AsyncIterator[AsyncSession]:

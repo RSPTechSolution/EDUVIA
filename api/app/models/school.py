@@ -1,10 +1,12 @@
 import uuid
+from datetime import datetime
 
-from sqlalchemy import Boolean, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TenantMixin, TimestampMixin, uuid_pk
+from app.models.billing import Plan
 
 
 class School(Base, TimestampMixin):
@@ -24,7 +26,13 @@ class School(Base, TimestampMixin):
     currency: Mapped[str] = mapped_column(String(10), default="INR")
     language: Mapped[str] = mapped_column(String(10), default="en")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    plan: Mapped[str] = mapped_column(String(50), default="basic")
+    # Subscription. The plan decides which modules can be enabled and the user limits.
+    plan_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("plans.id"), index=True)
+    plan: Mapped[Plan] = relationship(lazy="joined")
+    subscription_status: Mapped[str] = mapped_column(String(20), default="active")  # trialing | active | past_due | cancelled
+    billing_cycle: Mapped[str] = mapped_column(String(10), default="yearly")  # monthly | yearly
+    trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Non-secret preferences only. Credentials live in encrypted columns (later phases).
     settings: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
 

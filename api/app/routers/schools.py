@@ -58,7 +58,6 @@ async def get_school(school_id: uuid.UUID, db: DB, _: CurrentUser = require_supe
 @router.patch("/{school_id}", response_model=ApiResponse[SchoolOut])
 async def admin_update_school(school_id: uuid.UUID, body: SchoolAdminUpdate, db: DB,
                               current: CurrentUser = require_super_admin()):
-    school_service.ensure_valid_plan(body.plan)
     school = await school_service.get_school(db, school_id)
     return ok(SchoolOut.model_validate(await school_service.update_school(db, school, body, actor_id=current.id)))
 

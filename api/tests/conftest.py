@@ -21,7 +21,8 @@ from app.core.config import settings  # noqa: E402
 from app.core.database import make_engine, system_session  # noqa: E402
 from app.core.redis import get_redis  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Base  # noqa: E402
+from app.core.pricing import PRESET_PLANS  # noqa: E402
+from app.models import Base, Plan  # noqa: E402
 from tests import factories  # noqa: E402
 
 API = "/api/v1"
@@ -45,6 +46,10 @@ async def clean_state(migrated_db):
     tables = ", ".join(t.name for t in reversed(Base.metadata.sorted_tables))
     async with owner.begin() as conn:
         await conn.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
+        # Preset plans are reference data inserted by migration 0002: restore them.
+        await conn.execute(Plan.__table__.insert(), [
+            {**p, "is_public": True, "is_custom": False, "is_active": True} for p in PRESET_PLANS
+        ])
     await owner.dispose()
     await get_redis().flushdb()
 

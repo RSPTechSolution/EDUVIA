@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Loader2, MoreHorizontal, Plus, Power, PowerOff, Search, ToggleRight } from "lucide-react";
+import { Building2, CreditCard, Loader2, MoreHorizontal, Plus, Power, PowerOff, Search, ToggleRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { StatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -24,9 +25,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { ApiError, api } from "@/lib/api/client";
 import type { ModuleState, School } from "@/lib/api/types";
-import { formatDate } from "@/lib/format";
+import { formatDate, inr } from "@/lib/format";
 import { generatePassword, useDebounced } from "@/lib/hooks";
-import { qk, useSchools } from "@/lib/queries";
+import { qk, usePricingCatalog, useSchools } from "@/lib/queries";
 import { newPassword } from "@/lib/validation";
 
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50);
@@ -39,18 +40,126 @@ const schema = z.object({
   admin_full_name: z.string().trim().min(2, "Enter the admin's name"),
   admin_email: z.string().trim().email("Enter a valid email"),
   admin_password: newPassword,
+  plan_code: z.string().min(1),
 });
 type Values = z.infer<typeof schema>;
+
+const PLAN_NAMES: Record<string, string> = { basic: "Basic", pro: "Pro", max: "Max" };
+const STATUS_NAMES: Record<string, string> = { trialing: "Trial", active: "Active", past_due: "Payment due", cancelled: "Cancelled" };
+
+function ChangePlanDialog({ school, onClose }: { school: School | null; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const catalog = usePricingCatalog();
+  const [plan, setPlan] = useState("basic");
+  const [cycle, setCycle] = useState("yearly");
+  const [status, setStatus] = useState("active");
+  const [modules, setModules] = useState<string[]>([]);
+  const [students, setStudents] = useState("500");
+  useEffect(() => {
+    if (!school) return;
+    setPlan(school.plan.is_custom ? "custom" : school.plan.code);
+    setCycle(school.billing_cycle);
+    setStatus(school.subscription_status);
+  }, [school]);
+
+  const quote = useQuery({
+    queryKey: ["quote", modules, students],
+    enabled: plan === "custom" && Number(students) > 0,
+    queryFn: async () => (await api<{ monthly: number }>("/public/quote", { method: "POST", body: { modules, students: Number(students) } })).data,
+    retry: false,
+  });
+
+  const save = useMutation({
+    mutationFn: () => api<School>(`/platform/schools/${school!.id}/plan`, {
+      method: "PUT",
+      body: { plan_code: plan, billing_cycle: cycle, status, ...(plan === "custom" ? { custom_modules: modules, custom_students: Number(students) } : {}) },
+    }),
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: ["platform", "schools"] });
+      toast.success(`${data.name} is now on ${data.plan.name}`);
+      onClose();
+    },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : "Could not change the plan"),
+  });
+
+  return (
+    <Dialog open={Boolean(school)} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Change plan · {school?.name}</DialogTitle>
+          <DialogDescription>Modules outside the new plan are switched off; new ones are switched on.</DialogDescription>
+        </DialogHeader>
+        <div className="grid max-h-[60vh] gap-4 overflow-y-auto px-0.5 sm:grid-cols-3">
+          <Field label="Plan">
+            {(a) => (
+              <Select value={plan} onValueChange={(v) => setPlan(String(v))}>
+                <SelectTrigger id={a.id} className="w-full"><SelectValue>{PLAN_NAMES[plan] ?? "Custom"}</SelectValue></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PLAN_NAMES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </Field>
+          <Field label="Billing">
+            {(a) => (
+              <Select value={cycle} onValueChange={(v) => setCycle(String(v))}>
+                <SelectTrigger id={a.id} className="w-full"><SelectValue>{cycle === "yearly" ? "Yearly" : "Monthly"}</SelectValue></SelectTrigger>
+                <SelectContent><SelectItem value="yearly">Yearly</SelectItem><SelectItem value="monthly">Monthly</SelectItem></SelectContent>
+              </Select>
+            )}
+          </Field>
+          <Field label="Status">
+            {(a) => (
+              <Select value={status} onValueChange={(v) => setStatus(String(v))}>
+                <SelectTrigger id={a.id} className="w-full"><SelectValue>{STATUS_NAMES[status]}</SelectValue></SelectTrigger>
+                <SelectContent>{Object.entries(STATUS_NAMES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+              </Select>
+            )}
+          </Field>
+          {plan === "custom" && (
+            <>
+              <Field label="Students" className="sm:col-span-3">
+                {(a) => <Input {...a} inputMode="numeric" value={students} onChange={(e) => /^[0-9]*$/.test(e.target.value) && setStudents(e.target.value)} />}
+              </Field>
+              <fieldset className="sm:col-span-3">
+                <legend className="mb-2 text-sm font-medium">Modules</legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {catalog.data?.modules.map((m) => (
+                    <label key={m.module} className="flex items-center gap-2 text-sm">
+                      <Checkbox checked={m.core || modules.includes(m.module)} disabled={m.core}
+                        onCheckedChange={(c) => setModules((x) => (c ? [...x, m.module] : x.filter((y) => y !== m.module)))} />
+                      {m.label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <p className="text-sm sm:col-span-3">
+                Price: <span className="font-semibold">{quote.data ? `${inr(quote.data.monthly)}/month` : quote.isError ? (quote.error as Error).message : "…"}</span>
+              </p>
+            </>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={save.isPending}>Cancel</Button>
+          <Button onClick={() => save.mutate()} disabled={save.isPending || (plan === "custom" && !quote.data)}>
+            {save.isPending && <Loader2 className="animate-spin" aria-hidden />}Change plan
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function NewSchoolDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const queryClient = useQueryClient();
   const timezones = useMemo(() => Intl.supportedValuesOf("timeZone"), []);
   const { register, handleSubmit, control, reset, setValue, watch, setError, formState: { errors, dirtyFields } } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", slug: "", timezone: "Asia/Kolkata", currency: "INR", admin_full_name: "", admin_email: "", admin_password: "" },
+    defaultValues: { name: "", slug: "", timezone: "Asia/Kolkata", currency: "INR", admin_full_name: "", admin_email: "", admin_password: "", plan_code: "basic" },
   });
   useEffect(() => {
-    if (open) reset({ name: "", slug: "", timezone: "Asia/Kolkata", currency: "INR", admin_full_name: "", admin_email: "", admin_password: generatePassword() });
+    if (open) reset({ name: "", slug: "", timezone: "Asia/Kolkata", currency: "INR", admin_full_name: "", admin_email: "", admin_password: generatePassword(), plan_code: "basic" });
   }, [open, reset]);
 
   const name = watch("name");
@@ -98,6 +207,16 @@ function NewSchoolDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 <Select value={field.value} onValueChange={(v) => field.onChange(v)}>
                   <SelectTrigger id={a.id} className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent className="max-h-72">{timezones.map((tz) => <SelectItem key={tz} value={tz}>{tz.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                </Select>
+              )} />
+            )}
+          </Field>
+          <Field label="Plan" className="sm:col-span-2">
+            {(a) => (
+              <Controller control={control} name="plan_code" render={({ field }) => (
+                <Select value={field.value} onValueChange={(v) => field.onChange(v)}>
+                  <SelectTrigger id={a.id} className="w-full"><SelectValue>{PLAN_NAMES[field.value] ?? field.value}</SelectValue></SelectTrigger>
+                  <SelectContent>{Object.entries(PLAN_NAMES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
               )} />
             )}
@@ -169,6 +288,7 @@ function SchoolsPage() {
   const [creating, setCreating] = useState(false);
   const [modulesFor, setModulesFor] = useState<School | null>(null);
   const [suspend, setSuspend] = useState<School | null>(null);
+  const [planFor, setPlanFor] = useState<School | null>(null);
 
   const setActive = useMutation({
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) => api<School>(`/schools/${id}`, { method: "PATCH", body: { is_active } }),
@@ -192,7 +312,7 @@ function SchoolsPage() {
       ),
     },
     { id: "location", header: "Location", cell: ({ row: { original: s } }) => <span className="text-muted-foreground">{[s.city, s.state].filter(Boolean).join(", ") || "—"}</span> },
-    { id: "plan", header: "Plan", cell: ({ row }) => <span className="capitalize">{row.original.plan}</span> },
+    { id: "plan", header: "Plan", cell: ({ row }) => <span>{row.original.plan.name}{row.original.subscription_status === "trialing" && <span className="ml-1.5 text-xs text-muted-foreground">(trial)</span>}</span> },
     { id: "status", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.is_active ? "active" : "suspended"} /> },
     { id: "created", header: "Created", cell: ({ row }) => <span className="whitespace-nowrap text-muted-foreground">{formatDate(row.original.created_at)}</span> },
     {
@@ -203,6 +323,7 @@ function SchoolsPage() {
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label={`Actions for ${s.name}`} />}><MoreHorizontal aria-hidden /></DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => setPlanFor(s)}><CreditCard aria-hidden />Change plan</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setModulesFor(s)}><ToggleRight aria-hidden />Modules</DropdownMenuItem>
               {s.is_active ? (
                 <DropdownMenuItem variant="destructive" onClick={() => setSuspend(s)}><PowerOff aria-hidden />Suspend</DropdownMenuItem>
@@ -235,6 +356,7 @@ function SchoolsPage() {
       />
       <NewSchoolDialog open={creating} onOpenChange={setCreating} />
       <SchoolModulesSheet school={modulesFor} onClose={() => setModulesFor(null)} />
+      <ChangePlanDialog school={planFor} onClose={() => setPlanFor(null)} />
       <ConfirmDialog
         open={Boolean(suspend)}
         onOpenChange={(o) => !o && setSuspend(null)}

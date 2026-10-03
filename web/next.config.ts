@@ -16,6 +16,8 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // Lets a production build run next to `npm run dev` without sharing `.next`.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
   poweredByHeader: false,
   async headers() {

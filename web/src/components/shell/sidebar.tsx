@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { CreditCard, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { BrandMark, Wordmark } from "@/components/brand/logo";
-import { useSession } from "@/components/session-provider";
+import { useCan, useSession } from "@/components/session-provider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { visibleGroups, type NavItem } from "@/config/navigation";
 import { cn } from "@/lib/utils";
@@ -86,17 +86,38 @@ export function SidebarBrand({ collapsed = false }: { collapsed?: boolean }) {
   );
 }
 
+function PlanChip({ collapsed }: { collapsed: boolean }) {
+  const me = useSession();
+  const can = useCan();
+  if (!me.school || !can("billing.view") || collapsed) return null;
+  const trial = me.school.subscription_status === "trialing" && me.school.trial_ends_at;
+  const daysLeft = trial ? Math.max(0, Math.ceil((new Date(me.school.trial_ends_at!).getTime() - Date.now()) / 86_400_000)) : 0;
+  return (
+    <Link
+      href="/settings/billing"
+      className="mx-3 mb-3 flex items-center gap-3 rounded-xl bg-gradient-to-br from-white/10 to-white/[0.03] p-3 ring-1 ring-white/10 transition hover:ring-white/25 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+    >
+      <span className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><CreditCard className="size-4" aria-hidden /></span>
+      <span className="min-w-0 leading-tight">
+        <span className="block text-sm font-semibold text-sidebar-foreground">{me.school.plan.name} plan</span>
+        <span className="block text-xs text-sidebar-muted">{trial ? `Trial · ${daysLeft} days left` : "Manage plan"}</span>
+      </span>
+    </Link>
+  );
+}
+
 export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-dvh shrink-0 flex-col bg-sidebar transition-[width] duration-200 ease-out lg:flex",
+        "sticky top-0 hidden h-dvh shrink-0 flex-col bg-gradient-to-b from-sidebar via-sidebar to-[oklch(0.21_0.06_258)] transition-[width] duration-200 ease-out lg:flex dark:to-[oklch(0.12_0.03_258)]",
         collapsed ? "w-[72px]" : "w-64",
       )}
       aria-label="Sidebar"
     >
       <SidebarBrand collapsed={collapsed} />
       <SidebarNav collapsed={collapsed} />
+      <PlanChip collapsed={collapsed} />
       <div className="border-t border-sidebar-border p-3">
         <button
           type="button"

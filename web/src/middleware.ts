@@ -2,9 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ACCESS_COOKIE, REFRESH_COOKIE, clearAuthCookies, setAuthCookies } from "@/lib/auth/cookies";
 import { refreshTokens } from "@/lib/auth/refresh";
 
-const PUBLIC_PAGES = ["/login", "/forgot-password", "/reset-password"];
+// Marketing site and auth pages: reachable without a session.
+const PUBLIC_PAGES = [
+  "/", "/pricing", "/about", "/contact", "/privacy", "/terms", "/signup",
+  "/login", "/forgot-password", "/reset-password",
+];
 // API calls that are allowed without a session (forwarded through the proxy).
-const PUBLIC_API_PREFIXES = ["/api/proxy/auth/password-reset/"];
+const PUBLIC_API_PREFIXES = ["/api/proxy/auth/password-reset/", "/api/proxy/public/"];
 
 function unauthenticated(req: NextRequest) {
   const isApi = req.nextUrl.pathname.startsWith("/api/");
@@ -47,5 +51,5 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   runtime: "nodejs",
-  matcher: ["/((?!_next/static|_next/image|brand/|icon.png|apple-icon.png|favicon.ico|robots.txt|manifest.webmanifest).*)"],
+  matcher: ["/((?!_next/static|_next/image|brand/|marketing/|icon.png|apple-icon.png|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest).*)"],
 };

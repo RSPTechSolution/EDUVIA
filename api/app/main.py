@@ -10,7 +10,7 @@ from app.core.database import engine
 from app.core.errors import install_error_handlers
 from app.core.permissions import MODULES
 from app.core.redis import close_redis, get_redis
-from app.routers import auth, schools, users
+from app.routers import auth, billing, dashboard, platform, public, schools, users
 from app.schemas.common import ok
 
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -45,6 +45,10 @@ API = "/api/v1"
 app.include_router(auth.router, prefix=f"{API}/auth", tags=["Auth"])
 app.include_router(schools.router, prefix=f"{API}/schools", tags=["Schools"])
 app.include_router(users.router, prefix=f"{API}/users", tags=["Users"])
+app.include_router(billing.router, prefix=f"{API}/subscription", tags=["Subscription"])
+app.include_router(dashboard.router, prefix=f"{API}/dashboard", tags=["Dashboard"])
+app.include_router(platform.router, prefix=f"{API}/platform", tags=["Platform"])
+app.include_router(public.router, prefix=f"{API}/public", tags=["Public website"])
 
 
 @app.get(f"{API}/health", tags=["Meta"])

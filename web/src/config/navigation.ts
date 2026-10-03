@@ -1,5 +1,5 @@
 import {
-  Building2, KeyRound, LayoutDashboard, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Building2, CreditCard, Inbox, KeyRound, LayoutDashboard, Layers, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -28,13 +28,18 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Platform",
-    items: [{ label: "Schools", href: "/platform/schools", icon: Building2, superAdminOnly: true, keywords: ["tenants", "provision"] }],
+    items: [
+      { label: "Schools", href: "/platform/schools", icon: Building2, superAdminOnly: true, keywords: ["tenants", "provision"] },
+      { label: "Plans", href: "/platform/plans", icon: Layers, superAdminOnly: true, keywords: ["pricing", "subscription"] },
+      { label: "Leads", href: "/platform/leads", icon: Inbox, superAdminOnly: true, keywords: ["enquiries", "contact", "upgrade requests"] },
+    ],
   },
   {
     label: "Administration",
     items: [
       { label: "School profile", href: "/settings/school", icon: Settings2, permission: "school.view", keywords: ["settings", "timezone"] },
       { label: "Modules", href: "/settings/modules", icon: ToggleRight, permission: "modules.manage", keywords: ["features"] },
+      { label: "Plan & billing", href: "/settings/billing", icon: CreditCard, permission: "billing.view", keywords: ["subscription", "upgrade", "pricing", "trial"] },
       { label: "Users & roles", href: "/settings/users", icon: Users, permission: "users.view", keywords: ["staff", "accounts", "permissions"] },
       { label: "Audit log", href: "/settings/audit", icon: ScrollText, permission: "audit.view", keywords: ["history", "activity"] },
     ],

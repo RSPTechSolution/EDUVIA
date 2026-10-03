@@ -164,15 +164,23 @@ The parent app accepts parent/student accounts, the staff app accepts staff role
 cd api    && pytest                        # integration tests against the eduvia_test database
 cd web    && npm test                      # unit tests (Vitest)
 cd web    && npx playwright install chromium   # once
-cd web    && npm run build && npm run start    # then, in another shell:
+cd web    && NEXT_DIST_DIR=.next-prod npm run build   # separate folder, safe next to npm run dev
 cd web    && npx playwright test               # end-to-end, needs the API and web running
 cd mobile && flutter analyze && flutter test
 ```
 
 The end-to-end tests run against the dev database and create a few users and schools prefixed `e2e`.
 
+## Plans and the public website
+
+- **Public site:** `/` (home), `/pricing`, `/about`, `/contact`, `/privacy`, `/terms` and `/signup` (self-service 14-day trial).
+- **Plans:** Basic ₹2,999, Pro ₹7,999 and Max ₹17,999 per month (yearly = 10 months), stored in the `plans` table and editable by the platform admin under *Platform → Plans*. Custom plans are priced by `api/app/core/pricing.py` (platform fee + chosen modules + tiered per-student rate), so the website and billing always agree. Prices exclude GST.
+- **Enforcement:** a module only works if the school's plan includes it (locked modules show which plan unlocks them); adding students or staff beyond the plan's limit is refused with an upgrade prompt; a school can't move to a plan its usage doesn't fit.
+- **Changing plans:** during the trial, school admins switch plans instantly from *Plan & billing*. After the trial a change becomes a request in *Platform → Leads* (online payment isn't connected yet). The platform admin can assign any plan, including custom ones, from *Platform → Schools*.
+- The demo school is on Max so every feature is visible.
+
 ## Build status
 
-Built so far (checkpoint 1, foundation): authentication, roles and permissions, schools, users, modules, audit log, the web design system and app shell, and the mobile sign-in flow for all three apps. The module phases (students, attendance, fees, exams, …) follow the plan in `skills/`.
+Built so far: authentication, roles and permissions, schools, users, modules, audit log, plans and billing, the public website, the web design system, dashboard and app shell, and the mobile sign-in flow for all three apps. The module phases (students, attendance, fees, exams, …) follow the plan in `skills/`.
 
-Not verifiable on this development machine yet: Android builds (no Android SDK installed) and iOS builds (need a Mac; iOS flavors also need Xcode schemes — until then use `--dart-define=FLAVOR=…`).
+Not verifiable on this development machine yet: Android builds (no Android SDK installed) and iOS builds (need a Mac; iOS flavors also need Xcode schemes — until then use `--dart-define=FLAVOR=…`). Online payment (Razorpay) is not connected yet.

@@ -7,10 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import BadRequest, Conflict, NotFound
 from app.core.permissions import Role
 from app.core.security import hash_password
-from app.models import AuditLog, User
+from app.models import AuditLog, School, User
 from app.schemas.common import PageMeta, PageParams
 from app.schemas.user import UserCreate, UserUpdate
-from app.services import audit_service
+from app.services import audit_service, billing_service
 from app.services.auth_service import revoke_user_sessions
 
 
@@ -46,6 +46,7 @@ async def create_user(db: AsyncSession, school_id: uuid.UUID, data: UserCreate, 
     email = data.email.lower()
     if await _email_taken(db, school_id, email):
         raise Conflict("A user with this email already exists", code="EMAIL_TAKEN")
+    await billing_service.check_capacity(db, await db.get(School, school_id), data.role)
     user = User(school_id=school_id, email=email, full_name=data.full_name, phone=data.phone,
                 role=data.role, password_hash=hash_password(data.password), must_change_password=True)
     db.add(user)
@@ -71,6 +72,11 @@ async def update_user(db: AsyncSession, school_id: uuid.UUID, user_id: uuid.UUID
         changes.get("role", Role.SCHOOL_ADMIN) != Role.SCHOOL_ADMIN or changes.get("is_active") is False)
     if losing_admin and await _active_admin_count(db, school_id) <= 1:
         raise BadRequest("A school must keep at least one active admin", code="LAST_ADMIN")
+    # Taking up a new seat (reactivation or moving into a limited role) must fit the plan.
+    new_role = changes.get("role", user.role)
+    reactivating = changes.get("is_active") is True and not user.is_active
+    if reactivating or (user.is_active and new_role != user.role):
+        await billing_service.check_capacity(db, await db.get(School, school_id), new_role)
     for field, value in changes.items():
         setattr(user, field, value)
     if changes.get("is_active") is False or "role" in changes:

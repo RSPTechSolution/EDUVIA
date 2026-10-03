@@ -60,3 +60,8 @@ export function greeting(date = new Date()) {
   const h = date.getHours();
   return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 }
+
+/** Whole-rupee amounts in Indian grouping: ₹1,79,990 */
+export function inr(n: number) {
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+}

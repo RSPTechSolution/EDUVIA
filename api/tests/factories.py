@@ -1,15 +1,18 @@
 from httpx import AsyncClient
 
+from sqlalchemy import select
+
 from app.core.permissions import MODULES
 from app.core.security import hash_password
-from app.models import School, SchoolModule, User
+from app.models import Plan, School, SchoolModule, User
 
 PASSWORD = "Passw0rd!x"
 API = "/api/v1"
 
 
-async def school(db, slug: str, *, is_active: bool = True) -> School:
-    s = School(name=f"{slug.title()} School", slug=slug, is_active=is_active)
+async def school(db, slug: str, *, is_active: bool = True, plan: str = "pro", status: str = "active") -> School:
+    p = await db.scalar(select(Plan).where(Plan.code == plan))
+    s = School(name=f"{slug.title()} School", slug=slug, is_active=is_active, plan=p, subscription_status=status)
     db.add(s)
     await db.flush()
     for m, meta in MODULES.items():

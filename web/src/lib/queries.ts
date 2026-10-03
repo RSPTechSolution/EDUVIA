@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import type { AuditEntry, ModuleState, School, User } from "@/lib/api/types";
+import type { AuditEntry, DashboardSummary, ModuleState, School, Subscription, User } from "@/lib/api/types";
 
 export const qk = {
   school: ["school", "current"] as const,
@@ -55,5 +55,21 @@ export function useSchools(params: { page: number; page_size?: number; search?: 
     enabled,
     placeholderData: keepPreviousData,
     queryFn: () => api<School[]>("/schools", { query: { page_size: 20, ...params } }),
+  });
+}
+
+export function useSubscription(enabled = true) {
+  return useQuery({ queryKey: ["subscription"], enabled, queryFn: async () => (await api<Subscription>("/subscription")).data });
+}
+
+export function useDashboardSummary(enabled = true) {
+  return useQuery({ queryKey: ["dashboard", "summary"], enabled, queryFn: async () => (await api<DashboardSummary>("/dashboard/summary")).data });
+}
+
+export function usePricingCatalog() {
+  return useQuery({
+    queryKey: ["public", "pricing"],
+    staleTime: 10 * 60_000,
+    queryFn: async () => (await api<import("@/lib/api/types").PricingCatalog>("/public/pricing")).data,
   });
 }

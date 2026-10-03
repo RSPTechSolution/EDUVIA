@@ -59,7 +59,11 @@ function UsersPage() {
       setPending(null);
       toast.success(`${user.full_name} ${kind === "delete" ? "deleted" : kind === "activate" ? "reactivated" : "deactivated"}`);
     },
-    onError: (e) => toast.error(e instanceof ApiError ? e.message : "Something went wrong"),
+    onError: (e) =>
+      toast.error(e instanceof ApiError ? e.message : "Something went wrong",
+        e instanceof ApiError && e.code === "PLAN_LIMIT_REACHED"
+          ? { action: { label: "View plans", onClick: () => window.location.assign("/settings/billing") } }
+          : undefined),
   });
 
   const columns = useMemo<Col<User>[]>(() => [

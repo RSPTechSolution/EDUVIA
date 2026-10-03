@@ -8,6 +8,7 @@ from typing import Annotated
 from pydantic import AfterValidator, BaseModel, EmailStr, Field, field_validator
 
 from app.schemas.auth import NewPassword
+from app.schemas.billing import PlanBrief
 from app.schemas.common import Schema
 
 _SLUG = re.compile(r"^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])$")
@@ -37,7 +38,10 @@ class SchoolOut(Schema):
     currency: str
     language: str
     is_active: bool
-    plan: str
+    plan: PlanBrief
+    subscription_status: str
+    billing_cycle: str
+    trial_ends_at: datetime | None
     settings: dict
     created_at: datetime
 
@@ -60,7 +64,6 @@ class SchoolUpdate(BaseModel):
 class SchoolAdminUpdate(SchoolUpdate):
     """Fields only the platform super admin may change."""
     is_active: bool | None = None
-    plan: str | None = Field(None, max_length=50)
 
 
 class SchoolCreate(BaseModel):
@@ -72,6 +75,7 @@ class SchoolCreate(BaseModel):
     admin_full_name: str = Field(min_length=2, max_length=200)
     admin_email: EmailStr
     admin_password: NewPassword
+    plan_code: str = Field("basic", max_length=80)
 
     @field_validator("slug")
     @classmethod
@@ -85,7 +89,9 @@ class SchoolCreate(BaseModel):
 class ModuleOut(BaseModel):
     module: str
     label: str
-    is_enabled: bool
+    is_enabled: bool  # switched on and included in the plan
+    in_plan: bool
+    upgrade_plan: str | None = None  # cheapest public plan that includes it, when not in plan
 
 
 class ModuleToggle(BaseModel):

@@ -43,6 +43,12 @@ class TokenPair(BaseModel):
     expires_in: int
 
 
+class PlanSummary(Schema):
+    code: str
+    name: str
+    is_custom: bool
+
+
 class SchoolBrief(Schema):
     id: uuid.UUID
     name: str
@@ -50,6 +56,9 @@ class SchoolBrief(Schema):
     logo_url: str | None
     timezone: str
     currency: str
+    plan: PlanSummary
+    subscription_status: str
+    trial_ends_at: datetime | None
 
 
 class MeOut(Schema):

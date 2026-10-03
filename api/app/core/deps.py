@@ -95,10 +95,15 @@ def require_super_admin():
 
 
 async def enabled_modules(db: AsyncSession, school_id: uuid.UUID) -> list[str]:
+    """Modules the school has switched on AND its plan includes."""
     from app.models import SchoolModule
+    school = await db.get(School, school_id)
+    if not school:
+        return []
     rows = await db.scalars(select(SchoolModule.module).where(
         SchoolModule.school_id == school_id, SchoolModule.is_enabled.is_(True)))
-    return sorted(rows.all())
+    allowed = set(school.plan.modules)
+    return sorted(m for m in rows.all() if m in allowed)
 
 
 def require_module(module: str):

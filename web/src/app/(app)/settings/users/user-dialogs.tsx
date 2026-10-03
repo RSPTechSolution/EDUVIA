@@ -98,6 +98,10 @@ export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; on
       });
     },
     onError: (e) => {
+      if (e instanceof ApiError && e.code === "PLAN_LIMIT_REACHED") {
+        toast.error(e.message, { action: { label: "View plans", onClick: () => window.location.assign("/settings/billing") } });
+        return;
+      }
       if (!applyServerErrors(e, setError as never)) toast.error(e instanceof ApiError ? e.message : "Could not save");
     },
   });

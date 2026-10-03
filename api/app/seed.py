@@ -10,7 +10,7 @@ from app.core.config import settings
 from app.core.database import system_session
 from app.core.permissions import MODULES, Role
 from app.core.security import hash_password
-from app.models import School, SchoolModule, User
+from app.models import Plan, School, SchoolModule, User
 
 DEMO_PASSWORD = "Demo@1234"
 SUPER_ADMIN = ("superadmin@eduvia.com", "Platform Admin", "Admin@1234")
@@ -39,11 +39,15 @@ async def seed() -> None:
             db.add(User(email=SUPER_ADMIN[0], full_name=SUPER_ADMIN[1], password_hash=hash_password(SUPER_ADMIN[2]),
                         role=Role.SUPER_ADMIN))
 
+        # The demo school is on Max so every feature can be explored.
+        max_plan = await db.scalar(select(Plan).where(Plan.code == "max"))
         school = await db.scalar(select(School).where(School.slug == DEMO_SCHOOL["slug"]))
         if not school:
-            school = School(**DEMO_SCHOOL)
+            school = School(**DEMO_SCHOOL, plan=max_plan, subscription_status="active", billing_cycle="yearly")
             db.add(school)
             await db.flush()
+        elif school.plan_id != max_plan.id:
+            school.plan_id = max_plan.id
         existing_modules = set((await db.scalars(select(SchoolModule.module).where(SchoolModule.school_id == school.id))).all())
         for module in MODULES:
             if module not in existing_modules:
