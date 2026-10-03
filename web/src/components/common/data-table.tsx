@@ -20,12 +20,14 @@ interface DataTableProps<T extends RowData> {
   meta?: PageMeta | null;
   onPageChange?: (page: number) => void;
   loading?: boolean;
+  /** Showing previous results while new ones load (search, filter, paging). */
+  refreshing?: boolean;
   empty?: React.ReactNode;
   caption: string;
   getRowId?: (row: T) => string;
 }
 
-export function DataTable<T extends RowData>({ columns, data, meta, onPageChange, loading, empty, caption, getRowId }: DataTableProps<T>) {
+export function DataTable<T extends RowData>({ columns, data, meta, onPageChange, loading, refreshing, empty, caption, getRowId }: DataTableProps<T>) {
   const table = useTable<typeof features, T>({
     features,
     data,
@@ -37,8 +39,13 @@ export function DataTable<T extends RowData>({ columns, data, meta, onPageChange
   const to = meta ? Math.min(meta.page * meta.page_size, meta.total) : data.length;
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
-      <div className="overflow-x-auto">
+    <div className="relative overflow-hidden rounded-xl border bg-card shadow-xs" aria-busy={loading || refreshing || undefined}>
+      {refreshing && (
+        <div className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-primary/15" role="status" aria-label="Updating results">
+          <div className="indeterminate-bar h-full w-1/3 rounded-full bg-primary" />
+        </div>
+      )}
+      <div className={cn("overflow-x-auto transition-opacity duration-200", refreshing && "pointer-events-none opacity-55")}>
         <table className="w-full text-sm">
           <caption className="sr-only">{caption}</caption>
           <thead className="border-b bg-muted/40">
@@ -87,11 +94,11 @@ export function DataTable<T extends RowData>({ columns, data, meta, onPageChange
             Showing {from}–{to} of {meta.total}
           </p>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={meta.page <= 1 || loading} onClick={() => onPageChange?.(meta.page - 1)}>
+            <Button variant="outline" size="sm" disabled={meta.page <= 1 || loading || refreshing} onClick={() => onPageChange?.(meta.page - 1)}>
               <ChevronLeft aria-hidden />Previous
             </Button>
             <span className="text-xs text-muted-foreground tabular">Page {meta.page} of {pages}</span>
-            <Button variant="outline" size="sm" disabled={meta.page >= pages || loading} onClick={() => onPageChange?.(meta.page + 1)}>
+            <Button variant="outline" size="sm" disabled={meta.page >= pages || loading || refreshing} onClick={() => onPageChange?.(meta.page + 1)}>
               Next<ChevronRight aria-hidden />
             </Button>
           </div>

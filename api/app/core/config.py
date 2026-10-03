@@ -30,6 +30,8 @@ class Settings(BaseSettings):
 
     LOGIN_RATE_LIMIT: int = 10           # attempts ...
     LOGIN_RATE_WINDOW_SECONDS: int = 900 # ... per 15 minutes per (ip, email)
+    SIGNUP_RATE_LIMIT: int = 5           # school sign-ups per hour per IP
+    CONTACT_RATE_LIMIT: int = 10         # contact/quote messages per hour per IP
 
     CORS_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
     APP_URL: str = "http://localhost:3000"

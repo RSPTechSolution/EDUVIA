@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -75,8 +75,8 @@ export function ContactForm() {
           {(a) => <Textarea {...a} {...register("message")} rows={5} />}
         </Field>
       </div>
-      <Button type="submit" size="lg" className="mt-6 h-11 w-full sm:w-auto sm:px-8" disabled={isSubmitting || !hydrated}>
-        {isSubmitting && <Loader2 className="animate-spin" aria-hidden />}Send message
+      <Button type="submit" size="lg" className="mt-6 h-11 w-full sm:w-auto sm:px-8" disabled={!hydrated} loading={isSubmitting} loadingText="Sending…">
+        Send message
       </Button>
     </form>
   );

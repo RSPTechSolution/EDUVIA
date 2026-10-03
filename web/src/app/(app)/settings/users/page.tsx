@@ -163,6 +163,7 @@ function UsersPage() {
         data={users.data?.data ?? []}
         meta={users.data?.meta}
         loading={users.isLoading}
+        refreshing={users.isFetching && !users.isLoading}
         onPageChange={setPage}
         getRowId={(u) => u.id}
         empty={

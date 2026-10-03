@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -29,9 +28,8 @@ export function ConfirmDialog({
             variant={destructive ? "destructive" : "default"}
             className={destructive ? "bg-destructive text-white hover:bg-destructive/90" : undefined}
             onClick={onConfirm}
-            disabled={pending}
+            loading={pending}
           >
-            {pending && <Loader2 className="animate-spin" aria-hidden />}
             {confirmLabel}
           </Button>
         </DialogFooter>

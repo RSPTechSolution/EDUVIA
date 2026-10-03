@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, CreditCard, Loader2, MoreHorizontal, Plus, Power, PowerOff, Search, ToggleRight } from "lucide-react";
+import { Building2, CreditCard, MoreHorizontal, Plus, Power, PowerOff, Search, ToggleRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ import type { ModuleState, School } from "@/lib/api/types";
 import { formatDate, inr } from "@/lib/format";
 import { generatePassword, useDebounced } from "@/lib/hooks";
 import { qk, usePricingCatalog, useSchools } from "@/lib/queries";
+import { timeZoneOptions, tzLabel } from "@/lib/timezones";
 import { newPassword } from "@/lib/validation";
 
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50);
@@ -142,8 +143,8 @@ function ChangePlanDialog({ school, onClose }: { school: School | null; onClose:
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={save.isPending}>Cancel</Button>
-          <Button onClick={() => save.mutate()} disabled={save.isPending || (plan === "custom" && !quote.data)}>
-            {save.isPending && <Loader2 className="animate-spin" aria-hidden />}Change plan
+          <Button onClick={() => save.mutate()} disabled={plan === "custom" && !quote.data} loading={save.isPending} loadingText="Changing…">
+            Change plan
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -153,7 +154,7 @@ function ChangePlanDialog({ school, onClose }: { school: School | null; onClose:
 
 function NewSchoolDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const queryClient = useQueryClient();
-  const timezones = useMemo(() => Intl.supportedValuesOf("timeZone"), []);
+  const timezones = useMemo(() => timeZoneOptions("Asia/Kolkata"), []);
   const { register, handleSubmit, control, reset, setValue, watch, setError, formState: { errors, dirtyFields } } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: { name: "", slug: "", timezone: "Asia/Kolkata", currency: "INR", admin_full_name: "", admin_email: "", admin_password: "", plan_code: "basic" },
@@ -205,8 +206,8 @@ function NewSchoolDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
             {(a) => (
               <Controller control={control} name="timezone" render={({ field }) => (
                 <Select value={field.value} onValueChange={(v) => field.onChange(v)}>
-                  <SelectTrigger id={a.id} className="w-full"><SelectValue /></SelectTrigger>
-                  <SelectContent className="max-h-72">{timezones.map((tz) => <SelectItem key={tz} value={tz}>{tz.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                  <SelectTrigger id={a.id} className="w-full"><SelectValue>{tzLabel(field.value)}</SelectValue></SelectTrigger>
+                  <SelectContent className="max-h-72">{timezones.map((tz) => <SelectItem key={tz} value={tz}>{tzLabel(tz)}</SelectItem>)}</SelectContent>
                 </Select>
               )} />
             )}
@@ -234,8 +235,8 @@ function NewSchoolDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
         </form>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={create.isPending}>Cancel</Button>
-          <Button type="submit" form="school-form" disabled={create.isPending}>
-            {create.isPending && <Loader2 className="animate-spin" aria-hidden />}Create school
+          <Button type="submit" form="school-form" loading={create.isPending} loadingText="Creating school…">
+            Create school
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -350,6 +351,7 @@ function SchoolsPage() {
         data={schools.data?.data ?? []}
         meta={schools.data?.meta}
         loading={schools.isLoading}
+        refreshing={schools.isFetching && !schools.isLoading}
         onPageChange={setPage}
         getRowId={(s) => s.id}
         empty={<EmptyState icon={Building2} title={q ? "No schools match" : "No schools yet"} description={q ? undefined : "Create the first school to get started."} />}

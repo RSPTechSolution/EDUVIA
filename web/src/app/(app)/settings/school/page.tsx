@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -21,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, api } from "@/lib/api/client";
 import type { School } from "@/lib/api/types";
 import { qk, useCurrentSchool } from "@/lib/queries";
+import { timeZoneOptions, tzLabel } from "@/lib/timezones";
 
 const optional = (max: number) => z.string().trim().max(max);
 const schema = z.object({
@@ -50,24 +50,27 @@ function SchoolProfilePage() {
   const school = useCurrentSchool();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const timezones = useMemo(() => Intl.supportedValuesOf("timeZone"), []);
+  const savedTz = school.data?.timezone;
+  const timezones = useMemo(() => timeZoneOptions(savedTz), [savedTz]);
 
   // Every field starts defined so inputs stay controlled while the school loads.
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: { name: "", phone: "", email: "", address: "", city: "", state: "", timezone: "Asia/Kolkata", currency: "INR" },
   });
-  const { register, handleSubmit, reset, control, setError, formState: { errors, isDirty } } = form;
+  const { register, handleSubmit, reset, control, setError, formState: { errors, isDirty, dirtyFields } } = form;
   useEffect(() => {
     if (school.data) reset(toValues(school.data));
   }, [school.data, reset]);
 
   const save = useMutation({
-    mutationFn: (v: Values) =>
-      api<School>("/schools/current", {
-        method: "PATCH",
-        body: { ...v, phone: v.phone || null, email: v.email || null, address: v.address || null, city: v.city || null, state: v.state || null },
-      }),
+    // Only send what the user changed, so a field can never be overwritten by accident.
+    mutationFn: (v: Values) => {
+      const changed = Object.fromEntries(
+        (Object.keys(dirtyFields) as (keyof Values)[]).map((k) => [k, typeof v[k] === "string" && v[k] === "" && k !== "name" ? null : v[k]]),
+      );
+      return api<School>("/schools/current", { method: "PATCH", body: changed });
+    },
     onSuccess: ({ data }) => {
       queryClient.setQueryData(qk.school, data);
       reset(toValues(data));
@@ -120,9 +123,9 @@ function SchoolProfilePage() {
                   {(a) => (
                     <Controller control={control} name="timezone" render={({ field }) => (
                       <Select value={field.value} onValueChange={(v) => field.onChange(v)} disabled={!editable}>
-                        <SelectTrigger id={a.id} className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectTrigger id={a.id} className="w-full"><SelectValue>{tzLabel(field.value)}</SelectValue></SelectTrigger>
                         <SelectContent className="max-h-72">
-                          {timezones.map((tz) => <SelectItem key={tz} value={tz}>{tz.replace(/_/g, " ")}</SelectItem>)}
+                          {timezones.map((tz) => <SelectItem key={tz} value={tz}>{tzLabel(tz)}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     )} />
@@ -146,8 +149,8 @@ function SchoolProfilePage() {
               <Button type="button" variant="outline" disabled={!isDirty || save.isPending} onClick={() => school.data && reset(toValues(school.data))}>
                 Discard
               </Button>
-              <Button type="submit" disabled={!isDirty || save.isPending}>
-                {save.isPending && <Loader2 className="animate-spin" aria-hidden />}Save changes
+              <Button type="submit" disabled={!isDirty} loading={save.isPending} loadingText="Saving…">
+                Save changes
               </Button>
             </CardFooter>
           )}

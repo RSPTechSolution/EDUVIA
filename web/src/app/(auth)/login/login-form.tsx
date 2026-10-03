@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -32,6 +32,8 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const hydrated = useHydrated();
   const [showPassword, setShowPassword] = useState(false);
+  // Stays true after a successful sign-in until the browser has loaded the next page.
+  const [redirecting, setRedirecting] = useState(false);
   const {
     register, handleSubmit, setValue, formState: { errors, isSubmitting },
   } = useForm<Values>({
@@ -59,6 +61,7 @@ export function LoginForm() {
         /* ignore */
       }
       // Full navigation so server components render with the new session cookie.
+      setRedirecting(true);
       window.location.assign(safeNext(params.get("next")));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not reach the server. Check your connection and try again.");
@@ -97,9 +100,15 @@ export function LoginForm() {
       <div className="flex justify-end">
         <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">Forgot password?</Link>
       </div>
-      <Button type="submit" size="lg" className="h-10 w-full" disabled={isSubmitting || !hydrated}>
-        {isSubmitting && <Loader2 className="animate-spin" aria-hidden />}
-        {isSubmitting ? "Signing in…" : "Sign in"}
+      <Button
+        type="submit"
+        size="lg"
+        className="h-10 w-full"
+        disabled={!hydrated}
+        loading={isSubmitting || redirecting}
+        loadingText={redirecting ? "Opening your dashboard…" : "Signing in…"}
+      >
+        Sign in
       </Button>
     </form>
   );

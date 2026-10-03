@@ -57,6 +57,10 @@ test("school profile edits persist", async ({ page }) => {
   await expect(page.getByText("School profile saved")).toBeVisible();
   await page.reload();
   await expect(page.getByLabel("Phone")).toHaveValue(phone);
+  // Regression: saving once silently changed the time zone. It must stay as stored.
+  await expect(page.getByLabel("Time zone")).toContainText("Asia/Kolkata");
+  const school = await page.request.get("/api/proxy/schools/current");
+  expect((await school.json()).data.timezone).toBe("Asia/Kolkata");
 });
 
 test("module toggle persists and is audited", async ({ page }) => {

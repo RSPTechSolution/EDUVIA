@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Request
 
 from app.core import pricing, ratelimit
+from app.core.config import settings
 from app.core.deps import DB, client_ip
 from app.core.errors import BadRequest, TooManyRequests
 from app.core.permissions import MODULES
@@ -54,7 +55,7 @@ async def quote(body: QuoteRequest):
 
 @router.post("/signup", response_model=ApiResponse[SignupOut], status_code=201)
 async def signup(body: SignupRequest, request: Request, db: DB):
-    await _limit(request, "signup", 5, 3600)
+    await _limit(request, "signup", settings.SIGNUP_RATE_LIMIT, 3600)
     school, admin = await billing_service.signup(db, body, ip=client_ip(request))
     return ok(SignupOut(school_slug=school.slug, email=admin.email,
                         plan=PlanBrief.model_validate(school.plan), trial_ends_at=school.trial_ends_at))
@@ -62,7 +63,7 @@ async def signup(body: SignupRequest, request: Request, db: DB):
 
 @router.post("/contact", response_model=ApiResponse[Message], status_code=201)
 async def contact(body: ContactRequest, request: Request, db: DB):
-    await _limit(request, "contact", 10, 3600)
+    await _limit(request, "contact", settings.CONTACT_RATE_LIMIT, 3600)
     quoted = None
     kind = "contact"
     if body.students and body.modules is not None:

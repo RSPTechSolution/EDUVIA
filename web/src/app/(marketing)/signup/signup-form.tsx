@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Loader2, PencilLine } from "lucide-react";
+import { Check, PencilLine } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authRequest } from "@/lib/api/client";
 import type { BillingCycle, Plan, Quote } from "@/lib/api/types";
 import { inr } from "@/lib/format";
@@ -49,6 +50,7 @@ export function SignupForm() {
   const customStudents = Number(params.get("students") ?? 0) || 0;
   const hasCustom = customModules.length > 0 && customStudents > 0;
   const [error, setError] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   const plans = useQuery({ queryKey: ["public", "plans"], queryFn: () => publicGet<Plan[]>("/plans") });
   const quote = useQuery({
@@ -92,6 +94,7 @@ export function SignupForm() {
     // Sign straight in and open the new school.
     try {
       await authRequest("/api/auth/login", { email: v.email, password: v.password, school_slug: v.school_slug });
+      setRedirecting(true);
       window.location.assign("/dashboard?welcome=1");
     } catch {
       window.location.assign(`/login`);
@@ -110,7 +113,7 @@ export function SignupForm() {
           <CycleToggle value={cycle} onChange={setCycle} />
         </div>
         <div role="radiogroup" aria-label="Plan" className="mt-5 space-y-3">
-          {plans.isLoading && <div className="h-48 animate-pulse rounded-2xl bg-muted" />}
+          {plans.isLoading && <Skeleton className="h-48 rounded-2xl" />}
           {plans.data?.map((p) => {
             const price = planPrice(p, cycle);
             return (
@@ -218,9 +221,15 @@ export function SignupForm() {
           </label>
           {errors.accept_terms && <p className="mt-1.5 text-xs font-medium text-destructive">{errors.accept_terms.message}</p>}
         </div>
-        <Button type="submit" size="lg" className="mt-7 h-11 w-full" disabled={isSubmitting || !hydrated || (planCode === "custom" && !quote.data)}>
-          {isSubmitting && <Loader2 className="animate-spin" aria-hidden />}
-          {isSubmitting ? "Creating your school…" : "Create my school"}
+        <Button
+          type="submit"
+          size="lg"
+          className="mt-7 h-11 w-full"
+          disabled={!hydrated || (planCode === "custom" && !quote.data)}
+          loading={isSubmitting || redirecting}
+          loadingText={redirecting ? "Opening your school…" : "Creating your school…"}
+        >
+          Create my school
         </Button>
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Already using EDUVIA? <Link href="/login" className="font-medium text-primary hover:underline">Sign in</Link>

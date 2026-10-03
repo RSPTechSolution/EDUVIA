@@ -63,6 +63,7 @@ function AuditPage() {
         data={audit.data?.data ?? []}
         meta={audit.data?.meta}
         loading={audit.isLoading}
+        refreshing={audit.isFetching && !audit.isLoading}
         onPageChange={setPage}
         getRowId={(e) => e.id}
         empty={<EmptyState icon={ScrollText} title="No activity recorded" />}

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -74,8 +74,8 @@ function ResetForm() {
         <Field label="Confirm password" error={errors.confirm?.message} required>
           {(a) => <Input {...a} {...register("confirm")} type="password" autoComplete="new-password" />}
         </Field>
-        <Button type="submit" size="lg" className="h-10 w-full" disabled={isSubmitting || !hydrated}>
-          {isSubmitting && <Loader2 className="animate-spin" aria-hidden />}Update password
+        <Button type="submit" size="lg" className="h-10 w-full" disabled={!hydrated} loading={isSubmitting} loadingText="Updating…">
+          Update password
         </Button>
       </form>
     </>

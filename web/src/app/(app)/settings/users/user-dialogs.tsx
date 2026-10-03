@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Copy, Loader2, RefreshCw } from "lucide-react";
+import { Copy, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -136,8 +136,7 @@ export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; on
         </form>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={save.isPending}>Cancel</Button>
-          <Button type="submit" form="user-form" disabled={save.isPending}>
-            {save.isPending && <Loader2 className="animate-spin" aria-hidden />}
+          <Button type="submit" form="user-form" loading={save.isPending} loadingText={editing ? "Saving…" : "Creating account…"}>
             {editing ? "Save changes" : "Create account"}
           </Button>
         </DialogFooter>
@@ -179,8 +178,8 @@ export function SetPasswordDialog({ open, onOpenChange, user }: { open: boolean;
         </form>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={save.isPending}>Cancel</Button>
-          <Button type="submit" form="pw-form" disabled={save.isPending}>
-            {save.isPending && <Loader2 className="animate-spin" aria-hidden />}Set password
+          <Button type="submit" form="pw-form" loading={save.isPending} loadingText="Saving…">
+            Set password
           </Button>
         </DialogFooter>
       </DialogContent>

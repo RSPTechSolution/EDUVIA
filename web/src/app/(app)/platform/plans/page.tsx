@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Pencil, Sparkles } from "lucide-react";
+import { Pencil, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Field } from "@/components/common/field";
@@ -105,8 +105,8 @@ function PlanEditor({ plan, onClose }: { plan: Plan | null; onClose: () => void 
           </div>
         )}
         <SheetFooter>
-          <Button onClick={() => d && save.mutate(d)} disabled={!valid || save.isPending}>
-            {save.isPending && <Loader2 className="animate-spin" aria-hidden />}Save plan
+          <Button onClick={() => d && save.mutate(d)} disabled={!valid} loading={save.isPending} loadingText="Saving…">
+            Save plan
           </Button>
         </SheetFooter>
       </SheetContent>

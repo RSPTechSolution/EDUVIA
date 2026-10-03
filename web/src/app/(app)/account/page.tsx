@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useForm } from "react-hook-form";
@@ -65,8 +65,8 @@ function ChangePassword() {
           </Field>
         </CardContent>
         <CardFooter className="border-t">
-          <Button type="submit" disabled={save.isPending}>
-            {save.isPending && <Loader2 className="animate-spin" aria-hidden />}Update password
+          <Button type="submit" loading={save.isPending} loadingText="Updating…">
+            Update password
           </Button>
         </CardFooter>
       </form>

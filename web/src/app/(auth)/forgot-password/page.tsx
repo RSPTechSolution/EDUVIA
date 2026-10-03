@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
+import { ArrowLeft, MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -69,8 +69,8 @@ export default function ForgotPasswordPage() {
             <Field label="Email" error={errors.email?.message} required>
               {(a) => <Input {...a} {...register("email")} type="email" autoComplete="email" />}
             </Field>
-            <Button type="submit" size="lg" className="h-10 w-full" disabled={isSubmitting || !hydrated}>
-              {isSubmitting && <Loader2 className="animate-spin" aria-hidden />}Send reset link
+            <Button type="submit" size="lg" className="h-10 w-full" disabled={!hydrated} loading={isSubmitting} loadingText="Sending…">
+              Send reset link
             </Button>
           </form>
         </>

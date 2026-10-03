@@ -8,6 +8,7 @@ import { useSession } from "@/components/session-provider";
 import {
   Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
 } from "@/components/ui/command";
+import { startNavigationProgress } from "@/components/navigation-progress";
 import { visibleGroups } from "@/config/navigation";
 
 export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -43,7 +44,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
               <CommandItem
                 key={item.href}
                 value={`${item.label} ${(item.keywords ?? []).join(" ")}`}
-                onSelect={() => run(() => router.push(item.href))}
+                onSelect={() => run(() => { startNavigationProgress(); router.push(item.href); })}
               >
                 <item.icon aria-hidden />
                 {item.label}
