@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     SIGNUP_RATE_LIMIT: int = 5           # school sign-ups per hour per IP
     CONTACT_RATE_LIMIT: int = 10         # contact/quote messages per hour per IP
 
+    # Online fee payments: "test" simulates a gateway (never allowed in production),
+    # "none" turns online payment off. Real gateways (Razorpay) plug in here later.
+    PAYMENT_GATEWAY: str = "test"
+
     CORS_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
     APP_URL: str = "http://localhost:3000"
 
@@ -49,6 +53,8 @@ class Settings(BaseSettings):
             raise ValueError("JWT_SECRET_KEY must be set and at least 32 characters long")
         if self.ENVIRONMENT == "production" and self.DEBUG:
             raise ValueError("DEBUG must be false in production")
+        if self.ENVIRONMENT == "production" and self.PAYMENT_GATEWAY == "test":
+            raise ValueError("PAYMENT_GATEWAY=test is for development only")
         return self
 
     @property

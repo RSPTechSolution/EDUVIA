@@ -14,7 +14,7 @@ test("admin edits a slot and is told when a teacher is busy", async ({ page }) =
   await expect(dialog.getByText("Class 7 – A · Monday")).toBeVisible();
   await expect(dialog.getByRole("radio", { name: /Current/ })).toBeVisible();
   // Someone teaching elsewhere then can't be picked.
-  await dialog.getByText("Other subjects").click();
+  await dialog.getByText("Other subjects", { exact: true }).click();
   await expect(dialog.getByRole("radio", { name: /Teaching Class/ }).first()).toBeDisabled();
   await dialog.getByLabel("Room").fill("E2E-1");
   await dialog.getByRole("button", { name: "Save" }).click();

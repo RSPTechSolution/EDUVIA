@@ -3,7 +3,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AuditEntry, AvailableTeacher, ClassItem, DashboardSummary, ModuleState, Period, RoleRules, School, Student, StudentDetail, StudentOption, Subject,
+  AttendanceOverview, AuditEntry, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
+  SectionCard, SectionReport, StructureMatrix, StudentAttendance, ClassItem, DashboardSummary, ModuleState, Period, RoleRules, School, Student, StudentDetail, StudentOption, Subject,
   Subscription, TeacherInfo, TimetableView, User, UserDetail,
 } from "@/lib/api/types";
 
@@ -161,4 +162,88 @@ export function useAvailableTeachers(params: { day: number; period_id: string; s
     placeholderData: keepPreviousData,
     queryFn: async () => (await api<AvailableTeacher[]>("/timetable/available-teachers", { query: params! })).data,
   });
+}
+
+// ---- attendance ------------------------------------------------------------------------------
+
+export function useAttendanceSections(date: string | undefined, enabled = true) {
+  return useQuery({ queryKey: ["attendance", "sections", date], enabled, queryFn: async () => (await api<SectionCard[]>("/attendance/sections", { query: { date } })).data });
+}
+
+export function useRoster(sectionId: string, date: string | undefined) {
+  return useQuery({
+    queryKey: ["attendance", "roster", sectionId, date],
+    queryFn: async () => (await api<Roster>(`/attendance/sections/${sectionId}`, { query: { date } })).data,
+  });
+}
+
+export function useAttendanceOverview(date: string | undefined, enabled = true) {
+  return useQuery({ queryKey: ["attendance", "overview", date], enabled, queryFn: async () => (await api<AttendanceOverview>("/attendance/overview", { query: { date } })).data });
+}
+
+export function useSectionReport(sectionId: string | null, month: string) {
+  return useQuery({
+    queryKey: ["attendance", "report", sectionId, month],
+    enabled: Boolean(sectionId),
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<SectionReport>(`/attendance/sections/${sectionId}/report`, { query: { month } })).data,
+  });
+}
+
+export function useMyAttendance(month: string, enabled = true) {
+  return useQuery({
+    queryKey: ["attendance", "my", month],
+    enabled,
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<StudentAttendance[]>("/attendance/my", { query: { month } })).data,
+  });
+}
+
+export function useStudentAttendance(studentId: string, month: string, enabled = true) {
+  return useQuery({
+    queryKey: ["attendance", "student", studentId, month],
+    enabled,
+    queryFn: async () => (await api<StudentAttendance>(`/attendance/students/${studentId}`, { query: { month } })).data,
+  });
+}
+
+// ---- fees ------------------------------------------------------------------------------------
+
+export function useFeeSummary(enabled = true) {
+  return useQuery({ queryKey: ["fees", "summary"], enabled, queryFn: async () => (await api<FeeSummary>("/fees/summary")).data });
+}
+
+export interface InvoiceParams { page: number; status?: string; class_id?: string; term?: string; search?: string; student_id?: string; page_size?: number }
+
+export function useInvoices(params: InvoiceParams, enabled = true) {
+  return useQuery({
+    queryKey: ["fees", "invoices", params],
+    enabled,
+    placeholderData: keepPreviousData,
+    queryFn: () => api<InvoiceRow[]>("/fees/invoices", { query: { page_size: 25, ...params } }),
+  });
+}
+
+export function useInvoice(id: string) {
+  return useQuery({ queryKey: ["fees", "invoice", id], queryFn: async () => (await api<InvoiceDetail>(`/fees/invoices/${id}`)).data });
+}
+
+export function useFeeTerms() {
+  return useQuery({ queryKey: ["fees", "terms"], queryFn: async () => (await api<string[]>("/fees/terms")).data });
+}
+
+export function useFeeCategories() {
+  return useQuery({ queryKey: ["fees", "categories"], queryFn: async () => (await api<FeeCategory[]>("/fees/categories")).data });
+}
+
+export function useFeeStructures() {
+  return useQuery({ queryKey: ["fees", "structures"], queryFn: async () => (await api<StructureMatrix>("/fees/structures")).data });
+}
+
+export function useReceipt(id: string) {
+  return useQuery({ queryKey: ["fees", "receipt", id], queryFn: async () => (await api<Receipt>(`/fees/payments/${id}/receipt`)).data });
+}
+
+export function useMyFees(enabled = true) {
+  return useQuery({ queryKey: ["fees", "my"], enabled, queryFn: async () => (await api<MyFees>("/fees/my")).data });
 }

@@ -40,6 +40,12 @@ PERMISSIONS: dict[str, list[Role]] = {
     "classes.manage": ADMINS,
     "timetable.view": ADMINS + [Role.TEACHER, Role.RECEPTIONIST],
     "timetable.manage": ADMINS,
+    "attendance.view": ADMINS + [Role.TEACHER, Role.RECEPTIONIST],
+    "attendance.mark": ADMINS + [Role.TEACHER],  # teachers: only sections they teach
+    "attendance.manage": ADMINS,  # any section, any past date
+    "fees.view": ADMINS + [Role.ACCOUNTANT, Role.RECEPTIONIST],
+    "fees.collect": ADMINS + [Role.ACCOUNTANT, Role.RECEPTIONIST],
+    "fees.manage": [Role.SCHOOL_ADMIN, Role.ACCOUNTANT],
     "billing.manage": [Role.SCHOOL_ADMIN],
     "schools.manage": [],  # platform level: super_admin only
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { format, parseISO } from "date-fns";
-import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { roleLabel } from "@/lib/format";
 
 const tooltipClass = "rounded-lg border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md";
@@ -92,5 +92,102 @@ export function RolesDonut({ data }: { data: { role: string; count: number }[] }
         ))}
       </ul>
     </div>
+  );
+}
+
+/** Share of students present per school day. One series, so no legend; the title names it. */
+export function AttendanceTrendChart({ data }: { data: { date: string; percent: number | null }[] }) {
+  const points = data.filter((d) => d.percent !== null) as { date: string; percent: number }[];
+  const min = Math.max(0, Math.floor((Math.min(...points.map((p) => p.percent), 100) - 5) / 5) * 5);
+  return (
+    <div
+      className="h-56 w-full text-primary [&_.recharts-cartesian-axis-tick-value]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border"
+      role="img" aria-label={`Attendance over the last ${points.length} school days`}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={points} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+          <defs>
+            <linearGradient id="attFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" className="[stop-color:var(--primary)] [stop-opacity:0.22]" />
+              <stop offset="100%" className="[stop-color:var(--primary)] [stop-opacity:0]" />
+            </linearGradient>
+          </defs>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis dataKey="date" tickFormatter={(d: string) => format(parseISO(d), "d MMM")} tickLine={false} axisLine={false}
+            interval="preserveStartEnd" minTickGap={24} tick={{ fontSize: 11 }} />
+          <YAxis domain={[min, 100]} tickFormatter={(v: number) => `${v}%`} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+          <Tooltip
+            cursor={{ stroke: "currentColor", strokeOpacity: 0.25 }}
+            content={({ active, payload }) => active && payload?.length ? (
+              <div className={tooltipClass}>
+                <p className="font-medium">{format(parseISO(payload[0].payload.date), "EEEE, d MMM")}</p>
+                <p className="text-muted-foreground"><span className="font-semibold text-foreground">{payload[0].value}%</span> present</p>
+              </div>
+            ) : null}
+          />
+          <Area type="monotone" dataKey="percent" stroke="currentColor" strokeWidth={2} fill="url(#attFill)" dot={{ r: 0 }}
+            activeDot={{ r: 5, strokeWidth: 2, className: "stroke-card", fill: "currentColor" }} />
+        </AreaChart>
+      </ResponsiveContainer>
+      <table className="sr-only">
+        <caption>Attendance per school day</caption>
+        <tbody>{points.map((d) => <tr key={d.date}><th scope="row">{d.date}</th><td>{d.percent}%</td></tr>)}</tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Fees collected per day. Thin bars, rounded at the data end only. */
+export function CollectionChart({ data }: { data: { date: string; amount: number }[] }) {
+  const inr = (v: number) => `₹${v >= 100000 ? `${(v / 100000).toFixed(1)}L` : v >= 1000 ? `${Math.round(v / 1000)}k` : v}`;
+  return (
+    <div
+      className="h-60 w-full text-primary [&_.recharts-cartesian-axis-tick-value]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border"
+      role="img" aria-label={`Fees collected per day over the last ${data.length} days`}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }} barCategoryGap={2}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis dataKey="date" tickFormatter={(d: string) => format(parseISO(d), "d MMM")} tickLine={false} axisLine={false}
+            interval="preserveStartEnd" minTickGap={28} tick={{ fontSize: 11 }} />
+          <YAxis tickFormatter={inr} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={56} />
+          <Tooltip
+            cursor={{ fill: "currentColor", fillOpacity: 0.06 }}
+            content={({ active, payload }) => active && payload?.length ? (
+              <div className={tooltipClass}>
+                <p className="font-medium">{format(parseISO(payload[0].payload.date), "EEEE, d MMM")}</p>
+                <p className="text-muted-foreground"><span className="font-semibold text-foreground">₹{Number(payload[0].value).toLocaleString("en-IN")}</span> collected</p>
+              </div>
+            ) : null}
+          />
+          <Bar dataKey="amount" fill="currentColor" radius={[4, 4, 0, 0]} maxBarSize={18} />
+        </BarChart>
+      </ResponsiveContainer>
+      <table className="sr-only">
+        <caption>Fees collected per day</caption>
+        <tbody>{data.map((d) => <tr key={d.date}><th scope="row">{d.date}</th><td>₹{d.amount}</td></tr>)}</tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Horizontal bars as plain HTML: label, bar, value. One hue; the label carries identity. */
+export function BarList({ items, format: fmt = (v) => v.toLocaleString("en-IN") }: {
+  items: { label: string; value: number; hint?: string }[];
+  format?: (v: number) => string;
+}) {
+  const max = Math.max(...items.map((i) => i.value), 1);
+  return (
+    <ul className="space-y-3">
+      {items.map((i) => (
+        <li key={i.label} className="group">
+          <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
+            <span className="truncate">{i.label}{i.hint && <span className="ml-1.5 text-xs text-muted-foreground">{i.hint}</span>}</span>
+            <span className="font-semibold tabular">{fmt(i.value)}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
+            <div className="h-full rounded-full bg-primary transition-[width] duration-700 group-hover:bg-primary/80" style={{ width: `${(i.value / max) * 100}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }

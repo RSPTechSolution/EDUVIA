@@ -341,3 +341,157 @@ export interface AvailableTeacher {
   periods_per_week: number;
   periods_that_day: number;
 }
+
+// ---- attendance ------------------------------------------------------------------------------
+
+export type AttendanceStatus = "present" | "absent" | "late" | "half_day" | "leave";
+export interface AttendanceCounts { present: number; absent: number; late: number; half_day: number; leave: number }
+
+export interface SectionCard {
+  section_id: string;
+  label: string;
+  class_teacher: string | null;
+  is_class_teacher: boolean;
+  students: number;
+  marked: number;
+  present: number;
+  absent: number;
+  marked_by: string | null;
+}
+
+export interface RosterEntry {
+  student_id: string;
+  name: string;
+  admission_no: string;
+  roll_no: number | null;
+  gender: string;
+  status: AttendanceStatus | null;
+  remark: string | null;
+  recent_percent: number | null; // last 30 days
+}
+
+export interface Roster {
+  section_id: string;
+  label: string;
+  date: string;
+  editable: boolean;
+  locked_reason: string | null;
+  marked_by: string | null;
+  marked_at: string | null;
+  students: RosterEntry[];
+  counts: AttendanceCounts;
+}
+
+export interface StudentAttendance {
+  student_id: string;
+  name: string;
+  class_section: string;
+  month: string;
+  days: { date: string; status: AttendanceStatus; remark: string | null }[];
+  month_counts: AttendanceCounts;
+  month_percent: number | null;
+  year_counts: AttendanceCounts;
+  year_percent: number | null;
+}
+
+export interface AttendanceReportRow { student_id: string; name: string; roll_no: number | null; counts: AttendanceCounts; percent: number | null }
+
+export interface SectionReport {
+  section_id: string;
+  label: string;
+  month: string;
+  school_days: number;
+  rows: AttendanceReportRow[];
+  average_percent: number | null;
+}
+
+export interface AttendanceOverview {
+  date: string;
+  sections_total: number;
+  sections_marked: number;
+  students_total: number;
+  counts: AttendanceCounts;
+  percent: number | null;
+  sections: SectionCard[];
+  trend: { date: string; percent: number | null; marked: number }[];
+  low_attendance: AttendanceReportRow[];
+}
+
+// ---- fees ------------------------------------------------------------------------------------
+
+export interface FeeCategory { id: string; name: string; description: string | null; is_active: boolean }
+
+export interface StructureMatrix {
+  categories: FeeCategory[];
+  classes: { class_id: string; class_name: string; students: number; amounts: Record<string, number>; total: number }[];
+}
+
+export interface InvoiceRow {
+  id: string;
+  invoice_no: string;
+  student_id: string;
+  student_name: string;
+  admission_no: string;
+  class_section: string;
+  term: string;
+  due_date: string;
+  total: number;
+  discount: number;
+  paid: number;
+  balance: number;
+  status: "unpaid" | "partial" | "paid" | "cancelled";
+  overdue: boolean;
+}
+
+export interface FeePayment {
+  id: string;
+  receipt_no: string;
+  amount: number;
+  method: string;
+  reference: string | null;
+  note: string | null;
+  paid_at: string;
+  collected_by: string | null;
+}
+
+export interface InvoiceDetail extends InvoiceRow {
+  academic_year: string;
+  issue_date: string;
+  discount_reason: string | null;
+  items: { name: string; amount: number }[];
+  payments: FeePayment[];
+  guardian_phone: string | null;
+}
+
+export interface FeeSummary {
+  collected_today: number;
+  collected_month: number;
+  collected_year: number;
+  billed_year: number;
+  outstanding: number;
+  overdue: number;
+  overdue_invoices: number;
+  collection_rate: number | null;
+  daily: { date: string; amount: number }[];
+  by_method: { method: string; amount: number; count: number }[];
+  by_class: { class_name: string; outstanding: number; students: number }[];
+  recent: FeePayment[];
+}
+
+export interface Receipt {
+  payment: FeePayment;
+  invoice: InvoiceDetail;
+  school_name: string;
+  school_address: string | null;
+  school_phone: string | null;
+  balance_after: number;
+}
+
+export interface MyFees {
+  children: { student_id: string; name: string; class_section: string; due: number; overdue: number; next_due_date: string | null; invoices: InvoiceDetail[] }[];
+  total_due: number;
+  online_payments: boolean;
+  test_mode: boolean;
+}
+
+export interface PaymentOrder { order_id: string; amount: number; gateway: string; test_mode: boolean; invoice_no: string; description: string }

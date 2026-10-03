@@ -29,7 +29,15 @@ test("flutter parent app end to end", async ({ page }) => {
   await expect(page.getByText(/Suresh/).first()).toBeVisible({ timeout: 15_000 });
   await page.waitForTimeout(800);
 
-  await page.mouse.click(309, 815); // Profile tab in the bottom navigation bar
+  // The new tabs load real data.
+  await page.getByRole("tab", { name: "Fees" }).click();
+  await expect(page.getByText(/Total due for all children/)).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("tab", { name: "Attendance" }).click();
+  await expect(page.getByLabel(/attendance this year/).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("tab", { name: "Timetable" }).click();
+  await expect(page.getByText(/Assembly/)).toBeVisible({ timeout: 15_000 });
+
+  await page.getByRole("tab", { name: "Profile" }).click();
   await expect(page.getByRole("button", { name: /Change password/ })).toBeVisible();
   await page.waitForTimeout(500);
 

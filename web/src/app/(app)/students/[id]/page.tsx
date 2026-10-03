@@ -9,6 +9,7 @@ import { use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ParentPicker } from "@/components/academics/pickers";
+import { StudentRecords } from "@/components/academics/student-records";
 import { StudentFields, studentSchema, toApi, type StudentValues } from "@/components/academics/student-fields";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EmptyState } from "@/components/common/empty-state";
@@ -274,6 +275,8 @@ function StudentProfile({ id }: { id: string }) {
           </CardContent>
         </Card>
       </div>
+
+      <StudentRecords studentId={s.id} />
 
       {manage && <EditSheet student={s} open={editing} onOpenChange={setEditing} />}
       {manage && <AddGuardianDialog student={s} open={adding} onOpenChange={setAdding} />}

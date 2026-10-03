@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Activity, ArrowRight, Building2, CalendarClock, CalendarDays, CheckCircle2, Circle, Clock, CreditCard, Inbox, LayoutGrid, PartyPopper,
+  Activity, ArrowRight, Building2, CalendarClock, CalendarDays, ClipboardCheck, Wallet, CheckCircle2, Circle, Clock, CreditCard, Inbox, LayoutGrid, PartyPopper,
   Settings2, UserPlus, Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import { Stagger, StaggerItem } from "@/components/motion/primitives";
 import { UsageBar } from "@/components/common/usage-bar";
 import { RolesDonut, SigninsChart } from "@/components/dashboard/charts";
 import { DAY_NAMES, TodayList, formatTime } from "@/components/timetable/grid";
+import { PercentBadge } from "@/components/attendance/status";
 import { useCan, useSession } from "@/components/session-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,9 +21,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api/client";
 import type { Lead, TimetableView } from "@/lib/api/types";
 import { describeAudit } from "@/lib/audit-labels";
-import { formatDateTime, greeting, roleLabel, timeAgo } from "@/lib/format";
+import { formatDateTime, greeting, inr, roleLabel, timeAgo } from "@/lib/format";
 import { modulesReviewed } from "@/lib/local-flags";
-import { useAudit, useCurrentSchool, useDashboardSummary, useMyTimetables, useSchools, useUsers } from "@/lib/queries";
+import {
+  useAttendanceOverview, useAttendanceSections, useAudit, useCurrentSchool, useDashboardSummary, useFeeSummary, useMyAttendance, useMyFees,
+  useMyTimetables, useSchools, useUsers,
+} from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 function Hero({ subtitle, children }: { subtitle: string; children?: React.ReactNode }) {
@@ -156,6 +160,8 @@ function SchoolDashboard() {
 
       <Suspense><WelcomeBanner /></Suspense>
 
+      <SchoolPulse />
+
       {trial && s && (
         <Link href="/settings/billing" className="flex items-center gap-3 rounded-xl border border-info/30 bg-info/5 p-4 text-sm transition hover:border-info/50">
           <CalendarClock className="size-5 shrink-0 text-info" aria-hidden />
@@ -242,6 +248,107 @@ function nextLesson(view: TimetableView, day: number) {
     .find((x) => x.e);
 }
 
+/** Parents and students: this month's attendance and what's owed, per child. */
+function FamilySummary() {
+  const me = useSession();
+  const month = new Date().toISOString().slice(0, 7);
+  const attendance = useMyAttendance(month, me.modules.includes("attendance"));
+  const fees = useMyFees(me.modules.includes("fees"));
+  const kids = attendance.data ?? [];
+  if (!kids.length && !fees.data?.children.length) return null;
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {(kids.length ? kids : fees.data!.children.map((c) => ({ student_id: c.student_id, name: c.name, class_section: c.class_section, month_percent: null }))).map((k) => {
+        const f = fees.data?.children.find((c) => c.student_id === k.student_id);
+        return (
+          <Card key={k.student_id} className="card-lift">
+            <CardContent className="flex items-center gap-5">
+              <div className="min-w-0 flex-1">
+                <p className="font-heading text-lg font-bold">{k.name}</p>
+                <p className="text-xs text-muted-foreground">{k.class_section}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link href="/my-attendance" className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm hover:border-primary/40">
+                    <ClipboardCheck className="size-4 text-primary" aria-hidden />Attendance <PercentBadge value={k.month_percent} />
+                  </Link>
+                  {f && (
+                    <Link href="/my-fees" className={cn("inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm hover:border-primary/40", f.overdue > 0 && "border-destructive/40")}>
+                      <Wallet className="size-4 text-primary" aria-hidden />
+                      {f.due > 0 ? <><span className="font-semibold tabular">{inr(f.due)}</span> due{f.overdue > 0 && <span className="text-xs font-semibold text-destructive">· overdue</span>}</> : <span className="text-success">Fees paid</span>}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Teachers: which of their classes still need attendance today. */
+function AttendanceToTake() {
+  const can = useCan();
+  const sections = useAttendanceSections(undefined, can("attendance.mark"));
+  const list = sections.data?.filter((s) => s.is_class_teacher || s.marked < s.students) ?? [];
+  if (!can("attendance.mark") || !sections.data?.length) return null;
+  const pending = sections.data.filter((s) => s.marked < s.students);
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle>Attendance today</CardTitle>
+          <CardDescription>{pending.length ? `${pending.length} of your classes still to mark` : "All your classes are marked"}</CardDescription>
+        </div>
+        <Link href="/attendance" className="text-sm font-medium text-primary hover:underline">All classes</Link>
+      </CardHeader>
+      <CardContent>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {list.slice(0, 6).map((s) => {
+            const done = s.students > 0 && s.marked >= s.students;
+            return (
+              <li key={s.section_id}>
+                <Link href={`/attendance/${s.section_id}`} className={cn("card-lift flex items-center gap-3 rounded-lg border p-3", !done && "border-primary/40 bg-primary/[0.03]")}>
+                  {done ? <CheckCircle2 className="size-5 text-success" aria-hidden /> : <ClipboardCheck className="size-5 text-primary" aria-hidden />}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{s.label}{s.is_class_teacher && <span className="ml-1.5 text-xs font-normal text-muted-foreground">your class</span>}</span>
+                    <span className="block text-xs text-muted-foreground">{done ? `${s.present} present · ${s.absent} absent` : `${s.students} students · tap to mark`}</span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Admin tiles for attendance and fees, shown only with the permissions and modules. */
+function SchoolPulse() {
+  const can = useCan();
+  const me = useSession();
+  const att = useAttendanceOverview(undefined, can("attendance.view") && me.modules.includes("attendance"));
+  const fees = useFeeSummary(can("fees.view") && me.modules.includes("fees"));
+  if (!att.data && !fees.data) return null;
+  return (
+    <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {att.data && (
+        <>
+          <StaggerItem><StatCard label="Present today" value={att.data.percent !== null ? `${att.data.percent}%` : "Not marked"} icon={ClipboardCheck} accent="success" hint={`${att.data.sections_marked} of ${att.data.sections_total} classes marked`} href="/attendance" /></StaggerItem>
+          <StaggerItem><StatCard label="Absent today" value={att.data.counts.absent} icon={Users} accent="warning" hint={`${att.data.low_attendance.length} below 75% this month`} href="/attendance" /></StaggerItem>
+        </>
+      )}
+      {fees.data && (
+        <>
+          <StaggerItem><StatCard label="Fees collected today" value={inr(fees.data.collected_today)} icon={Wallet} accent="info" hint={`${inr(fees.data.collected_month)} this month`} href="/fees" /></StaggerItem>
+          <StaggerItem><StatCard label="Fees overdue" value={inr(fees.data.overdue)} icon={CalendarClock} accent="warning" hint={`${fees.data.overdue_invoices} invoices`} href="/fees?tab=invoices&status=overdue" /></StaggerItem>
+        </>
+      )}
+    </Stagger>
+  );
+}
+
 function PersonalDashboard() {
   const me = useSession();
   const views = useMyTimetables();
@@ -281,6 +388,8 @@ function PersonalDashboard() {
             : <StatCard label="Teachers" value={new Set(all.flatMap((v) => v.entries.map((e) => e.teacher_id).filter(Boolean))).size} loading={views.isLoading} icon={LayoutGrid} accent="warning" hint="Teaching your week" />}
         </StaggerItem>
       </Stagger>
+
+      {teacher ? <AttendanceToTake /> : <FamilySummary />}
 
       {views.isLoading ? <Skeleton className="h-72 rounded-xl" /> : !all.length ? (
         <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">

@@ -130,6 +130,15 @@ Pick one way to run it:
   ```
 
 The parent app accepts parent/student accounts, the staff app accepts staff roles, the driver app accepts drivers.
+To try the staff app in Chrome use `--dart-define=FLAVOR=staff` (same port 8090, so stop the parent app first).
+
+What each app shows (tabs appear only when the school has the module and the account may use it):
+
+| App | Tabs |
+|---|---|
+| **EDUVIA** (parents, students) | Home (each child's attendance today, fees due, today's lessons) · Attendance (calendar, yearly %, days away) · Fees (dues, online payment, receipts) · Timetable · Profile |
+| **EDUVIA Staff** | Home (classes left to mark, today's classes, fee tiles for the office) · Attendance (teachers mark P/A/L/½/Leave with reasons) · Fees (office staff: search invoices, collect cash/UPI/cheque/card, receipts) · Timetable (teachers) · Profile |
+| **EDUVIA Driver** | Home · Profile (trips and boarding come with the transport module) |
 
 ### Stopping and starting again
 
@@ -157,6 +166,12 @@ roll numbers and blood groups, ~160 parent accounts (some families have two chil
 with subjects, a bell schedule and a complete, clash-free Monday–Saturday timetable.
 A few lessons are deliberately left without a teacher so you can try **Timetable → Free teachers**.
 
+It also adds daily attendance from July up to yesterday (a handful of students are below 75%, and
+**today is left unmarked** so teachers can take it), fee categories and per-class fees, and three
+quarterly invoices per student for 2026-27 with realistic payments: Quarter 1 mostly paid, some
+Quarter 2 invoices overdue or part-paid, Quarter 3 just issued. Aarav Patel owes ₹3,000 from Quarter 2,
+so the parent account can try paying online.
+
 Run `python -m app.seed --reset` at any time to wipe the demo school and rebuild it (handy after
 running the e2e tests, which add records). The data is the same on every machine.
 
@@ -167,15 +182,15 @@ Every school account uses the password **Demo@1234** and school ID **demo**.
 | Platform admin | superadmin@eduvia.com (password `Admin@1234`, school ID blank) | Schools, plans, leads |
 | School admin | admin@demo.com | Everything: students, classes, timetable editing, users, billing |
 | Principal | principal@demo.com | Students, classes, timetable editing; can view users and billing but not change school settings, users or billing |
-| Teacher | teacher@demo.com (Priya Verma, Maths, class teacher of Class 5 A) | Today's classes on the dashboard, My timetable, read-only timetables |
+| Teacher | teacher@demo.com (Priya Verma, Maths, class teacher of Class 5 A) | Take today's attendance (web or staff app), today's classes, My timetable |
 | Other teachers | e.g. amit.saxena@demo.com, anjali.mehta@demo.com, arijit.sen@demo.com (part-time, off Saturdays) | Each sees their own week |
-| Accountant | accounts@demo.com | Students (view), billing (view) |
-| Receptionist | reception@demo.com | Add and edit students, view timetables |
+| Accountant | accounts@demo.com | Fees: dashboard, fee setup, generating invoices, concessions, collecting payments |
+| Receptionist | reception@demo.com | Add and edit students, collect fees at the counter, view attendance and timetables |
 | Librarian / HR / transport / security / office staff | librarian@ · hr@ · transport@ · security@ · staff@demo.com | Basic access (their modules come in later phases) |
 | Driver | driver@ · driver2@ · driver3@demo.com | Basic access |
-| Parent | parent@demo.com (Suresh Patel) and mother@demo.com (Kavita Patel) | Aarav (Class 5 A) and Diya (Class 1 A): dashboard and children's timetable |
+| Parent | parent@demo.com (Suresh Patel) and mother@demo.com (Kavita Patel) | Aarav (Class 5 A) and Diya (Class 1 A): attendance calendar, fees with online payment (test mode), receipts, timetable |
 | Other parents | e.g. ajay.sandhu@demo.com (Class 11 and Class 2), archana.gupta@demo.com (Class 7 and UKG) | Parents with two children |
-| Student | student@demo.com (Aarav Patel) | Own timetable |
+| Student | student@demo.com (Aarav Patel) | Own attendance, fees and timetable |
 | Senior students | e.g. yash.kohli@students.demo.com (Class 12 Science), aditya.chopra@students.demo.com (Class 12 Commerce) | Own timetable |
 
 Every user is listed under **Settings → Users & roles** when signed in as the admin.
@@ -201,8 +216,14 @@ The end-to-end tests run against the dev database and create a few users and sch
 - **Changing plans:** during the trial, school admins switch plans instantly from *Plan & billing*. After the trial a change becomes a request in *Platform → Leads* (online payment isn't connected yet). The platform admin can assign any plan, including custom ones, from *Platform → Schools*.
 - The demo school is on Max so every feature is visible.
 
+## Attendance and fees
+
+- **Attendance:** teachers mark daily attendance for their class and any section they teach (web: *Attendance*, staff app: *Attendance* tab), with Present / Absent / Late / Half day / Leave and an optional reason. Teachers can correct the last 3 days; admins any past day. Future dates and Sundays are refused. Admins get a school overview (present today, classes marked, a 14-day trend, students below 75% over the last 30 days) and a monthly report per class with CSV export. Parents and students see a calendar and their percentage (leave days don't count against it).
+- **Fees:** fee categories and per-class fees per term (*Fees → Fee setup*), one-click invoice generation for a term (never twice for the same student and term), counter collection by cash/UPI/cheque/card/bank transfer with numbered receipts, concessions with a reason, overdue tracking and a collections dashboard. Parents see dues per child and pay online; every payment has a printable receipt.
+- **Online payment:** `PAYMENT_GATEWAY=test` (the default in development) simulates a gateway so you can try the full flow without money; the API refuses to start with it in production. Set `PAYMENT_GATEWAY=none` to hide online payment. Razorpay plugs in behind the same order/confirm flow once you have keys.
+
 ## Build status
 
-Built so far: authentication, roles and permissions, schools, users, modules, audit log, plans and billing, the public website, the web design system, dashboard and app shell, and the mobile sign-in flow for all three apps. The module phases (students, attendance, fees, exams, …) follow the plan in `skills/`.
+Built so far: authentication, roles and permissions, schools, users, modules, audit log, plans and billing, the public website, the web design system, dashboard and app shell, students, classes and sections, timetables, attendance and fees — on the web and in the mobile apps. The remaining module phases (exams, communication, transport, HR, library, …) follow the plan in `skills/`.
 
-Not verifiable on this development machine yet: Android builds (no Android SDK installed) and iOS builds (need a Mac; iOS flavors also need Xcode schemes — until then use `--dart-define=FLAVOR=…`). Online payment (Razorpay) is not connected yet.
+Not verifiable on this development machine yet: Android builds (no Android SDK installed) and iOS builds (need a Mac; iOS flavors also need Xcode schemes — until then use `--dart-define=FLAVOR=…`). Real online payment (Razorpay), PDF receipts, and biometric/QR attendance are not connected yet.

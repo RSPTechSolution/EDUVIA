@@ -110,7 +110,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-dvh shrink-0 flex-col bg-gradient-to-b from-sidebar via-sidebar to-[oklch(0.21_0.06_258)] transition-[width] duration-200 ease-out lg:flex dark:to-[oklch(0.12_0.03_258)]",
+        "sticky top-0 hidden h-dvh shrink-0 flex-col print:hidden bg-gradient-to-b from-sidebar via-sidebar to-[oklch(0.21_0.06_258)] transition-[width] duration-200 ease-out lg:flex dark:to-[oklch(0.12_0.03_258)]",
         collapsed ? "w-[72px]" : "w-64",
       )}
       aria-label="Sidebar"

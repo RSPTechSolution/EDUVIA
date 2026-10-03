@@ -58,7 +58,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
         </Sheet>
         <div className="flex min-w-0 flex-1 flex-col">
           <Header onOpenMobileNav={() => setMobileOpen(true)} onOpenSearch={() => setSearchOpen(true)} />
-          <main id="main" tabIndex={-1} className="flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8">
+          <main id="main" tabIndex={-1} className="flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8 print:p-0">
             <div className="mx-auto w-full max-w-7xl">
               <PageTransition key={pathname}>{children}</PageTransition>
             </div>

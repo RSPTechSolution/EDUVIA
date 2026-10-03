@@ -158,4 +158,7 @@ class ApiClient {
 
   Future<ApiResult<T>> post<T>(String path, {Object? body, bool auth = true, T Function(Object?)? parse}) =>
       request('POST', path, body: body, auth: auth, parse: parse);
+
+  Future<ApiResult<T>> put<T>(String path, {Object? body, T Function(Object?)? parse}) =>
+      request('PUT', path, body: body, parse: parse);
 }

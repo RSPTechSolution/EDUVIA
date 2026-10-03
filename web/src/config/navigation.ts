@@ -1,5 +1,5 @@
 import {
-  Building2, CalendarDays, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Building2, CalendarDays, ClipboardCheck, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -42,7 +42,16 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Students", href: "/students", icon: GraduationCap, module: "students", permission: "students.view", keywords: ["admission", "pupils", "children"] },
       { label: "Classes & sections", href: "/academics/classes", icon: School, module: "students", permission: "students.view", keywords: ["grades", "sections", "class teacher"] },
       { label: "Timetable", href: "/timetable", icon: CalendarRange, module: "academics", permission: "timetable.view", keywords: ["schedule", "periods", "free teacher", "substitute"] },
+      { label: "Attendance", href: "/attendance", icon: ClipboardCheck, module: "attendance", permission: "attendance.view", keywords: ["absent", "present", "roll call", "register"] },
+      { label: "Attendance", href: "/my-attendance", icon: ClipboardCheck, module: "attendance", roles: ["parent", "student"], keywords: ["absent", "present"] },
+      { label: "Fees", href: "/my-fees", icon: Wallet, module: "fees", roles: ["parent", "student"], keywords: ["pay", "dues", "receipt", "invoice"] },
       { label: "My timetable", href: "/my-timetable", icon: CalendarDays, module: "academics", roles: ["teacher", "principal", "parent", "student"], keywords: ["schedule", "today", "classes"] },
+    ],
+  },
+  {
+    label: "Finance",
+    items: [
+      { label: "Fees", href: "/fees", icon: Wallet, module: "fees", permission: "fees.view", keywords: ["collect", "dues", "invoice", "receipt", "payment", "concession"] },
     ],
   },
   {
