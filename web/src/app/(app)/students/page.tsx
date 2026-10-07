@@ -1,11 +1,12 @@
 "use client";
 
-import { AlertTriangle, Plus, Search } from "lucide-react";
+import { AlertTriangle, Download, GraduationCap, Plus, Search, Upload, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { DataTable, type Col } from "@/components/common/data-table";
 import { EmptyState } from "@/components/common/empty-state";
+import { ImportDialog, exportCsv } from "@/components/common/import-dialog";
 import { PageHeader } from "@/components/common/page-header";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { StatusBadge } from "@/components/common/status-badge";
@@ -13,6 +14,7 @@ import { StudentsIllustration } from "@/components/illustrations";
 import { useCan } from "@/components/session-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Student } from "@/lib/api/types";
@@ -40,6 +42,7 @@ function StudentsPage() {
   const [classId, setClassId] = useState(params.get("class_id") ?? "all");
   const [sectionId, setSectionId] = useState("all");
   const [status, setStatus] = useState("active");
+  const [importing, setImporting] = useState(false);
   const q = useDebounced(search.trim());
 
   const students = useStudents({
@@ -85,8 +88,18 @@ function StudentsPage() {
       <PageHeader
         title="Students"
         description={students.data?.meta ? `${students.data.meta.total.toLocaleString("en-IN")} ${status === "all" ? "" : STATUS[status].toLowerCase() + " "}students` : "Every student, their class and their parents."}
-        actions={manage && !noClasses && (
-          <Link href="/students/new" className={buttonVariants({ className: "h-9" })}><Plus aria-hidden />Add student</Link>
+        actions={!noClasses && (
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<Button variant="outline" className="h-9" />}><Download aria-hidden />Export</DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => exportCsv("/transfer/students/export", "students")}><GraduationCap aria-hidden />Students with parents</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportCsv("/transfer/parents/export", "parents")}><Users aria-hidden />Parents with children</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {manage && <Button variant="outline" className="h-9" onClick={() => setImporting(true)}><Upload aria-hidden />Import</Button>}
+            {manage && <Link href="/students/new" className={buttonVariants({ className: "h-9" })}><Plus aria-hidden />Add student</Link>}
+          </>
         )}
       />
 
@@ -146,6 +159,7 @@ function StudentsPage() {
           />
         </>
       )}
+      {manage && <ImportDialog kind="students" open={importing} onOpenChange={setImporting} />}
     </>
   );
 }

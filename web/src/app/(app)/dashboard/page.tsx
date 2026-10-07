@@ -206,10 +206,13 @@ function SchoolDashboard() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>People by role</CardTitle>
-            <CardDescription>Active accounts at your school</CardDescription>
+            <CardTitle>People at your school</CardTitle>
+            <CardDescription>Every enrolled student, and staff and parents with accounts</CardDescription>
           </CardHeader>
-          <CardContent>{s ? <RolesDonut data={s.roles} /> : <Skeleton className="h-44 w-full" />}</CardContent>
+          <CardContent>
+            {s ? <RolesDonut data={s.roles} /> : <Skeleton className="h-44 w-full" />}
+            {s && <p className="mt-4 text-xs text-muted-foreground">{s.student_logins} of the students also have their own app login; the rest are followed by their parents.</p>}
+          </CardContent>
         </Card>
       </div>
 

@@ -190,6 +190,7 @@ export interface DashboardSummary {
   roles: { role: string; count: number }[];
   signins: { date: string; count: number }[];
   signins_total: number;
+  student_logins: number;
   students: { used: number; limit: number | null };
   staff: { used: number; limit: number | null };
   modules_enabled: number;

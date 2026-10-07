@@ -34,8 +34,9 @@ class DashboardSummary(BaseModel):
     plan: PlanBrief
     subscription_status: str
     trial_days_left: int
-    active_users: int
-    roles: list[RoleCount]
+    active_users: int  # accounts that can sign in
+    roles: list[RoleCount]  # people: students counted from student records, everyone else by account
+    student_logins: int  # students who also have their own app login
     signins: list[DayCount]
     signins_total: int
     students: Limit
@@ -77,7 +78,11 @@ async def summary(db: DB, current: CurrentUser = require_permission("school.view
         subscription_status=school.subscription_status,
         trial_days_left=view["trial_days_left"],
         active_users=sum(n for _, n in roles),
-        roles=[RoleCount(role=r, count=n) for r, n in roles],
+        # Students are people with a student record; most have no login of their own (their parents
+        # use the app), so counting student accounts here made 200 students look like 17.
+        roles=sorted([RoleCount(role=r, count=n) for r, n in roles if r != "student"]
+                     + [RoleCount(role="student", count=used["students"])], key=lambda x: -x.count),
+        student_logins=dict(roles).get("student", 0),
         signins=signins,
         signins_total=sum(d.count for d in signins),
         students=Limit(used=used["students"], limit=school.plan.max_students),

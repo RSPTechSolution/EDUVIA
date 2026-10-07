@@ -51,7 +51,12 @@ def provider_name() -> str:
 
 
 async def queue(db: AsyncSession, msg: Email, *, school_id: uuid.UUID | None) -> None:
-    """Record the email and send it once the current transaction commits."""
+    """Record the email and send it once the current transaction commits.
+
+    Bulk imports set ``db.info["suppress_emails"]`` while they validate rows, then decide afterwards
+    whether to email the new accounts."""
+    if db.info.get("suppress_emails"):
+        return
     row = EmailLog(school_id=school_id, to_email=msg.to, to_name=msg.to_name, subject=msg.subject, kind=msg.kind,
                    provider=provider_name(), status="queued")
     db.add(row)

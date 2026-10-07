@@ -1,12 +1,13 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { KeyRound, MoreHorizontal, Pencil, Plus, Power, Search, Trash2, UserX } from "lucide-react";
+import { Download, KeyRound, MoreHorizontal, Pencil, Plus, Power, Search, Trash2, Upload, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataTable, type Col } from "@/components/common/data-table";
 import { EmptyState } from "@/components/common/empty-state";
+import { ImportDialog, exportCsv } from "@/components/common/import-dialog";
 import { PageHeader } from "@/components/common/page-header";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { StatusBadge } from "@/components/common/status-badge";
@@ -48,6 +49,7 @@ function UsersPage() {
   const [editing, setEditing] = useState<User | null>(null);
   const [pwUser, setPwUser] = useState<User | null>(null);
   const [pending, setPending] = useState<Pending>(null);
+  const [importing, setImporting] = useState(false);
 
   const action = useMutation({
     mutationFn: async ({ kind, user }: NonNullable<Pending>) =>
@@ -130,9 +132,11 @@ function UsersPage() {
       <PageHeader
         title="Users & roles"
         description="Everyone who can sign in to your school: staff, parents and students."
-        actions={manage && (
-          <Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus aria-hidden />Add user</Button>
-        )}
+        actions={<>
+          <Button variant="outline" onClick={() => exportCsv("/transfer/staff/export", "staff")}><Download aria-hidden />Export staff</Button>
+          {manage && <Button variant="outline" onClick={() => setImporting(true)}><Upload aria-hidden />Import staff</Button>}
+          {manage && <Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus aria-hidden />Add user</Button>}
+        </>}
       />
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <div className="relative sm:max-w-xs sm:flex-1">
@@ -176,6 +180,7 @@ function UsersPage() {
       />
       <UserFormDialog open={formOpen} onOpenChange={setFormOpen} user={editing} />
       <SetPasswordDialog open={Boolean(pwUser)} onOpenChange={(o) => !o && setPwUser(null)} user={pwUser} />
+      {manage && <ImportDialog kind="staff" open={importing} onOpenChange={setImporting} />}
       <ConfirmDialog
         open={Boolean(pending)}
         onOpenChange={(o) => !o && setPending(null)}
