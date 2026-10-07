@@ -9,6 +9,7 @@ os.environ.update(
     REDIS_URL="redis://localhost:6380/15",
     JWT_SECRET_KEY="test-only-secret-key-that-is-long-enough-0123456789",
     BCRYPT_ROUNDS="4",
+    EMAIL_PROVIDER="console",  # tests never send real email
 )
 
 import pytest  # noqa: E402

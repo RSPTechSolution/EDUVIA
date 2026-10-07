@@ -33,12 +33,33 @@ class Settings(BaseSettings):
     SIGNUP_RATE_LIMIT: int = 5           # school sign-ups per hour per IP
     CONTACT_RATE_LIMIT: int = 10         # contact/quote messages per hour per IP
 
+    # Email: "console" logs messages instead of sending (development, tests); "brevo" sends.
+    # A Brevo key starting xkeysib- uses Brevo's HTTP API; an SMTP key (xsmtpsib-) uses the SMTP relay
+    # and needs BREVO_SMTP_LOGIN.
+    EMAIL_PROVIDER: str = "console"
+    BREVO_API_KEY: str = ""
+    BREVO_SMTP_LOGIN: str = ""
+    BREVO_SMTP_HOST: str = "smtp-relay.brevo.com"
+    BREVO_SMTP_PORT: int = 587
+    EMAIL_FROM: str = "no-reply@eduvia.local"
+    EMAIL_FROM_NAME: str = "EDUVIA"
+    EMAIL_DAILY_LIMIT: int = 300  # Brevo's free plan
+    # Never send to these domains: the demo data and tests use them, and demo.com is someone else's.
+    EMAIL_SKIP_DOMAINS: Annotated[list[str], NoDecode] = ["demo.com", "students.demo.com", "example.com", "t.com", "eduvia.local"]
+
     # Online fee payments: "test" simulates a gateway (never allowed in production),
     # "none" turns online payment off. Real gateways (Razorpay) plug in here later.
     PAYMENT_GATEWAY: str = "test"
 
     CORS_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
     APP_URL: str = "http://localhost:3000"
+
+    @field_validator("EMAIL_SKIP_DOMAINS", mode="before")
+    @classmethod
+    def _split_domains(cls, v):
+        if isinstance(v, str) and not v.startswith("["):
+            return [d.strip().lower() for d in v.split(",") if d.strip()]
+        return v
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
@@ -53,6 +74,10 @@ class Settings(BaseSettings):
             raise ValueError("JWT_SECRET_KEY must be set and at least 32 characters long")
         if self.ENVIRONMENT == "production" and self.DEBUG:
             raise ValueError("DEBUG must be false in production")
+        if self.EMAIL_PROVIDER == "brevo" and not self.BREVO_API_KEY:
+            raise ValueError("EMAIL_PROVIDER=brevo needs BREVO_API_KEY")
+        if self.EMAIL_PROVIDER == "brevo" and self.BREVO_API_KEY.startswith("xsmtpsib-") and not self.BREVO_SMTP_LOGIN:
+            raise ValueError("A Brevo SMTP key needs BREVO_SMTP_LOGIN (shown next to the key in Brevo)")
         if self.ENVIRONMENT == "production" and self.PAYMENT_GATEWAY == "test":
             raise ValueError("PAYMENT_GATEWAY=test is for development only")
         return self

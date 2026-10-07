@@ -14,6 +14,7 @@ from app.schemas.academics import (
 )
 from app.schemas.common import PageMeta, PageParams
 from app.services import audit_service
+from app.services import notify
 from app.services.academics_service import field_error, get_class, get_section
 
 
@@ -86,6 +87,7 @@ async def link_guardian(db: AsyncSession, school_id: uuid.UUID, student: Student
                       must_change_password=True)
         db.add(parent)
         await db.flush()
+        await notify.account_created(db, parent, np.password or generated)
     if await db.scalar(select(StudentGuardian.id).where(
             StudentGuardian.student_id == student.id, StudentGuardian.user_id == parent.id)):
         raise field_error(field, f"{parent.full_name} is already linked to this student")
@@ -119,6 +121,7 @@ async def create_student(db: AsyncSession, school_id: uuid.UUID, data: StudentCr
         db.add(user)
         await db.flush()
         student.user_id = user.id
+        await notify.account_created(db, user, data.login.password)
 
     await audit_service.record(db, "student.create", school_id=school_id, user_id=actor_id, entity_type="student",
                                entity_id=student.id, meta={"admission_no": student.admission_no})

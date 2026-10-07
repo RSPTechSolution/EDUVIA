@@ -1,5 +1,5 @@
 import {
-  Award, BookOpenCheck, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Award, BookOpenCheck, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -73,6 +73,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Modules", href: "/settings/modules", icon: ToggleRight, permission: "modules.manage", keywords: ["features"] },
       { label: "Plan & billing", href: "/settings/billing", icon: CreditCard, permission: "billing.view", keywords: ["subscription", "upgrade", "pricing", "trial"] },
       { label: "Users & roles", href: "/settings/users", icon: Users, permission: "users.view", keywords: ["staff", "accounts", "permissions"] },
+      { label: "Email", href: "/settings/emails", icon: Mail, permission: "emails.view", keywords: ["brevo", "smtp", "sent", "receipts"] },
       { label: "Audit log", href: "/settings/audit", icon: ScrollText, permission: "audit.view", keywords: ["history", "activity"] },
     ],
   },

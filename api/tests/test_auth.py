@@ -1,4 +1,3 @@
-import logging
 import re
 
 from tests import factories
@@ -94,14 +93,17 @@ async def test_change_password_revokes_other_sessions(client, admin):
     assert (await factories.login(client, admin.email, "NewPass123", "alpha")).status_code == 200
 
 
-async def test_password_reset_flow(client, admin, caplog):
+async def test_password_reset_flow(client, admin):
+    from app.services.email_service import CONSOLE_OUTBOX
+    CONSOLE_OUTBOX.clear()
     unknown = await client.post(f"{API}/auth/password-reset/request", json={"email": "ghost@alpha.edu", "school_slug": "alpha"})
-    with caplog.at_level(logging.INFO, logger="eduvia.auth"):
-        known = await client.post(f"{API}/auth/password-reset/request", json={"email": admin.email, "school_slug": "alpha"})
+    known = await client.post(f"{API}/auth/password-reset/request", json={"email": admin.email, "school_slug": "alpha"})
     assert unknown.status_code == known.status_code == 200
     assert unknown.json() == known.json()  # no account enumeration
 
-    token = re.search(r"token=(\S+)", caplog.text).group(1)
+    [email] = [m for m in CONSOLE_OUTBOX if m.kind == "password_reset"]  # only the real account gets one
+    assert email.to == admin.email
+    token = re.search(r"token=(\S+)", email.text).group(1)
     res = await client.post(f"{API}/auth/password-reset/confirm", json={"token": token, "new_password": "Reset1234"})
     assert res.status_code == 200
     assert (await factories.login(client, admin.email, "Reset1234", "alpha")).status_code == 200

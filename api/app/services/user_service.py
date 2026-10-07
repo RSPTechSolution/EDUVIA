@@ -12,7 +12,7 @@ from app.models import AuditLog, School, SchoolClass, Section, Student, StudentG
 from app.schemas.common import PageMeta, PageParams
 from app.schemas.user import LinkedChild, UserCreate, UserDetail, UserUpdate
 from app.services.academics_service import field_error
-from app.services import audit_service, billing_service
+from app.services import audit_service, billing_service, notify
 from app.services.auth_service import revoke_user_sessions
 
 
@@ -111,6 +111,7 @@ async def create_user(db: AsyncSession, school_id: uuid.UUID, data: UserCreate, 
     await db.flush()
     await audit_service.record(db, "user.create", school_id=school_id, user_id=actor_id,
                                entity_type="user", entity_id=user.id, meta={"role": data.role})
+    await notify.account_created(db, user, data.password)
     return user
 
 
@@ -177,6 +178,7 @@ async def admin_set_password(db: AsyncSession, school_id: uuid.UUID, user_id: uu
     await revoke_user_sessions(db, user.id)
     await audit_service.record(db, "user.password_set", school_id=school_id, user_id=actor_id,
                                entity_type="user", entity_id=user.id)
+    await notify.password_set(db, user, password)
 
 
 async def list_audit(db: AsyncSession, school_id: uuid.UUID, page: PageParams, *,

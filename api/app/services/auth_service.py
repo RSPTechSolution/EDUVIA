@@ -16,6 +16,7 @@ from app.core.security import (
 from app.models import PasswordResetToken, School, User, UserSession
 from app.schemas.auth import LoginResponse, MeOut, SchoolBrief, TokenPair
 from app.services import audit_service
+from app.services import notify
 
 log = logging.getLogger("eduvia.auth")
 INVALID = "Invalid email, password or school"
@@ -156,8 +157,7 @@ async def request_password_reset(db: AsyncSession, email: str, school_slug: str 
     ))
     await audit_service.record(db, "auth.password_reset_requested", school_id=user.school_id, user_id=user.id)
     await db.flush()
-    # Email delivery is wired up in the communication phase; until then the link is logged.
-    log.info("Password reset link for %s: %s/reset-password?token=%s", user.email, settings.APP_URL, token)
+    await notify.password_reset(db, user, token)
     return token
 
 

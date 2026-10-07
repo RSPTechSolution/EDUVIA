@@ -22,6 +22,7 @@ from app.schemas.finance import (
     OrderResult, PaymentOut, Receipt, StructureClass, StructureMatrix, StructureSet,
 )
 from app.services import audit_service
+from app.services import notify
 from app.services.academics_service import field_error
 from app.services.attendance_service import academic_year_start
 from app.services.family_service import own_students, school_today
@@ -255,6 +256,7 @@ async def _record_payment(db: AsyncSession, inv: FeeInvoice, amount: Decimal, me
     await audit_service.record(db, "fees.payment", school_id=inv.school_id, user_id=collected_by or paid_by, entity_type="fee_invoice",
                                entity_id=inv.id, meta={"amount": float(amount), "method": method, "receipt_no": p.receipt_no,
                                                        "invoice_no": inv.invoice_no})
+    await notify.fee_paid(db, p, inv)
     return p
 
 

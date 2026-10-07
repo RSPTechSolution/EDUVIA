@@ -34,6 +34,8 @@ PERMISSIONS: dict[str, list[Role]] = {
     "users.view": ADMINS + [Role.HR_MANAGER],
     "users.manage": [Role.SCHOOL_ADMIN],
     "audit.view": ADMINS,
+    "emails.view": ADMINS,
+    "emails.manage": [Role.SCHOOL_ADMIN],
     "billing.view": ADMINS + [Role.ACCOUNTANT],
     "students.view": ADMINS + [Role.TEACHER, Role.RECEPTIONIST, Role.ACCOUNTANT],
     "students.manage": ADMINS + [Role.RECEPTIONIST],

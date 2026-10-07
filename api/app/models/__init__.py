@@ -5,6 +5,7 @@ from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.billing import Lead, Plan
 from app.models.communication import Homework, HomeworkStatus, Notice, NoticeRead
+from app.models.email import EmailLog
 from app.models.exams import Exam, ExamMark, ExamPaper, ExamRemark
 from app.models.finance import FeeCategory, FeeInvoice, FeeInvoiceItem, FeePayment, FeeStructure, PaymentOrder
 from app.models.school import School, SchoolModule
@@ -14,4 +15,4 @@ from app.models.user import PasswordResetToken, User, UserSession
 __all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan", "Lead", "School", "SchoolModule", "User", "UserSession", "PasswordResetToken", "AuditLog",
            "Subject", "Period", "TeacherSubject", "TeacherUnavailability", "TimetableEntry",
            "AttendanceRecord", "FeeCategory", "FeeStructure", "FeeInvoice", "FeeInvoiceItem", "FeePayment", "PaymentOrder",
-           "Exam", "ExamPaper", "ExamMark", "ExamRemark", "Notice", "NoticeRead", "Homework", "HomeworkStatus"]
+           "Exam", "ExamPaper", "ExamMark", "ExamRemark", "Notice", "NoticeRead", "Homework", "HomeworkStatus", "EmailLog"]

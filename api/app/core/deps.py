@@ -14,7 +14,10 @@ from app.core.permissions import Role, has_permission
 from app.core.security import decode_access_token
 from app.models import School, User, UserSession
 
-DB = Annotated[AsyncSession, Depends(get_db)]
+# scope="function": commit before the response is sent. With the default ("request") the client could
+# get its answer before the data was saved, and a request made straight after (e.g. /auth/me after
+# login) could miss it.
+DB = Annotated[AsyncSession, Depends(get_db, scope="function")]
 
 
 @dataclass
