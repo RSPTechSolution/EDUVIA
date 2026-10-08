@@ -15,6 +15,7 @@ import '../../features/fees/fees_screens.dart';
 import '../../features/home/more_screen.dart';
 import '../../features/homework/homework_screens.dart';
 import '../../features/notices/notices_screen.dart';
+import '../../features/notifications/notifications_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/timetable/timetable_screen.dart';
 import '../auth/auth_controller.dart';
@@ -68,6 +69,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/fees/receipt/:id', builder: (_, st) => ReceiptScreen(id: st.pathParameters['id']!)),
       GoRoute(path: '/timetable', builder: (_, _) => const TimetableScreen()),
       GoRoute(path: '/notices', builder: (_, _) => const NoticesScreen()),
+      GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
       GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
       GoRoute(path: '/results', builder: (_, _) => const ResultsScreen()),
       GoRoute(path: '/results/:exam/:student', builder: (_, st) => ReportCardScreen(examId: st.pathParameters['exam']!, studentId: st.pathParameters['student']!)),

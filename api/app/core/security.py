@@ -68,3 +68,25 @@ def decode_access_token(token: str) -> dict:
     if payload.get("type") != "access":
         raise Unauthorized("Invalid token", code="INVALID_TOKEN")
     return payload
+
+
+def create_download_token(*, user_id: uuid.UUID, session_id: uuid.UUID, path: str, minutes: int = 10) -> str:
+    """A short-lived token that opens one API path (e.g. a PDF) without an Authorization header,
+    so a phone can hand the link to its browser or PDF viewer."""
+    now = datetime.now(UTC)
+    payload = {"sub": str(user_id), "sid": str(session_id), "type": "download", "path": path,
+               "iat": now, "exp": now + timedelta(minutes=minutes)}
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_download_token(token: str, path: str) -> dict:
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM],
+                             options={"require": ["exp", "sub", "sid", "type", "path"]})
+    except jwt.ExpiredSignatureError:
+        raise Unauthorized("This link has expired. Open it again from the app.", code="TOKEN_EXPIRED")
+    except jwt.PyJWTError:
+        raise Unauthorized("Invalid link", code="INVALID_TOKEN")
+    if payload.get("type") != "download" or payload.get("path") != path:
+        raise Unauthorized("Invalid link", code="INVALID_TOKEN")
+    return payload

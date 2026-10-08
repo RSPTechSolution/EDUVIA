@@ -1,3 +1,5 @@
+from datetime import datetime
+import uuid
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -36,3 +38,14 @@ def ok(data=None, meta: PageMeta | None = None) -> dict:
 
 class Message(BaseModel):
     message: str
+
+
+class FileOut(BaseModel):
+    id: uuid.UUID
+    filename: str
+    content_type: str
+    size: int
+    label: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

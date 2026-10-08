@@ -13,6 +13,7 @@ import { StudentRecords } from "@/components/academics/student-records";
 import { StudentFields, studentSchema, toApi, type StudentValues } from "@/components/academics/student-fields";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EmptyState } from "@/components/common/empty-state";
+import { FileList, PhotoUpload } from "@/components/common/files";
 import { Field } from "@/components/common/field";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { FamilyIllustration } from "@/components/illustrations";
@@ -200,9 +201,15 @@ function StudentProfile({ id }: { id: string }) {
       <FadeIn>
         <div className="aurora relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.3_0.08_264)] via-[oklch(0.42_0.14_256)] to-[oklch(0.52_0.12_210)] p-6 text-white shadow-lg sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <span className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-white/15 font-heading text-3xl font-extrabold ring-2 ring-white/30 backdrop-blur">
-              {initials(`${s.first_name} ${s.last_name}`)}
-            </span>
+            <PhotoUpload
+              fileId={s.photo_file_id}
+              purpose="student_photo"
+              ownerId={s.id}
+              canEdit={manage}
+              onChanged={() => qc.invalidateQueries({ queryKey: ["student", s.id] })}
+              className="size-20 rounded-2xl bg-white/15 font-heading text-3xl font-extrabold ring-2 ring-white/30 backdrop-blur"
+              fallback={initials(`${s.first_name} ${s.last_name}`)}
+            />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{s.first_name} {s.last_name}</h1>
@@ -277,6 +284,16 @@ function StudentProfile({ id }: { id: string }) {
       </div>
 
       <StudentRecords studentId={s.id} />
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Documents</CardTitle>
+          <CardDescription>Birth certificate, transfer certificate, Aadhaar, medical records. Parents can see these in the app.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FileList purpose="student_document" ownerId={s.id} canUpload={manage} withLabel emptyText="No documents uploaded" />
+        </CardContent>
+      </Card>
 
       {manage && <EditSheet student={s} open={editing} onOpenChange={setEditing} />}
       {manage && <AddGuardianDialog student={s} open={adding} onOpenChange={setAdding} />}

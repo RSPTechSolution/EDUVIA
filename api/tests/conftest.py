@@ -10,6 +10,8 @@ os.environ.update(
     JWT_SECRET_KEY="test-only-secret-key-that-is-long-enough-0123456789",
     BCRYPT_ROUNDS="4",
     EMAIL_PROVIDER="console",  # tests never send real email
+    PUSH_PROVIDER="console",
+    STORAGE_DIR="storage-test",
 )
 
 import pytest  # noqa: E402

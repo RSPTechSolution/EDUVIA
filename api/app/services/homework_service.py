@@ -7,13 +7,13 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError, Forbidden, NotFound
-from app.core.permissions import has_permission
-from app.models import Homework, HomeworkStatus, SchoolClass, Section, Student, Subject, TimetableEntry, User
+from app.core.permissions import STAFF_ROLES, has_permission
+from app.models import StoredFile, Homework, HomeworkStatus, SchoolClass, Section, Student, Subject, TimetableEntry, User
 from app.schemas.common import PageMeta, PageParams
 from app.schemas.communication import (
     AssignTarget, CheckSave, FamilyDone, HomeworkDetail, HomeworkIn, HomeworkOut, HomeworkStudent, HomeworkUpdate, MyHomework,
 )
-from app.services import audit_service
+from app.services import audit_service, notification_service, storage_service
 from app.services.academics_service import field_error, get_section
 from app.services.family_service import own_students, school_today
 
@@ -86,6 +86,9 @@ async def create(db: AsyncSession, user: User, data: HomeworkIn) -> HomeworkOut:
     await db.flush()
     await audit_service.record(db, "homework.create", school_id=user.school_id, user_id=user.id, entity_type="homework", entity_id=h.id,
                                meta={"title": h.title})
+    await notification_service.notify(
+        db, await notification_service.family_of_sections(db, [h.section_id]), school_id=user.school_id, kind="homework",
+        title=f"New homework: {subject.name}", body=f"{h.title} · due {h.due_date:%d %b}", link="/my-homework", data={"homework_id": h.id})
     return (await list_homework(db, user, PageParams(page=1, page_size=1), homework_id=h.id))[0][0]
 
 
@@ -138,7 +141,21 @@ async def list_homework(db: AsyncSession, user: User, page: PageParams, *, secti
         Student.school_id == user.school_id, Student.status == "active").group_by(Student.section_id))).all())
     out = [HomeworkOut(**_base(h, labels, (sn, sc), t), students=sizes.get(h.section_id, 0), done=stats[(h.id, "done")],
                        checked=stats[(h.id, "checked")], can_edit=_can_edit(user, h, scope)) for h, sn, sc, t in rows]
+    await _attach(db, out)
     return out, PageMeta(total=total, page=page.page, page_size=page.page_size)
+
+
+async def _attach(db: AsyncSession, items: list) -> None:
+    """Fill in each homework's attached files."""
+    ids = list({i.id for i in items})
+    if not ids:
+        return
+    files: dict[uuid.UUID, list] = {}
+    for f in (await db.scalars(select(StoredFile).where(StoredFile.purpose == "homework", StoredFile.owner_id.in_(ids))
+                               .order_by(StoredFile.created_at))).all():
+        files.setdefault(f.owner_id, []).append(f)
+    for i in items:
+        i.attachments = files.get(i.id, [])
 
 
 async def detail(db: AsyncSession, user: User, homework_id: uuid.UUID) -> HomeworkDetail:
@@ -201,6 +218,7 @@ async def my_homework(db: AsyncSession, user: User, days: int = 21) -> list[MyHo
             out.append(MyHomework(**_base(h, labels, (sn, sc), t), student_id=k.id, student_name=f"{k.first_name} {k.last_name}",
                                   status=status, note=s.note if s else None, remark=s.remark if s else None,
                                   overdue=status == "pending" and h.due_date < today))
+    await _attach(db, out)
     return out
 
 
@@ -219,3 +237,22 @@ async def family_done(db: AsyncSession, user: User, homework_id: uuid.UUID, data
     row = row or HomeworkStatus(school_id=user.school_id, homework_id=h.id, student_id=kid.id)
     row.status, row.note, row.updated_at = "done", data.note or None, datetime.now(UTC)
     db.add(row)
+
+
+# ---- attachments: the teacher who set it (or an admin) uploads; staff and the class's families read --
+
+async def _may_attach(db: AsyncSession, user: User, owner_id: uuid.UUID | None) -> bool:
+    if not owner_id or not has_permission(user.role, "homework.manage"):
+        return False
+    h = await db.scalar(select(Homework).where(Homework.id == owner_id, Homework.school_id == user.school_id))
+    return bool(h) and _can_edit(user, h, await _scope(db, user))
+
+
+async def _may_read(db: AsyncSession, user: User, owner_id: uuid.UUID | None) -> bool:
+    h = await db.scalar(select(Homework).where(Homework.id == owner_id, Homework.school_id == user.school_id))
+    if not h:
+        return False
+    return user.role in STAFF_ROLES or h.section_id in {k.section_id for k in await own_students(db, user)}
+
+
+storage_service.register_purpose("homework", storage_service.Purpose(can_upload=_may_attach, can_read=_may_read))

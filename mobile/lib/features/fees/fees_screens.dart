@@ -8,6 +8,7 @@ import '../../core/api/api_client.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/auth/session.dart';
 import '../../shared/widgets/common.dart';
+import '../../shared/widgets/open_file.dart';
 import 'fees_data.dart';
 
 final _date = DateFormat('d MMM yyyy');
@@ -629,7 +630,13 @@ class ReceiptScreen extends ConsumerWidget {
     final async = ref.watch(receiptProvider(id));
     final s = statusColors(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Receipt')),
+      appBar: AppBar(title: const Text('Receipt'), actions: [
+        IconButton(
+          tooltip: 'Open PDF',
+          icon: const Icon(Icons.picture_as_pdf_outlined),
+          onPressed: () => openApiFile(context, ref, '/fees/payments/$id/receipt.pdf'),
+        ),
+      ]),
       body: AsyncView(
         value: async,
         onRetry: () => ref.invalidate(receiptProvider(id)),

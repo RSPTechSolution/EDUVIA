@@ -1,5 +1,6 @@
 "use client";
 
+import { AttachmentChips } from "@/components/common/files";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { BookOpen, Check, CheckCircle2, Circle, MessageSquareText, XCircle } from "lucide-react";
@@ -47,6 +48,7 @@ function Item({ h }: { h: MyHomework }) {
           </div>
           <p className={cn("mt-1 font-medium", h.status !== "pending" && "text-muted-foreground")}>{h.title}</p>
           {h.details && <p className="mt-0.5 text-sm text-muted-foreground">{h.details}</p>}
+          {!!h.attachments?.length && <div className="mt-1.5"><AttachmentChips files={h.attachments} /></div>}
           <p className="mt-1 text-xs text-muted-foreground">
             {h.teacher ?? "Teacher"} · {h.status === "checked" ? "Checked by the teacher" : h.status === "incomplete" ? "Teacher marked it incomplete" : h.status === "done" ? "You marked it done" : "Not done yet"}
           </p>

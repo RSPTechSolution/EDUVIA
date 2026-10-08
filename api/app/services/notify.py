@@ -60,6 +60,11 @@ async def fee_paid(db: AsyncSession, payment: FeePayment, invoice: FeeInvoice) -
                                    .where(StudentGuardian.student_id == student.id, User.is_active.is_(True)))).all()
     balance = max(invoice.total - invoice.discount - invoice.paid, 0)
     method = {"cash": "Cash", "upi": "UPI", "cheque": "Cheque", "card": "Card", "bank_transfer": "Bank transfer", "online": "Online"}.get(payment.method, payment.method)
+    from app.services import notification_service
+    await notification_service.notify(db, await notification_service.family_of(db, [student.id]), school_id=school.id, kind="fee_receipt",
+                                      title=f"Fee received: ₹{payment.amount:,.2f}",
+                                      body=f"{student.first_name} {student.last_name} · {invoice.term} · receipt {payment.receipt_no}",
+                                      link="/my-fees", data={"payment_id": payment.id})
     for email, name in recipients:
         await email_service.queue(db, t.fee_receipt(
             to=email, name=name, school_name=school.name, student=f"{student.first_name} {student.last_name}", class_section=class_section,

@@ -2,6 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import Annotated, Literal
 
+from app.schemas.common import FileOut
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=200)]
@@ -75,6 +76,7 @@ class HomeworkOut(BaseModel):
     done: int = 0
     checked: int = 0
     can_edit: bool = False
+    attachments: list[FileOut] = []
 
 
 class HomeworkStudent(BaseModel):

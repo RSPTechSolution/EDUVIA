@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Request
+from pydantic import BaseModel, Field
 
 from app.core import ratelimit
 from app.core.config import settings
 from app.core.deps import DB, Auth, client_ip
 from app.core.errors import TooManyRequests
+from app.core.security import create_download_token
 from app.schemas.auth import (
     ChangePasswordRequest, LoginRequest, LoginResponse, MeOut, PasswordResetConfirm,
     PasswordResetRequest, RefreshRequest, TokenPair,
@@ -62,3 +64,14 @@ async def password_reset_request(body: PasswordResetRequest, request: Request, d
 async def password_reset_confirm(body: PasswordResetConfirm, db: DB):
     await auth_service.confirm_password_reset(db, body.token, body.new_password)
     return ok(Message(message="Password updated. Please sign in."))
+
+
+class DownloadLinkIn(BaseModel):
+    path: str = Field(min_length=8, max_length=300, pattern=r"^/api/v1/[A-Za-z0-9/_\-.]+$")
+
+
+@router.post("/download-link", response_model=ApiResponse[dict])
+async def download_link(body: DownloadLinkIn, current: Auth):
+    """A 10-minute link that opens one GET path (a PDF or file) without signing in again, for phones."""
+    token = create_download_token(user_id=current.id, session_id=current.session_id, path=body.path)
+    return ok({"url": f"{settings.API_PUBLIC_URL.rstrip('/')}{body.path}?dl={token}", "expires_in": 600})

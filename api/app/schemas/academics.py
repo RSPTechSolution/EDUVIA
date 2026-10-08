@@ -205,6 +205,7 @@ class StudentOut(Schema):
     status: str
     user_id: uuid.UUID | None
     guardian_count: int = 0
+    photo_file_id: uuid.UUID | None = None
     created_at: datetime
 
 

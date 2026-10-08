@@ -169,4 +169,14 @@ class ApiClient {
 
   Future<ApiResult<T>> put<T>(String path, {Object? body, T Function(Object?)? parse}) =>
       request('PUT', path, body: body, parse: parse);
+
+  /// A 10-minute link to [path] (e.g. `/fees/payments/<id>/receipt.pdf`) that works without the
+  /// Authorization header, so the phone's browser or PDF viewer can open it.
+  Future<Uri> signedUrl(String path) async {
+    final base = Uri.parse(_dio.options.baseUrl);
+    final full = '${base.path}$path';
+    final res = await post<String>('/auth/download-link', body: {'path': full}, parse: (d) => (d as Map)['url'] as String);
+    final token = Uri.parse(res.data).queryParameters['dl']!;
+    return base.replace(path: full, queryParameters: {'dl': token});
+  }
 }

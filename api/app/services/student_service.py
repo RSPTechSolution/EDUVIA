@@ -6,14 +6,14 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import Conflict, Forbidden, NotFound
-from app.core.permissions import Role
+from app.core.permissions import STAFF_ROLES, Role, has_permission
 from app.core.security import hash_password
 from app.models import School, SchoolClass, Section, Student, StudentGuardian, User
 from app.schemas.academics import (
     GuardianLink, GuardianOut, StudentCreate, StudentDetail, StudentOption, StudentOut, StudentUpdate,
 )
 from app.schemas.common import PageMeta, PageParams
-from app.services import audit_service
+from app.services import audit_service, storage_service
 from app.services import notify
 from app.services.academics_service import field_error, get_class, get_section
 
@@ -255,3 +255,34 @@ async def remove_guardian(db: AsyncSession, school_id: uuid.UUID, student_id: uu
     await db.delete(g)
     await audit_service.record(db, "student.guardian_remove", school_id=school_id, user_id=actor_id,
                                entity_type="student", entity_id=s.id)
+
+
+# ---- photos and documents: the office uploads; staff who can see students and the family can read --
+
+async def _may_upload(db: AsyncSession, user: User, owner_id: uuid.UUID | None) -> bool:
+    return bool(owner_id) and has_permission(user.role, "students.manage") and bool(
+        await db.scalar(select(Student.id).where(Student.id == owner_id, Student.school_id == user.school_id)))
+
+
+async def _may_read(db: AsyncSession, user: User, owner_id: uuid.UUID | None) -> bool:
+    from app.services.family_service import visible_student
+    try:
+        await visible_student(db, user, owner_id, "students.view")
+        return True
+    except NotFound:
+        return False
+
+
+async def _may_read_photo(db: AsyncSession, user: User, owner_id: uuid.UUID | None) -> bool:
+    # Teachers take attendance with photos in view, so every staff member may see them, as may the family.
+    return user.role in STAFF_ROLES or await _may_read(db, user, owner_id)
+
+
+async def _set_photo(db: AsyncSession, user: User, owner_id: uuid.UUID | None, file_id: uuid.UUID | None) -> None:
+    s = await _get(db, user.school_id, owner_id)
+    s.photo_file_id = file_id
+
+
+storage_service.register_purpose("student_photo", storage_service.Purpose(
+    can_upload=_may_upload, can_read=_may_read_photo, images_only=True, single=True, on_change=_set_photo))
+storage_service.register_purpose("student_document", storage_service.Purpose(can_upload=_may_upload, can_read=_may_read))

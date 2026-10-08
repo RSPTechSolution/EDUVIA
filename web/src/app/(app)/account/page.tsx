@@ -10,9 +10,9 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Field } from "@/components/common/field";
 import { PageHeader } from "@/components/common/page-header";
+import { PhotoUpload } from "@/components/common/files";
 import { useSession } from "@/components/session-provider";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -76,6 +76,7 @@ function ChangePassword() {
 
 function AccountPage() {
   const me = useSession();
+  const router = useRouter();
   const required = useSearchParams().get("required") === "1" || me.must_change_password;
   return (
     <>
@@ -90,7 +91,16 @@ function AccountPage() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <Card>
           <CardContent className="flex flex-col items-center pt-2 text-center">
-            <Avatar className="size-20"><AvatarFallback className="bg-primary/10 text-2xl font-semibold text-primary">{initials(me.full_name)}</AvatarFallback></Avatar>
+            <PhotoUpload
+              fileId={me.photo_file_id}
+              purpose="user_photo"
+              ownerId={me.id}
+              canEdit
+              onChanged={() => router.refresh()}
+              className="size-20 rounded-full bg-primary/10 text-2xl font-semibold text-primary"
+              fallback={initials(me.full_name)}
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">Click your photo to change it</p>
             <h2 className="mt-4 text-lg font-semibold">{me.full_name}</h2>
             <p className="text-sm text-muted-foreground">{me.email}</p>
             <dl className="mt-6 w-full divide-y text-left text-sm">

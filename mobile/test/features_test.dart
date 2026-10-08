@@ -149,14 +149,16 @@ void main() {
     expect(find.text('Absent · Fever'), findsOneWidget);
   });
 
-  testWidgets('parent ticks off homework and sees notices from the bell', (tester) async {
+  testWidgets('parent ticks off homework and opens a notice from the notification centre', (tester) async {
     var done = false;
     Map<String, dynamic> hw() => {
           'id': 'h1', 'section_id': 'sec', 'section_label': 'Class 5 – A', 'subject_id': 'm', 'subject_name': 'Mathematics', 'subject_color': 'blue',
           'title': 'Exercise 3.1', 'details': null, 'assigned_on': '2026-10-01', 'due_date': '2099-10-06', 'teacher': 'Priya Verma',
           'students': 8, 'done': 0, 'checked': 0, 'can_edit': false, 'student_id': 's1', 'student_name': 'Aarav Patel',
           'status': done ? 'done' : 'pending', 'note': null, 'remark': null, 'overdue': false,
+          'attachments': [{'id': 'f1', 'filename': 'worksheet.pdf', 'content_type': 'application/pdf', 'size': 2048, 'label': null, 'created_at': '2026-10-01T10:00:00Z'}],
         };
+    var read = false;
     final fake = FakeApi()
       ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson()..['modules'] = ['attendance', 'fees', 'academics', 'communication', 'exams'])))
       ..on('GET /homework/my', (_) => (200, FakeApi.ok([hw()])))
@@ -165,7 +167,18 @@ void main() {
         done = true;
         return (200, FakeApi.ok({'message': 'ok'}));
       })
-      ..on('GET /notices/unread-count', (_) => (200, FakeApi.ok({'count': 2})))
+      ..on('GET /notifications/unread-count', (_) => (200, FakeApi.ok({'count': read ? 1 : 2})))
+      ..on('GET /notifications', (_) => (200, FakeApi.ok([
+            {'id': 'x1', 'kind': 'notice', 'title': 'Diwali vacation', 'body': 'School closed 20–25 Oct', 'link': '/notices', 'data': {},
+             'read': read, 'created_at': '2026-10-02T10:00:00Z'},
+            {'id': 'x2', 'kind': 'homework', 'title': 'New homework: Mathematics', 'body': 'Exercise 3.1', 'link': '/my-homework', 'data': {},
+             'read': false, 'created_at': '2026-10-01T10:00:00Z'},
+          ])))
+      ..on('POST /notifications/x1/read', (_) {
+        read = true;
+        return (200, FakeApi.ok({'message': 'ok'}));
+      })
+      ..on('GET /notices/unread-count', (_) => (200, FakeApi.ok({'count': 1})))
       ..on('GET /notices', (_) => (200, FakeApi.ok([
             {'id': 'n1', 'title': 'Diwali vacation', 'body': 'School closed 20–25 Oct', 'audience': 'everyone', 'audience_label': 'Everyone', 'section_ids': [],
              'priority': 'important', 'pinned': true, 'created_at': '2026-10-02T10:00:00Z', 'author': 'Principal', 'read': false, 'can_edit': false},
@@ -173,10 +186,11 @@ void main() {
       ..on('POST /notices/n1/read', (_) => (200, FakeApi.ok({'message': 'ok'})));
     await pump(tester, container(fake));
     expect(find.text('Homework to do'), findsOneWidget);
-    expect(find.byTooltip('Notices, 2 unread'), findsOneWidget);
+    expect(find.byTooltip('Notifications, 2 unread'), findsOneWidget);
 
     await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Homework')));
     await tester.pumpAndSettle();
+    expect(find.text('worksheet.pdf'), findsOneWidget);
     await tester.tap(find.byTooltip('Mark as done'));
     await tester.pumpAndSettle();
     expect(done, isTrue);
@@ -184,8 +198,13 @@ void main() {
 
     await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Home')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Notices, 2 unread'));
+    await tester.tap(find.byTooltip('Notifications, 2 unread'));
     await tester.pumpAndSettle();
+    expect(find.text('New homework: Mathematics'), findsOneWidget);
+    await tester.tap(find.text('Diwali vacation'));
+    await tester.pumpAndSettle();
+    expect(fake.calls, contains('POST /notifications/x1/read'));
+    expect(find.widgetWithText(AppBar, 'Notices'), findsOneWidget);
     await tester.tap(find.text('Diwali vacation'));
     await tester.pumpAndSettle();
     expect(find.text('School closed 20–25 Oct'), findsWidgets);

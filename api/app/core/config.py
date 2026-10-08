@@ -47,6 +47,18 @@ class Settings(BaseSettings):
     # Never send to these domains: the demo data and tests use them, and demo.com is someone else's.
     EMAIL_SKIP_DOMAINS: Annotated[list[str], NoDecode] = ["demo.com", "students.demo.com", "example.com", "t.com", "eduvia.local"]
 
+    # Uploaded files are kept on disk under STORAGE_DIR (one folder per school).
+    STORAGE_DIR: str = "storage"
+    MAX_UPLOAD_MB: int = 10
+
+    # Push notifications: "console" logs them; "fcm" sends through Firebase Cloud Messaging using the
+    # service-account JSON file at FIREBASE_CREDENTIALS_FILE. In-app notifications work either way.
+    PUSH_PROVIDER: str = "console"
+    FIREBASE_CREDENTIALS_FILE: str = ""
+
+    # Public address of this API, used in short-lived download links opened by the mobile apps.
+    API_PUBLIC_URL: str = "http://localhost:8000"
+
     # Online fee payments: "test" simulates a gateway (never allowed in production),
     # "none" turns online payment off. Real gateways (Razorpay) plug in here later.
     PAYMENT_GATEWAY: str = "test"
@@ -78,6 +90,8 @@ class Settings(BaseSettings):
             raise ValueError("EMAIL_PROVIDER=brevo needs BREVO_API_KEY")
         if self.EMAIL_PROVIDER == "brevo" and self.BREVO_API_KEY.startswith("xsmtpsib-") and not self.BREVO_SMTP_LOGIN:
             raise ValueError("A Brevo SMTP key needs BREVO_SMTP_LOGIN (shown next to the key in Brevo)")
+        if self.PUSH_PROVIDER == "fcm" and not self.FIREBASE_CREDENTIALS_FILE:
+            raise ValueError("PUSH_PROVIDER=fcm needs FIREBASE_CREDENTIALS_FILE (the Firebase service-account JSON)")
         if self.ENVIRONMENT == "production" and self.PAYMENT_GATEWAY == "test":
             raise ValueError("PAYMENT_GATEWAY=test is for development only")
         return self

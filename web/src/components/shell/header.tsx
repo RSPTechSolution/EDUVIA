@@ -6,12 +6,14 @@ import { ChevronRight, KeyRound, LogOut, Menu, Monitor, Moon, Search, Sun } from
 import { useTheme } from "next-themes";
 import { useSession } from "@/components/session-provider";
 import { signOut } from "@/components/shell/command-palette";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { fileUrl } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { NotificationBell } from "@/components/shell/notification-bell";
 import { findNavItem } from "@/config/navigation";
 import { initials, roleLabel } from "@/lib/format";
 
@@ -68,6 +70,7 @@ function UserMenu() {
         render={<Button variant="ghost" className="h-10 gap-2.5 px-1.5 sm:pr-3" aria-label="Account menu" />}
       >
         <Avatar>
+          {me.photo_file_id && <AvatarImage src={fileUrl(me.photo_file_id)} alt="" />}
           <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">{initials(me.full_name)}</AvatarFallback>
         </Avatar>
         <span className="hidden text-left leading-tight sm:block">
@@ -111,6 +114,7 @@ export function Header({ onOpenMobileNav, onOpenSearch }: { onOpenMobileNav: () 
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onOpenSearch} aria-label="Search">
           <Search className="size-[18px]" aria-hidden />
         </Button>
+        <NotificationBell />
         <ThemeMenu />
         <UserMenu />
       </div>

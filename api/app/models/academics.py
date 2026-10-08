@@ -53,6 +53,7 @@ class Student(Base, TenantMixin, TimestampMixin):
     address: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), default="active", index=True)  # active | inactive | alumni
     user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    photo_file_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("files.id", ondelete="SET NULL"))
 
 
 class StudentGuardian(Base, TenantMixin, TimestampMixin):

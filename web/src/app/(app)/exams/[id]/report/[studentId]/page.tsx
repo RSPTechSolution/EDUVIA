@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Award, Printer } from "lucide-react";
+import { ArrowLeft, Award, FileDown, Printer } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 import { BrandMark } from "@/components/brand/logo";
@@ -26,7 +26,10 @@ export default function ReportCardPage({ params }: { params: Promise<{ id: strin
     <div className="mx-auto max-w-3xl">
       <div className="mb-4 flex items-center justify-between print:hidden">
         <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" aria-hidden />Back</button>
-        <Button onClick={() => window.print()}><Printer aria-hidden />Print</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" render={<a href={`/api/proxy/exams/${id}/report/${studentId}/pdf?download=true`} />}><FileDown aria-hidden />Download PDF</Button>
+          <Button onClick={() => window.print()}><Printer aria-hidden />Print</Button>
+        </div>
       </div>
       {!c.published && <p className="mb-3 rounded-lg bg-warning/10 p-3 text-sm text-warning print:hidden">Draft: results aren&apos;t published, so families can&apos;t see this yet.</p>}
       <article aria-label={`Report card for ${c.student_name}`} className="relative overflow-hidden rounded-2xl border bg-white p-8 text-slate-900 shadow-sm print:border-0 print:p-0 print:shadow-none">

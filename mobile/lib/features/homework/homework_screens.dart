@@ -8,6 +8,7 @@ import '../../core/api/api_client.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/auth/session.dart';
 import '../../shared/widgets/common.dart';
+import '../../shared/widgets/open_file.dart';
 import '../timetable/timetable_screen.dart' show subjectColors;
 
 final _day = DateFormat('EEE d MMM');
@@ -31,7 +32,9 @@ class HomeworkItem {
         note = j['note'] as String?,
         remark = j['remark'] as String?,
         overdue = j['overdue'] as bool? ?? false,
-        roster = [for (final r in (j['roster'] as List? ?? const []).cast<Map>()) RosterRow.fromJson(r.cast())];
+        roster = [for (final r in (j['roster'] as List? ?? const []).cast<Map>()) RosterRow.fromJson(r.cast())],
+        attachments = [for (final f in (j['attachments'] as List? ?? const []).cast<Map>()) AttachedFile.fromJson(f.cast())];
+  final List<AttachedFile> attachments;
   final String id;
   final String sectionLabel;
   final String subject;
@@ -211,6 +214,7 @@ class _FamilyTile extends StatelessWidget {
               const SizedBox(height: 4),
               Text(h.title, style: TextStyle(fontWeight: FontWeight.w600, color: h.status == 'pending' ? null : scheme.onSurfaceVariant)),
               if (h.details != null) Text(h.details!, style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
+              if (h.attachments.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: AttachmentChips(files: h.attachments)),
               const SizedBox(height: 2),
               Text('${h.teacher ?? 'Teacher'} · $label', style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
               if (h.remark != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text('“${h.remark}”', style: const TextStyle(fontStyle: FontStyle.italic))),

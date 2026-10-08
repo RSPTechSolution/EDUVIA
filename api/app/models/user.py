@@ -31,6 +31,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     employee_id: Mapped[str | None] = mapped_column(String(50))
     designation: Mapped[str | None] = mapped_column(String(100))
     license_no: Mapped[str | None] = mapped_column(String(50))
+    photo_file_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("files.id", ondelete="SET NULL", use_alter=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

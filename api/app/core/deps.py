@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db, set_tenant
 from app.core.errors import Forbidden, Unauthorized
 from app.core.permissions import Role, has_permission
-from app.core.security import decode_access_token
+from app.core.security import decode_access_token, decode_download_token
 from app.models import School, User, UserSession
 
 # scope="function": commit before the response is sent. With the default ("request") the client could
@@ -54,9 +54,13 @@ def client_ip(request: Request) -> str | None:
 async def get_current_user(request: Request, db: DB) -> CurrentUser:
     auth = request.headers.get("Authorization", "")
     scheme, _, token = auth.partition(" ")
-    if scheme.lower() != "bearer" or not token:
+    if scheme.lower() == "bearer" and token:
+        payload = decode_access_token(token)
+    elif request.method == "GET" and request.query_params.get("dl"):
+        # A signed download link (see POST /auth/download-link): valid only for the path it was made for.
+        payload = decode_download_token(request.query_params["dl"], request.url.path)
+    else:
         raise Unauthorized("Not authenticated")
-    payload = decode_access_token(token)
 
     # Identity lookups happen before we know the tenant, so they run with bypass,
     # then the context is narrowed to the user's school for the rest of the request.

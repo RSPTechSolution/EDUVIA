@@ -11,7 +11,7 @@ from app.core.permissions import STAFF_ROLES, Role, has_permission
 from app.models import Notice, NoticeRead, SchoolClass, Section, Student, StudentGuardian, TimetableEntry, User
 from app.schemas.common import PageMeta, PageParams
 from app.schemas.communication import NoticeIn, NoticeOut
-from app.services import audit_service
+from app.services import audit_service, notification_service
 from app.services.academics_service import field_error
 from app.services.family_service import own_students
 
@@ -79,6 +79,17 @@ async def _recipients(db: AsyncSession, school_id: uuid.UUID, n: Notice) -> int:
     return await db.scalar(select(func.count(func.distinct(User.id))).where(*active, or_(User.id.in_(parents), User.id.in_(students)))) or 0
 
 
+async def _recipient_ids(db: AsyncSession, school_id: uuid.UUID, n: Notice) -> list[uuid.UUID]:
+    if n.audience == "sections":
+        return await notification_service.family_of_sections(db, n.section_ids)
+    q = select(User.id).where(User.school_id == school_id, User.is_active.is_(True), User.deleted_at.is_(None))
+    if n.audience == "staff":
+        q = q.where(User.role.in_(STAFF_ROLES))
+    elif n.audience == "families":
+        q = q.where(User.role.in_([Role.PARENT, Role.STUDENT]))
+    return list((await db.scalars(q)).all())
+
+
 def _can_edit(user: User, n: Notice) -> bool:
     return has_permission(user.role, "notices.manage") or n.created_by == user.id
 
@@ -138,6 +149,9 @@ async def create(db: AsyncSession, user: User, data: NoticeIn) -> NoticeOut:
     await mark_read(db, user, n.id)
     await audit_service.record(db, "notice.create", school_id=user.school_id, user_id=user.id, entity_type="notice", entity_id=n.id,
                                meta={"title": n.title, "audience": n.audience})
+    await notification_service.notify(db, [u for u in await _recipient_ids(db, user.school_id, n) if u != user.id],
+                                      school_id=user.school_id, kind="notice", title=n.title, body=n.body[:180],
+                                      link="/notices", data={"notice_id": n.id, "priority": n.priority})
     await db.refresh(n)
     return await _out(db, user, n, True, user.full_name, await _audience_labeller(db, user.school_id))
 

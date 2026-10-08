@@ -10,7 +10,7 @@ from app.schemas.finance import (
     CategoryIn, CategoryOut, CategoryUpdate, CollectPayment, ConfirmOrder, DiscountSet, FeeSummary, GenerateInvoices,
     GenerateResult, InvoiceDetail, InvoiceRow, MyFees, OrderOut, OrderResult, PaymentOut, Receipt, StructureMatrix, StructureSet,
 )
-from app.services import fee_service as svc
+from app.services import fee_service as svc, pdf_service
 
 router = APIRouter(dependencies=[require_module("fees")])
 
@@ -113,3 +113,10 @@ async def confirm(order_id: uuid.UUID, body: ConfirmOrder, db: DB, current: Curr
     current.require_school()
     return ok(await svc.confirm_order(db, current.user, order_id, body.outcome))
 
+
+
+@router.get("/payments/{payment_id}/receipt.pdf")
+async def receipt_pdf(payment_id: uuid.UUID, db: DB, download: bool = False, current: CurrentUser = require_permission("school.view")):
+    current.require_school()
+    r = await svc.receipt(db, current.user, payment_id, has_permission(current.role, "fees.view"))
+    return pdf_service.pdf_response(pdf_service.fee_receipt(r), f"receipt-{r.payment.receipt_no}.pdf", download)

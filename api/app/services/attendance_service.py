@@ -13,7 +13,7 @@ from app.schemas.attendance import (
     Counts, DayStatus, MarkRequest, Overview, ReportRow, Roster, RosterEntry, SectionCard, SectionReport,
     StudentAttendance, TrendPoint,
 )
-from app.services import audit_service
+from app.services import audit_service, notification_service
 from app.services.academics_service import field_error, get_section
 from app.services.family_service import school_today, student_label
 
@@ -154,8 +154,11 @@ async def mark(db: AsyncSession, user: User, section_id: uuid.UUID, data: MarkRe
         AttendanceRecord.student_id.in_(in_section), AttendanceRecord.date == data.date))).all()}
     changed = 0
     now = datetime.now(UTC)
+    newly_absent = []
     for rec in data.records:
         row = existing.get(rec.student_id)
+        if rec.status == "absent" and (row is None or row.status != "absent"):
+            newly_absent.append(rec.student_id)
         if row is None:
             db.add(AttendanceRecord(school_id=user.school_id, student_id=rec.student_id, section_id=section_id, date=data.date,
                                     status=rec.status, remark=rec.remark or None, marked_by=user.id, marked_at=now))
@@ -164,6 +167,13 @@ async def mark(db: AsyncSession, user: User, section_id: uuid.UUID, data: MarkRe
             row.status, row.remark, row.marked_by, row.section_id, row.marked_at = rec.status, rec.remark or None, user.id, section_id, now
             changed += 1
     await db.flush()
+    if newly_absent and data.date == await school_today(db, user.school_id):
+        names = {st.student_id: st.name for st in r.students}
+        for sid in newly_absent:
+            await notification_service.notify(db, await notification_service.family_of(db, [sid]), school_id=user.school_id,
+                                              kind="absent", title=f"{names.get(sid, 'Your child')} was marked absent today",
+                                              body=f"{r.label} · {data.date:%d %b %Y}. Contact the class teacher if this is a mistake.",
+                                              link="/my-attendance", data={"student_id": sid})
     c = _counts(x.status for x in data.records)
     await audit_service.record(db, "attendance.mark", school_id=user.school_id, user_id=user.id, entity_type="section",
                                entity_id=section_id, meta={"date": data.date.isoformat(), "present": c.present + c.late,

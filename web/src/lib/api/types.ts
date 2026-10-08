@@ -45,6 +45,7 @@ export interface Me {
   school_id: string | null;
   must_change_password: boolean;
   last_login_at: string | null;
+  photo_file_id?: string | null;
   school: SchoolBrief | null;
   modules: string[];
   permissions: string[];
@@ -246,6 +247,7 @@ export interface Student {
 }
 
 export interface StudentDetail extends Student {
+  photo_file_id?: string | null;
   guardians: Guardian[];
   login_email: string | null;
 }
@@ -631,6 +633,7 @@ export interface Notice {
 }
 
 export interface HomeworkItem {
+  attachments?: StoredFile[];
   id: string;
   section_id: string;
   section_label: string;
@@ -664,3 +667,23 @@ export interface MyHomework extends HomeworkItem {
 }
 
 export interface HomeworkTarget { section_id: string; section_label: string; subjects: { id: string; name: string; color: string }[] }
+
+export interface StoredFile {
+  id: string;
+  filename: string;
+  content_type: string;
+  size: number;
+  label: string | null;
+  created_at: string;
+}
+
+export interface AppNotification {
+  id: string;
+  kind: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  data: Record<string, unknown>;
+  read: boolean;
+  created_at: string;
+}

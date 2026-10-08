@@ -70,6 +70,7 @@ class MeOut(Schema):
     school_id: uuid.UUID | None
     must_change_password: bool
     last_login_at: datetime | None
+    photo_file_id: uuid.UUID | None = None
     school: SchoolBrief | None = None
     modules: list[str] = []
     permissions: list[str] = []

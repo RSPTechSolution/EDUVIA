@@ -9,7 +9,7 @@ from app.schemas.exams import (
     ChildResults, ClassPapersSet, ExamDetail, ExamIn, ExamOut, ExamUpdate, FromTimetable, MarksSave, MarksSheet, MarksSheetRef,
     RemarkSet, ReportCard, SectionResults,
 )
-from app.services import exam_service as svc
+from app.services import exam_service as svc, pdf_service
 
 router = APIRouter(dependencies=[require_module("exams")])
 
@@ -108,3 +108,12 @@ async def report(exam_id: uuid.UUID, student_id: uuid.UUID, db: DB, current: Cur
     """Staff any time; the student and their parents once results are published."""
     current.require_school()
     return ok(await svc.report_card(db, current.user, exam_id, student_id))
+
+
+@router.get("/{exam_id}/report/{student_id}/pdf")
+async def report_pdf(exam_id: uuid.UUID, student_id: uuid.UUID, db: DB, download: bool = False,
+                     current: CurrentUser = require_permission("school.view")):
+    current.require_school()
+    rc = await svc.report_card(db, current.user, exam_id, student_id)
+    name = f"report-card-{rc.admission_no}-{rc.exam_name}".lower().replace(" ", "-")
+    return pdf_service.pdf_response(pdf_service.report_card(rc), f"{name}.pdf", download)

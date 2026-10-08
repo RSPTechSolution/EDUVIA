@@ -81,3 +81,20 @@ export async function authRequest<T>(path: string, body: unknown): Promise<T> {
   }
   return payload.data;
 }
+
+/** Upload a file (multipart) through the proxy. `fields` are extra form fields such as purpose and owner_id. */
+export async function uploadFile<T>(file: File, fields: Record<string, string | undefined>): Promise<T> {
+  const form = new FormData();
+  form.set("file", file);
+  for (const [k, v] of Object.entries(fields)) if (v) form.set(k, v);
+  const res = await fetch("/api/proxy/files", { method: "POST", body: form, credentials: "same-origin" });
+  const payload = (await res.json().catch(() => null)) as ApiEnvelope<T> | null;
+  if (!res.ok || !payload?.success) {
+    const err = payload?.error;
+    throw new ApiError(err?.message ?? (res.status === 413 ? "The file is too big" : "Upload failed"), err?.code ?? "HTTP_ERROR", res.status, err?.details);
+  }
+  return payload.data;
+}
+
+/** Same-origin URL that shows a stored file (image src, or a link to open a PDF). */
+export const fileUrl = (id: string, download = false) => `/api/proxy/files/${id}${download ? "?download=true" : ""}`;

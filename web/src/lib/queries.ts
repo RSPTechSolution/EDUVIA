@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
+  AppNotification, StoredFile,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
   MarksSheetRef, MyHomework, Notice, ReportCard, SectionResults, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
   SectionCard, SectionReport, StructureMatrix, StudentAttendance, ClassItem, DashboardSummary, ModuleState, Period, RoleRules, School, Student, StudentDetail, StudentOption, Subject,
@@ -330,4 +331,31 @@ export function useHomeworkTargets(enabled = true) {
 
 export function useMyHomework(enabled = true) {
   return useQuery({ queryKey: ["homework", "my"], enabled, queryFn: async () => (await api<MyHomework[]>("/homework/my")).data });
+}
+
+// ---- notification centre & files --------------------------------------------------------------
+
+export function useNotificationCount(enabled = true) {
+  return useQuery({
+    queryKey: ["notifications", "count"],
+    enabled,
+    refetchInterval: 60_000,
+    queryFn: async () => (await api<{ count: number }>("/notifications/unread-count")).data.count,
+  });
+}
+
+export function useNotifications(enabled = true) {
+  return useQuery({
+    queryKey: ["notifications", "list"],
+    enabled,
+    queryFn: async () => (await api<AppNotification[]>("/notifications", { query: { page_size: 30 } })).data,
+  });
+}
+
+export function useFiles(purpose: string, ownerId: string | undefined) {
+  return useQuery({
+    queryKey: ["files", purpose, ownerId],
+    enabled: !!ownerId,
+    queryFn: async () => (await api<StoredFile[]>("/files", { query: { purpose, owner_id: ownerId } })).data,
+  });
 }

@@ -8,6 +8,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Field } from "@/components/common/field";
+import { PhotoUpload } from "@/components/common/files";
 import { PageHeader } from "@/components/common/page-header";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { useCan } from "@/components/session-provider";
@@ -156,6 +157,24 @@ function SchoolProfilePage() {
           )}
         </Card>
       </form>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Logo</CardTitle>
+          <CardDescription>Shown on the website, receipts and report cards. A square PNG or JPG works best.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-4">
+          <PhotoUpload
+            fileId={school.data?.logo_url?.split("/files/public/")[1]}
+            purpose="school_logo"
+            ownerId={school.data?.id ?? ""}
+            canEdit={editable}
+            onChanged={() => queryClient.invalidateQueries({ queryKey: qk.school })}
+            className="size-20 rounded-xl border bg-muted text-xs text-muted-foreground"
+            fallback="No logo"
+          />
+          <p className="text-sm text-muted-foreground">{editable ? "Click the square to upload a new logo." : "Only school admins can change the logo."}</p>
+        </CardContent>
+      </Card>
     </>
   );
 }

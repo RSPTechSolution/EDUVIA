@@ -36,6 +36,7 @@ class UserOut(Schema):
     is_active: bool
     must_change_password: bool
     last_login_at: datetime | None
+    photo_file_id: uuid.UUID | None = None
     created_at: datetime
 
 

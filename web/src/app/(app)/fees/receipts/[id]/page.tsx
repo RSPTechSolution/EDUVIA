@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CheckCircle2, Printer } from "lucide-react";
+import { ArrowLeft, CheckCircle2, FileDown, Printer } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 import { BrandMark } from "@/components/brand/logo";
@@ -25,7 +25,10 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
     <div className="mx-auto max-w-2xl">
       <div className="mb-4 flex items-center justify-between print:hidden">
         <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" aria-hidden />Back</button>
-        <Button onClick={() => window.print()}><Printer aria-hidden />Print</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" render={<a href={`/api/proxy/fees/payments/${id}/receipt.pdf?download=true`} />}><FileDown aria-hidden />Download PDF</Button>
+          <Button onClick={() => window.print()}><Printer aria-hidden />Print</Button>
+        </div>
       </div>
       <article className="relative overflow-hidden rounded-2xl border bg-white p-8 text-slate-900 shadow-sm print:border-0 print:shadow-none" aria-label={`Receipt ${p.receipt_no}`}>
         <div className="pointer-events-none absolute -top-10 -right-10 size-40 rounded-full bg-emerald-500/10" aria-hidden />

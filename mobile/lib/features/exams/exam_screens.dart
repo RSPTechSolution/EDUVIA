@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../core/api/api_client.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../shared/widgets/common.dart';
+import '../../shared/widgets/open_file.dart';
 import '../timetable/timetable_screen.dart' show subjectColors;
 
 final _day = DateFormat('EEE d MMM');
@@ -135,7 +136,13 @@ class ReportCardScreen extends ConsumerWidget {
     final async = ref.watch(reportCardProvider((examId, studentId)));
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Report card')),
+      appBar: AppBar(title: const Text('Report card'), actions: [
+        IconButton(
+          tooltip: 'Open PDF',
+          icon: const Icon(Icons.picture_as_pdf_outlined),
+          onPressed: () => openApiFile(context, ref, '/exams/$examId/report/$studentId/pdf'),
+        ),
+      ]),
       body: AsyncView(
         value: async,
         onRetry: () => ref.invalidate(reportCardProvider((examId, studentId))),

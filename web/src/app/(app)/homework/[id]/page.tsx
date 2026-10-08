@@ -1,5 +1,6 @@
 "use client";
 
+import { FileList } from "@/components/common/files";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ArrowLeft, Check, CheckCheck, RotateCcw, Save, Trash2, X } from "lucide-react";
@@ -66,6 +67,10 @@ function Detail({ id }: { id: string }) {
           </div>
           <h1 className="mt-2 text-xl font-bold">{h.title}</h1>
           {h.details && <p className="mt-1 text-sm whitespace-pre-line text-muted-foreground">{h.details}</p>}
+          <div className="mt-3 max-w-xl">
+            <FileList purpose="homework" ownerId={h.id} files={h.attachments} canUpload={h.can_edit} compact emptyText={h.can_edit ? "No worksheet attached" : ""}
+                      onChanged={() => qc.invalidateQueries({ queryKey: ["homework"] })} />
+          </div>
           <p className="mt-2 text-xs text-muted-foreground">Set {format(parseISO(h.assigned_on), "d MMM")} by {h.teacher ?? "—"} · due {format(parseISO(h.due_date), "EEEE d MMM")}</p>
         </div>
         {h.can_edit && <Button variant="ghost" className="text-destructive" onClick={() => setRemoving(true)}><Trash2 aria-hidden />Remove</Button>}

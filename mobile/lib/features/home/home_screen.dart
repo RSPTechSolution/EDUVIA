@@ -14,6 +14,7 @@ import '../attendance/attendance_screens.dart' show statusColor;
 import '../fees/fees_data.dart';
 import '../homework/homework_screens.dart';
 import '../notices/notices_screen.dart';
+import '../notifications/notifications_screen.dart';
 import '../timetable/timetable_screen.dart';
 
 String greeting(DateTime now) => now.hour < 12 ? 'Good morning' : (now.hour < 17 ? 'Good afternoon' : 'Good evening');
@@ -35,7 +36,7 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         titleSpacing: 16,
         title: Row(children: [const BrandMark(size: 32), const SizedBox(width: 10), Wordmark(fontSize: 20, suffix: flavor.suffix)]),
-        actions: [if (me.hasModule('communication')) const NoticeBell(), const SizedBox(width: 4)],
+        actions: [const NotificationBell(), const SizedBox(width: 4)],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
