@@ -916,3 +916,37 @@ export interface PeriodRoster {
 }
 
 export interface BunkRow { student_id: string; name: string; section_label: string; periods: string[] }
+
+// ---- accounts -------------------------------------------------------------------------------------
+
+export interface LedgerHead { id: string; kind: "income" | "expense"; name: string; is_active: boolean; total_this_year: number }
+
+export interface AccountEntry {
+  id: string;
+  voucher_no: string;
+  kind: "income" | "expense";
+  head_id: string;
+  head_name: string;
+  date: string;
+  amount: number;
+  party: string | null;
+  method: string;
+  reference: string | null;
+  note: string | null;
+  created_by: string | null;
+  created_at: string;
+  attachments: number;
+}
+
+export interface AccountsSummary {
+  start: string;
+  end: string;
+  fee_income: number;
+  other_income: number;
+  expense: number;
+  net: number;
+  income_by_head: { name: string; amount: number }[];
+  expense_by_head: { name: string; amount: number }[];
+  by_month: { month: string; income: number; expense: number }[];
+  cash_in_hand: number;
+}

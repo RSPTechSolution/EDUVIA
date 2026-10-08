@@ -253,3 +253,65 @@ async def seed_attendance_extras(db, school: School, today: date) -> None:
             users[email].biometric_id = str(9001 + i)
     await db.flush()
     print(f"  Calendar: {len(events)} entries; leave requests seeded; 1 attendance machine")
+
+
+async def seed_accounts(db, school: School, today: date) -> None:
+    from decimal import Decimal
+
+    from app.models import AccountEntry, LedgerHead, SchoolModule
+    from app.services.accounts_service import DEFAULT_HEADS
+    if await db.scalar(select(LedgerHead.id).where(LedgerHead.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(97)
+    heads = {}
+    for kind, names in DEFAULT_HEADS.items():
+        for n in names:
+            heads[n] = LedgerHead(school_id=school.id, kind=kind, name=n)
+            db.add(heads[n])
+    await db.flush()
+    # Monthly running costs since July, plus a few one-offs and some non-fee income.
+    monthly = [("Salaries", 1_150_000, "bank_transfer", "Staff salaries"), ("Electricity and water", 48_000, "bank_transfer", "PSPCL / MC water"),
+               ("Internet and phone", 6_500, "upi", "Airtel broadband"), ("Transport fuel", 72_000, "card", "Indian Oil fuel card"),
+               ("Stationery and printing", 15_000, "cash", "Sharma Stationers")]
+    one_off = [("Maintenance and repairs", 38_500, "cheque", "Gill Builders", "Classroom ceiling repair"),
+               ("Events and functions", 64_000, "bank_transfer", "Star Tent House", "Independence Day celebration"),
+               ("Maintenance and repairs", 12_400, "cash", "Kumar Electricals", "Fans and lights"),
+               ("Events and functions", 21_000, "upi", "Sweets and snacks", "Teachers' Day")]
+    income = [("Canteen and shop rent", 25_000, "bank_transfer", "Annapurna Canteen"), ("Bus hire", 18_000, "upi", "Rotary Club picnic"),
+              ("Donations", 100_000, "cheque", "Alumni association"), ("Interest", 4_250, "bank_transfer", "SBI savings interest")]
+    counter = {"income": 0, "expense": 0}
+
+    def voucher(kind: str) -> str:
+        counter[kind] += 1
+        return f"{'RV' if kind == 'income' else 'PV'}-{str(today.year if today.month >= 4 else today.year - 1)[2:]}{str((today.year if today.month >= 4 else today.year - 1) + 1)[2:]}-{counter[kind]:05d}"
+
+    d = date(today.year, 7, 1) if today.month >= 7 else date(today.year - 1, 7, 1)
+    while d <= today:
+        for head, amount, method, party in monthly:
+            day = d.replace(day=rnd.randint(1, 7))
+            if day > today:
+                continue
+            db.add(AccountEntry(school_id=school.id, voucher_no=voucher("expense"), kind="expense", head_id=heads[head].id, date=day,
+                                amount=Decimal(amount + rnd.randint(-2, 2) * 500), party=party, method=method,
+                                reference=f"CHQ{rnd.randint(100000, 999999)}" if method == "cheque" else None, note=f"{d:%B} {head.lower()}"))
+        head, amount, method, party = income[0]
+        db.add(AccountEntry(school_id=school.id, voucher_no=voucher("income"), kind="income", head_id=heads[head].id, date=min(d.replace(day=5), today),
+                            amount=Decimal(amount), party=party, method=method, note=f"{d:%B} rent"))
+        d = (d + timedelta(days=32)).replace(day=1)
+    for head, amount, method, party, note in one_off:
+        day = today - timedelta(days=rnd.randint(5, 80))
+        db.add(AccountEntry(school_id=school.id, voucher_no=voucher("expense"), kind="expense", head_id=heads[head].id, date=day,
+                            amount=Decimal(amount), party=party, method=method,
+                            reference=f"{rnd.randint(100000, 999999)}" if method == "cheque" else None, note=note))
+    for head, amount, method, party in income[1:]:
+        day = today - timedelta(days=rnd.randint(3, 60))
+        db.add(AccountEntry(school_id=school.id, voucher_no=voucher("income"), kind="income", head_id=heads[head].id, date=day,
+                            amount=Decimal(amount), party=party, method=method, reference=f"{rnd.randint(100000, 999999)}" if method == "cheque" else None))
+    settings = dict(school.settings or {})
+    settings.setdefault("late_fee", {"enabled": True, "mode": "flat", "amount": 200, "grace_days": 7, "max_amount": None})
+    school.settings = settings
+    mod = await db.scalar(select(SchoolModule).where(SchoolModule.school_id == school.id, SchoolModule.module == "accounts"))
+    if mod:
+        mod.is_enabled = True
+    await db.flush()
+    print(f"  Accounts: {counter['expense']} expense and {counter['income']} income vouchers; late fee Rs. 200 after 7 days")

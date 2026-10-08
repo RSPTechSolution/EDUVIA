@@ -2,7 +2,7 @@
 
 HTML uses inline styles and tables only, which is what email clients reliably render.
 """
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from html import escape
 
@@ -112,6 +112,22 @@ def fee_receipt(*, to: str, name: str, school_name: str, student: str, class_sec
               ("Balance on this invoice", inr(balance))],
         button=("View receipt", f"{settings.APP_URL}/fees/receipts/{payment_id}"),
         outro=["Keep this email for your records. The receipt can also be printed from the EDUVIA app or website."])
+
+
+def fee_reminder(*, to: str, name: str, school_name: str, student: str, class_section: str, term: str, due_date: date,
+                 balance: Decimal, overdue: bool, late_fee: Decimal) -> Email:
+    inr = lambda v: f"₹{v:,.0f}" if v == v.to_integral() else f"₹{v:,.2f}"  # noqa: E731
+    rows = [("Student", f"{student} · {class_section}"), ("For", term), ("Due date", due_date.strftime("%d %b %Y")),
+            ("Amount due", inr(balance))]
+    if late_fee:
+        rows.append(("Includes late fee", inr(late_fee)))
+    return _build(
+        to=to, to_name=name, kind="fee_reminder", school=school_name,
+        subject=f"{'Overdue' if overdue else 'Reminder'}: {term} fees for {student}",
+        title=f"{inr(balance)} {'is overdue' if overdue else 'is due soon'}",
+        intro=[f"Hello {escape(name.split()[0])}, this is a reminder about <b>{escape(student)}</b>'s school fees."],
+        rows=rows, button=("Pay or view fees", f"{settings.APP_URL}/my-fees"),
+        outro=["If you've already paid, thank you, and please ignore this message. For any question, contact the school office."])
 
 
 def test_email(*, to: str, school_name: str | None, sender: str) -> Email:

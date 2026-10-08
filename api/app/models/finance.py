@@ -55,6 +55,8 @@ class FeeInvoice(Base, TenantMixin, TimestampMixin):
     discount_reason: Mapped[str | None] = mapped_column(String(200))
     paid: Mapped[Decimal] = mapped_column(Money, default=0)
     status: Mapped[str] = mapped_column(String(20), default="unpaid", index=True)  # unpaid | partial | paid | cancelled
+    late_fee: Mapped[Decimal] = mapped_column(Money, default=0, server_default="0")  # included in total, as a "Late fee" item
+    last_reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class FeeInvoiceItem(Base, TenantMixin):

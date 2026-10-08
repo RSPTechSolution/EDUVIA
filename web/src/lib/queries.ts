@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AppNotification, StoredFile, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
+  AppNotification, StoredFile, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
   Substitution, SubstitutionDay, SyllabusView, BiometricDevice, BunkRow, CalendarEvent, LeaveRequest, PeriodCard, PeriodRoster, Punch,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
   MarksSheetRef, MyHomework, Notice, ReportCard, SectionResults, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
@@ -467,4 +467,26 @@ export function usePeriodRoster(entryId: string | null, date: string) {
 
 export function useBunks(date: string, enabled = true) {
   return useQuery({ queryKey: ["periods", "bunks", date], enabled, queryFn: async () => (await api<BunkRow[]>("/attendance/bunks", { query: { date } })).data });
+}
+
+// ---- accounts -------------------------------------------------------------------------------------
+
+export function useLedgerHeads() {
+  return useQuery({ queryKey: ["accounts", "heads"], queryFn: async () => (await api<LedgerHead[]>("/accounts/heads")).data });
+}
+
+export function useAccountEntries(params: { from: string; to: string; page: number; kind?: string; search?: string }) {
+  return useQuery({
+    queryKey: ["accounts", "entries", params],
+    placeholderData: keepPreviousData,
+    queryFn: () => api<AccountEntry[]>("/accounts/entries", { query: { ...params, page_size: 25 } }),
+  });
+}
+
+export function useAccountsSummary(from: string, to: string) {
+  return useQuery({
+    queryKey: ["accounts", "summary", from, to],
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<AccountsSummary>("/accounts/summary", { query: { from, to } })).data,
+  });
 }

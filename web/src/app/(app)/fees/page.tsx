@@ -1,13 +1,14 @@
 "use client";
 
 import { format, parseISO } from "date-fns";
-import { AlertTriangle, CalendarClock, IndianRupee, Percent, Search, Settings2, TrendingUp, Wallet } from "lucide-react";
+import { AlertTriangle, BellRing, CalendarClock, IndianRupee, Percent, Search, Settings2, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { DataTable, type Col } from "@/components/common/data-table";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
+import { RemindersDialog } from "@/components/fees/collection-tools";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { StatCard } from "@/components/common/stat-card";
 import { BarList, CollectionChart } from "@/components/dashboard/charts";
@@ -167,10 +168,15 @@ function FeesPage() {
   const can = useCan();
   const [tabParam, setTab] = useParam("tab");
   const tab = tabParam ?? "dashboard";
+  const [reminding, setReminding] = useState(false);
   return (
     <>
       <PageHeader title="Fees" description="Collections, dues and receipts."
-        actions={can("fees.manage") && <Link href="/fees/setup" className={buttonVariants({ variant: "outline", className: "h-9" })}><Settings2 aria-hidden />Fee setup</Link>} />
+        actions={<>
+          {can("fees.collect") && <Button variant="outline" className="h-9" onClick={() => setReminding(true)}><BellRing aria-hidden />Send reminders</Button>}
+          {can("fees.manage") && <Link href="/fees/setup" className={buttonVariants({ variant: "outline", className: "h-9" })}><Settings2 aria-hidden />Fee setup</Link>}
+        </>} />
+      <RemindersDialog open={reminding} onOpenChange={setReminding} />
       <Tabs value={tab} onValueChange={(v) => setTab(v === "dashboard" ? null : String(v))} className="mb-5">
         <TabsList>
           <TabsTrigger value="dashboard"><CalendarClock aria-hidden />Dashboard</TabsTrigger>

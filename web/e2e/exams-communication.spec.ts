@@ -9,6 +9,7 @@ test("teacher enters marks for their subject", async ({ page }) => {
   await page.getByRole("link", { name: /Class 5 – A · Mathematics/ }).click();
   await expect(page.getByRole("heading", { name: "Class 5 – A · Mathematics" })).toBeVisible();
   const first = page.getByLabel(/^Marks for/).first();
+  const before = await page.getByLabel(/^Marks for/).nth(1).inputValue();
   await first.fill("23");
   await expect(page.getByRole("cell").filter({ hasText: /^A1$/ }).first()).toBeVisible();
   await first.press("Enter");
@@ -16,7 +17,9 @@ test("teacher enters marks for their subject", async ({ page }) => {
   await expect(page.getByText(/out of range/)).toBeVisible();
   await page.keyboard.press("Backspace");
   await page.keyboard.press("Backspace");
-  await page.keyboard.type(String(5 + Math.floor(Math.random() * 30) / 2)); // a new value each run
+  let value = String(5 + Math.floor(Math.random() * 30) / 2); // a new value each run, so there is always something to save
+  if (Number(value) === Number(before)) value = String(Number(value) + 0.5);
+  await page.keyboard.type(value);
   await page.getByRole("button", { name: "Save marks" }).click();
   await expect(page.getByText(/Marks saved for Class 5 – A · Mathematics/)).toBeVisible();
 });

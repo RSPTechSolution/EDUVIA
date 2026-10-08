@@ -1,9 +1,11 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ArrowLeft, BadgePercent, Phone, ReceiptText, Wallet } from "lucide-react";
 import Link from "next/link";
 import { use, useState } from "react";
+import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { CollectDialog, DiscountDialog, InvoiceStatus, METHODS } from "@/components/fees/shared";
@@ -12,6 +14,7 @@ import { useCan } from "@/components/session-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ApiError, api } from "@/lib/api/client";
 import { formatDateTime, inr } from "@/lib/format";
 import { useInvoice } from "@/lib/queries";
 
@@ -20,6 +23,12 @@ function Detail({ id }: { id: string }) {
   const q = useInvoice(id);
   const [collecting, setCollecting] = useState(false);
   const [discounting, setDiscounting] = useState(false);
+  const qc = useQueryClient();
+  const waive = useMutation({
+    mutationFn: () => api(`/fees/invoices/${id}/waive-late-fee`, { method: "POST" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["fees"] }); qc.invalidateQueries({ queryKey: ["invoice"] }); q.refetch(); toast.success("Late fee waived"); },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : "Could not waive"),
+  });
   if (q.isLoading) return <div className="space-y-4"><Skeleton className="h-40 rounded-2xl" /><Skeleton className="h-64 rounded-2xl" /></div>;
   const inv = q.data;
   if (!inv) return <EmptyState title="Invoice not found" />;
@@ -51,6 +60,7 @@ function Detail({ id }: { id: string }) {
             <p className="mt-1 text-xs text-muted-foreground">{inr(inv.paid)} of {inr(net)} paid</p>
             <div className="mt-4 flex gap-2 sm:justify-end">
               {can("fees.manage") && inv.status !== "paid" && <Button variant="outline" onClick={() => setDiscounting(true)}><BadgePercent aria-hidden />Concession</Button>}
+              {can("fees.manage") && inv.items.some((i) => i.name === "Late fee") && <Button variant="outline" onClick={() => waive.mutate()} loading={waive.isPending}>Waive late fee</Button>}
               {can("fees.collect") && inv.balance > 0 && <Button onClick={() => setCollecting(true)}><Wallet aria-hidden />Collect payment</Button>}
             </div>
           </div>

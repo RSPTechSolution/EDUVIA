@@ -1,4 +1,5 @@
 """Import every model here so Alembic and the RLS coverage test see them."""
+from app.models.accounts import AccountEntry, LedgerHead
 from app.models.attendance import AttendanceRecord
 from app.models.attendance_extra import BiometricDevice, BiometricPunch, CalendarEvent, LeaveRequest, PeriodAttendance
 from app.models.academics_extra import Certificate, Enquiry, LessonPlan, Substitution, SyllabusTopic, TopicProgress
@@ -21,4 +22,5 @@ __all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan
            "Exam", "ExamPaper", "ExamMark", "ExamRemark", "Notice", "NoticeRead", "Homework", "HomeworkStatus", "EmailLog",
            "StoredFile", "Notification", "DeviceToken",
            "SyllabusTopic", "TopicProgress", "LessonPlan", "Certificate", "Enquiry", "Substitution",
-           "CalendarEvent", "LeaveRequest", "BiometricDevice", "BiometricPunch", "PeriodAttendance"]
+           "CalendarEvent", "LeaveRequest", "BiometricDevice", "BiometricPunch", "PeriodAttendance",
+           "LedgerHead", "AccountEntry"]

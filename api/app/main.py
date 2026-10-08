@@ -11,7 +11,7 @@ from app.core.errors import install_error_handlers
 from app.core.permissions import MODULES
 from app.core.redis import close_redis, get_redis
 from app.core import roles
-from app.routers import academics, academics_extra, attendance, attendance_extra, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
+from app.routers import academics, academics_extra, accounts, attendance, attendance_extra, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
 from app.schemas.common import ok
 
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -61,7 +61,9 @@ app.include_router(attendance_extra.calendar, prefix=f"{API}/calendar", tags=["C
 app.include_router(attendance_extra.leave, prefix=f"{API}/leave", tags=["Leave"])
 app.include_router(attendance_extra.devices, prefix=f"{API}/devices", tags=["Biometric devices"])
 app.include_router(attendance_extra.iclock, prefix="/iclock", tags=["ADMS"])
+app.include_router(accounts.fees, prefix=f"{API}/fees", tags=["Fees"])
 app.include_router(fees.router, prefix=f"{API}/fees", tags=["Fees"])
+app.include_router(accounts.accounts, prefix=f"{API}/accounts", tags=["Accounts"])
 app.include_router(exams.router, prefix=f"{API}/exams", tags=["Exams"])
 app.include_router(emails.router, prefix=f"{API}/emails", tags=["Email"])
 app.include_router(transfer.router, prefix=f"{API}/transfer", tags=["Import & export"])

@@ -191,3 +191,37 @@ export function BarList({ items, format: fmt = (v) => v.toLocaleString("en-IN") 
     </ul>
   );
 }
+
+/** Income against expense per month: two bars a month, income in the primary colour. */
+export function IncomeExpenseChart({ data }: { data: { month: string; income: number; expense: number }[] }) {
+  const inr = (v: number) => `₹${v >= 100000 ? `${(v / 100000).toFixed(1)}L` : v >= 1000 ? `${Math.round(v / 1000)}k` : v}`;
+  return (
+    <div className="h-64 w-full [&_.recharts-cartesian-axis-tick-value]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border"
+      role="img" aria-label="Income and expense by month">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }} barGap={2}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis dataKey="month" tickFormatter={(m: string) => format(parseISO(`${m}-01`), "MMM")} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+          <YAxis tickFormatter={inr} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={56} />
+          <Tooltip
+            cursor={{ fill: "currentColor", fillOpacity: 0.06 }}
+            content={({ active, payload }) => active && payload?.length ? (
+              <div className={tooltipClass}>
+                <p className="font-medium">{format(parseISO(`${payload[0].payload.month}-01`), "MMMM yyyy")}</p>
+                <p>Income <span className="font-semibold">₹{Number(payload[0].payload.income).toLocaleString("en-IN")}</span></p>
+                <p>Expense <span className="font-semibold">₹{Number(payload[0].payload.expense).toLocaleString("en-IN")}</span></p>
+              </div>
+            ) : null}
+          />
+          <Bar dataKey="income" className="fill-primary" radius={[4, 4, 0, 0]} maxBarSize={22} />
+          <Bar dataKey="expense" className="fill-warning" radius={[4, 4, 0, 0]} maxBarSize={22} />
+        </BarChart>
+      </ResponsiveContainer>
+      <table className="sr-only">
+        <caption>Income and expense by month</caption>
+        <thead><tr><th scope="col">Month</th><th scope="col">Income</th><th scope="col">Expense</th></tr></thead>
+        <tbody>{data.map((d) => <tr key={d.month}><th scope="row">{d.month}</th><td>₹{d.income}</td><td>₹{d.expense}</td></tr>)}</tbody>
+      </table>
+    </div>
+  );
+}

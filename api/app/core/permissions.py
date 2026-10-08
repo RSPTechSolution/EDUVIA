@@ -52,6 +52,8 @@ PERMISSIONS: dict[str, list[Role]] = {
     "fees.view": ADMINS + [Role.ACCOUNTANT, Role.RECEPTIONIST],
     "fees.collect": ADMINS + [Role.ACCOUNTANT, Role.RECEPTIONIST],
     "fees.manage": [Role.SCHOOL_ADMIN, Role.ACCOUNTANT],
+    "accounts.view": ADMINS + [Role.ACCOUNTANT],
+    "accounts.manage": [Role.SCHOOL_ADMIN, Role.ACCOUNTANT],
     "exams.view": ADMINS + [Role.TEACHER],
     "exams.marks": ADMINS + [Role.TEACHER],  # teachers: papers for sections they teach that subject in
     "exams.manage": ADMINS,  # create exams, date sheets, publish results

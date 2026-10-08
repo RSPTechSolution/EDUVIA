@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Field } from "@/components/common/field";
 import { PageHeader } from "@/components/common/page-header";
+import { LateFeeCard } from "@/components/fees/collection-tools";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -196,6 +197,7 @@ export default function Page() {
               </table>
             </CardContent>
           </Card>
+          <LateFeeCard />
           <GenerateDialog open={generating} onOpenChange={setGenerating} matrix={m.data} />
         </div>
       )}

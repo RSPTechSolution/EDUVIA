@@ -31,6 +31,7 @@ class AppNotification {
         'results' => Icons.emoji_events_outlined,
         'substitution' => Icons.swap_horiz_rounded,
         'leave' => Icons.event_busy_outlined,
+        'fee_reminder' => Icons.notifications_active_outlined,
         'calendar' => Icons.event_note_outlined,
         'enquiry' => Icons.person_add_alt_outlined,
         _ => Icons.notifications_outlined,
