@@ -272,4 +272,37 @@ void main() {
     expect(entries['a']!['marks'], 23.0);
     expect(entries['b']!['absent'], isTrue);
   });
+
+  testWidgets('parent opens syllabus progress from More', (tester) async {
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson()..['modules'] = ['academics'])))
+      ..on('GET /syllabus/my', (_) => (200, FakeApi.ok([{
+            'student_id': 's1', 'name': 'Aarav Patel', 'class_section': 'Class 5 – A',
+            'subjects': [{'section_id': 'sec', 'section_label': 'Class 5 – A', 'class_id': 'c5', 'subject_id': 'm', 'subject_name': 'Mathematics',
+                          'subject_color': 'blue', 'total': 8, 'done': 3, 'percent': 37.5, 'behind': 1, 'last_topic': 'Fractions'}],
+          }])));
+    await pump(tester, container(fake));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Syllabus'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mathematics'), findsOneWidget);
+    expect(find.text('37.5%'), findsOneWidget);
+    expect(find.text('3 of 8 topics · 1 behind plan'), findsOneWidget);
+    expect(find.text('Latest: Fractions'), findsOneWidget);
+  });
+
+  testWidgets('teacher sees covers on the home screen', (tester) async {
+    final me = meJson(role: 'teacher')..['permissions'] = ['school.view']..['modules'] = ['academics'];
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(me)))
+      ..on('GET /substitutions/mine', (_) => (200, FakeApi.ok([{
+            'id': 'x', 'date': '2026-10-13', 'period_id': 'p', 'period_name': 'P2', 'start_time': '08:40', 'end_time': '09:20',
+            'section_id': 's', 'section_label': 'Class 7 – A', 'subject_name': 'Science', 'subject_color': 'green',
+            'absent_teacher_id': 't', 'absent_teacher': 'Priya Verma', 'substitute_id': 'me', 'substitute': 'Me', 'note': null}])))
+      ..on('GET /timetable/my', (_) => (200, FakeApi.ok([])));
+    await pump(tester, container(fake, flavor: AppFlavor.staff));
+    expect(find.text('Your covers'), findsOneWidget);
+    expect(find.textContaining('Class 7 – A Science for Priya Verma'), findsOneWidget);
+  });
 }

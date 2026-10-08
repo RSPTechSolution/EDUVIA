@@ -29,6 +29,8 @@ class AppNotification {
         'absent' => Icons.event_busy_outlined,
         'fee_receipt' => Icons.receipt_long_outlined,
         'results' => Icons.emoji_events_outlined,
+        'substitution' => Icons.swap_horiz_rounded,
+        'enquiry' => Icons.person_add_alt_outlined,
         _ => Icons.notifications_outlined,
       };
 }
@@ -40,6 +42,7 @@ String? appRouteFor(String? link) => switch (link) {
       '/my-attendance' || '/attendance' => '/attendance',
       '/my-fees' || '/fees' => '/fees',
       '/my-results' => '/results',
+      '/my-timetable' => '/timetable',
       _ => null,
     };
 

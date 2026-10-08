@@ -11,7 +11,7 @@ from app.core.errors import install_error_handlers
 from app.core.permissions import MODULES
 from app.core.redis import close_redis, get_redis
 from app.core import roles
-from app.routers import academics, attendance, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
+from app.routers import academics, academics_extra, attendance, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
 from app.schemas.common import ok
 
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -48,6 +48,12 @@ app.include_router(schools.router, prefix=f"{API}/schools", tags=["Schools"])
 app.include_router(users.router, prefix=f"{API}/users", tags=["Users"])
 app.include_router(academics.classes, prefix=f"{API}/classes", tags=["Classes"])
 app.include_router(academics.students, prefix=f"{API}/students", tags=["Students"])
+app.include_router(academics_extra.syllabus, prefix=f"{API}/syllabus", tags=["Syllabus"])
+app.include_router(academics_extra.lessons, prefix=f"{API}/lesson-plans", tags=["Syllabus"])
+app.include_router(academics_extra.certificates, prefix=f"{API}/certificates", tags=["Certificates"])
+app.include_router(academics_extra.admissions, prefix=f"{API}/admissions", tags=["Admissions"])
+app.include_router(academics_extra.promotion, prefix=f"{API}/promotion", tags=["Promotion"])
+app.include_router(academics_extra.substitutions, prefix=f"{API}/substitutions", tags=["Substitutions"])
 app.include_router(timetable.router, prefix=f"{API}/timetable", tags=["Timetable"])
 app.include_router(attendance.router, prefix=f"{API}/attendance", tags=["Attendance"])
 app.include_router(fees.router, prefix=f"{API}/fees", tags=["Fees"])

@@ -1,5 +1,5 @@
 import {
-  Award, BookOpenCheck, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Award, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -42,12 +42,19 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Academics",
     items: [
       { label: "Students", href: "/students", icon: GraduationCap, module: "students", permission: "students.view", keywords: ["admission", "pupils", "children"] },
+      { label: "Admissions", href: "/admissions", icon: UserPlus, module: "students", permission: "admissions.manage", keywords: ["enquiry", "enquiries", "leads", "new admission", "walk-in"] },
+      { label: "Certificates & ID cards", href: "/certificates", icon: FileBadge2, module: "students", permission: "certificates.manage", keywords: ["tc", "transfer certificate", "bonafide", "character", "id card"] },
+      { label: "Promotion", href: "/promotion", icon: TrendingUp, module: "students", permission: "students.promote", keywords: ["next class", "new session", "year end", "graduate", "alumni"] },
       { label: "Classes & sections", href: "/academics/classes", icon: School, module: "students", permission: "students.view", keywords: ["grades", "sections", "class teacher"] },
       { label: "Timetable", href: "/timetable", icon: CalendarRange, module: "academics", permission: "timetable.view", keywords: ["schedule", "periods", "free teacher", "substitute"] },
       { label: "Attendance", href: "/attendance", icon: ClipboardCheck, module: "attendance", permission: "attendance.view", keywords: ["absent", "present", "roll call", "register"] },
       { label: "Attendance", href: "/my-attendance", icon: ClipboardCheck, module: "attendance", roles: ["parent", "student"], keywords: ["absent", "present"] },
       { label: "Fees", href: "/my-fees", icon: Wallet, module: "fees", roles: ["parent", "student"], keywords: ["pay", "dues", "receipt", "invoice"] },
       { label: "Exams", href: "/exams", icon: FileSpreadsheet, module: "exams", permission: "exams.view", keywords: ["marks", "results", "report card", "date sheet"] },
+      { label: "Syllabus", href: "/syllabus", icon: BookMarked, module: "academics", permission: "syllabus.manage", keywords: ["chapters", "curriculum", "coverage", "topics"] },
+      { label: "Lesson plans", href: "/lesson-plans", icon: NotebookPen, module: "academics", permission: "syllabus.manage", keywords: ["planner", "teaching plan"] },
+      { label: "Syllabus", href: "/my-syllabus", icon: BookMarked, module: "academics", roles: ["parent", "student"], keywords: ["chapters", "progress"] },
+      { label: "Substitutions", href: "/substitutions", icon: Repeat2, module: "academics", permission: "substitutions.manage", keywords: ["cover", "absent teacher", "proxy", "arrangement"] },
       { label: "Homework", href: "/homework", icon: BookOpenCheck, module: "academics", permission: "homework.manage", keywords: ["assignment", "classwork"] },
       { label: "Homework", href: "/my-homework", icon: BookOpenCheck, module: "academics", roles: ["parent", "student"], keywords: ["assignment"] },
       { label: "Results", href: "/my-results", icon: Award, module: "exams", roles: ["parent", "student"], keywords: ["report card", "marks", "exam"] },

@@ -687,3 +687,153 @@ export interface AppNotification {
   read: boolean;
   created_at: string;
 }
+
+// ---- syllabus & lesson plans ------------------------------------------------------------------
+
+export interface SyllabusTopic {
+  id: string;
+  unit: string | null;
+  title: string;
+  planned_month: string | null;
+  sort_order: number;
+  done_sections: string[];
+  completed_on: Record<string, string>;
+}
+
+export interface SyllabusView {
+  class_id: string;
+  class_name: string;
+  subject_id: string;
+  subject_name: string;
+  sections: { id: string; name: string; editable: boolean }[];
+  can_edit_topics: boolean;
+  topics: SyllabusTopic[];
+}
+
+export interface CoverageRow {
+  section_id: string;
+  section_label: string;
+  class_id: string;
+  subject_id: string;
+  subject_name: string;
+  subject_color: string;
+  total: number;
+  done: number;
+  percent: number | null;
+  behind: number;
+  last_topic: string | null;
+}
+
+export interface ChildSyllabus {
+  student_id: string;
+  name: string;
+  class_section: string;
+  subjects: CoverageRow[];
+}
+
+export interface LessonPlan {
+  id: string;
+  section_id: string;
+  section_label: string;
+  subject_id: string;
+  subject_name: string;
+  subject_color: string;
+  topic_id: string | null;
+  topic_title: string | null;
+  date: string;
+  title: string;
+  objectives: string | null;
+  activities: string | null;
+  resources: string | null;
+  status: "planned" | "taught";
+  teacher: string | null;
+  can_edit: boolean;
+}
+
+// ---- certificates, admissions, promotion, substitutions ---------------------------------------
+
+export interface Certificate {
+  id: string;
+  student_id: string;
+  student_name: string;
+  admission_no: string;
+  class_section: string;
+  kind: "transfer" | "bonafide" | "character";
+  serial_no: string;
+  issued_on: string;
+  details: Record<string, string>;
+  issued_by: string | null;
+  cancelled: boolean;
+}
+
+export type EnquiryStatus = "new" | "contacted" | "visit" | "applied" | "admitted" | "lost";
+
+export interface Enquiry {
+  id: string;
+  student_name: string;
+  date_of_birth: string | null;
+  gender: string | null;
+  class_id: string | null;
+  class_name: string | null;
+  parent_name: string;
+  phone: string;
+  email: string | null;
+  previous_school: string | null;
+  source: string;
+  status: EnquiryStatus;
+  follow_up_on: string | null;
+  assigned_to: string | null;
+  assigned_name: string | null;
+  notes: { at: string; by: string; text: string }[];
+  student_id: string | null;
+  created_at: string;
+  overdue: boolean;
+}
+
+export interface EnquirySummary {
+  by_status: Record<EnquiryStatus, number>;
+  due_today: number;
+  overdue: number;
+  this_month: number;
+  admitted_this_month: number;
+  conversion: number | null;
+}
+
+export type PromotionAction = "promote" | "repeat" | "leave" | "graduate";
+
+export interface PromotionPreview {
+  section_id: string;
+  section_label: string;
+  next_class_id: string | null;
+  next_class_name: string | null;
+  next_sections: { id: string; name: string; students: number; capacity: number | null }[];
+  default_section_id: string | null;
+  students: {
+    student_id: string; name: string; admission_no: string; roll_no: number | null; exam: string | null;
+    percent: number | null; passed: boolean | null; suggested: PromotionAction;
+  }[];
+}
+
+export interface Substitution {
+  id: string;
+  date: string;
+  period_id: string;
+  period_name: string;
+  start_time: string;
+  end_time: string;
+  section_id: string;
+  section_label: string;
+  subject_name: string;
+  subject_color: string;
+  absent_teacher_id: string | null;
+  absent_teacher: string | null;
+  substitute_id: string | null;
+  substitute: string | null;
+  note: string | null;
+}
+
+export interface SubstitutionDay {
+  date: string;
+  absent_teachers: { id: string; full_name: string; periods: number; covered: number }[];
+  periods: Substitution[];
+}

@@ -54,6 +54,11 @@ PERMISSIONS: dict[str, list[Role]] = {
     "notices.post": ADMINS + [Role.TEACHER, Role.RECEPTIONIST],  # teachers: only to classes they teach
     "notices.manage": ADMINS + [Role.RECEPTIONIST],  # any audience, edit or remove any notice
     "homework.manage": ADMINS + [Role.TEACHER],
+    "syllabus.manage": ADMINS + [Role.TEACHER],  # teachers: classes and subjects they teach
+    "certificates.manage": ADMINS + [Role.RECEPTIONIST],
+    "admissions.manage": ADMINS + [Role.RECEPTIONIST],
+    "students.promote": ADMINS,
+    "substitutions.manage": ADMINS,
     "billing.manage": [Role.SCHOOL_ADMIN],
     "schools.manage": [],  # platform level: super_admin only
 }

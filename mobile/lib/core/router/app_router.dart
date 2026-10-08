@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/academics/syllabus_screens.dart';
 import '../../features/attendance/attendance_data.dart';
 import '../../features/attendance/attendance_screens.dart';
 import '../../features/auth/change_password_screen.dart';
@@ -70,6 +71,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/timetable', builder: (_, _) => const TimetableScreen()),
       GoRoute(path: '/notices', builder: (_, _) => const NoticesScreen()),
       GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
+      GoRoute(path: '/syllabus', builder: (_, _) => const MySyllabusScreen()),
       GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
       GoRoute(path: '/results', builder: (_, _) => const ResultsScreen()),
       GoRoute(path: '/results/:exam/:student', builder: (_, st) => ReportCardScreen(examId: st.pathParameters['exam']!, studentId: st.pathParameters['student']!)),

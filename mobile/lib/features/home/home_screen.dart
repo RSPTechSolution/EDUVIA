@@ -14,6 +14,7 @@ import '../attendance/attendance_screens.dart' show statusColor;
 import '../fees/fees_data.dart';
 import '../homework/homework_screens.dart';
 import '../notices/notices_screen.dart';
+import '../academics/syllabus_screens.dart';
 import '../notifications/notifications_screen.dart';
 import '../timetable/timetable_screen.dart';
 
@@ -65,6 +66,7 @@ class HomeScreen extends ConsumerWidget {
             ] else ...[
               if (me.hasModule('attendance') && me.can('attendance.mark')) const _AttendanceToTake(),
               if (me.hasModule('fees') && me.can('fees.view')) const _FeeTiles(),
+              if (me.hasModule('academics') && me.teaches) const CoversCard(),
               if (me.hasModule('academics') && me.teaches) const _TodayLessons(),
             ],
             const SizedBox(height: 16),

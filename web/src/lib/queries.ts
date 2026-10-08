@@ -3,7 +3,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AppNotification, StoredFile,
+  AppNotification, StoredFile, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
+  Substitution, SubstitutionDay, SyllabusView,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
   MarksSheetRef, MyHomework, Notice, ReportCard, SectionResults, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
   SectionCard, SectionReport, StructureMatrix, StudentAttendance, ClassItem, DashboardSummary, ModuleState, Period, RoleRules, School, Student, StudentDetail, StudentOption, Subject,
@@ -358,4 +359,73 @@ export function useFiles(purpose: string, ownerId: string | undefined) {
     enabled: !!ownerId,
     queryFn: async () => (await api<StoredFile[]>("/files", { query: { purpose, owner_id: ownerId } })).data,
   });
+}
+
+// ---- syllabus, lesson plans, admissions, certificates, promotion, substitutions --------------
+
+export function useCoverage(enabled = true) {
+  return useQuery({ queryKey: ["syllabus", "coverage"], enabled, queryFn: async () => (await api<CoverageRow[]>("/syllabus/coverage")).data });
+}
+
+export function useMySyllabus(enabled = true) {
+  return useQuery({ queryKey: ["syllabus", "my"], enabled, queryFn: async () => (await api<ChildSyllabus[]>("/syllabus/my")).data });
+}
+
+export function useSyllabusSubjects(classId: string | null) {
+  return useQuery({
+    queryKey: ["syllabus", "subjects", classId],
+    enabled: !!classId,
+    queryFn: async () => (await api<{ id: string; name: string; color: string; topics: number }[]>(`/syllabus/classes/${classId}/subjects`)).data,
+  });
+}
+
+export function useSyllabus(classId: string | null, subjectId: string | null) {
+  return useQuery({
+    queryKey: ["syllabus", "view", classId, subjectId],
+    enabled: !!classId && !!subjectId,
+    queryFn: async () => (await api<SyllabusView>(`/syllabus/classes/${classId}/subjects/${subjectId}`)).data,
+  });
+}
+
+export function useLessons(from: string, to: string, sectionId?: string) {
+  return useQuery({
+    queryKey: ["lessons", from, to, sectionId],
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<LessonPlan[]>("/lesson-plans", { query: { from, to, section_id: sectionId } })).data,
+  });
+}
+
+export function useEnquiries(params: { page: number; status?: string; search?: string; due?: boolean }) {
+  return useQuery({
+    queryKey: ["enquiries", "list", params],
+    placeholderData: keepPreviousData,
+    queryFn: () => api<Enquiry[]>("/admissions", { query: { ...params, page_size: 25 } }),
+  });
+}
+
+export function useEnquirySummary() {
+  return useQuery({ queryKey: ["enquiries", "summary"], queryFn: async () => (await api<EnquirySummary>("/admissions/summary")).data });
+}
+
+export function useCertificates(studentId?: string) {
+  return useQuery({
+    queryKey: ["certificates", studentId],
+    queryFn: async () => (await api<Certificate[]>("/certificates", { query: { student_id: studentId } })).data,
+  });
+}
+
+export function usePromotion(sectionId: string | null) {
+  return useQuery({
+    queryKey: ["promotion", sectionId],
+    enabled: !!sectionId,
+    queryFn: async () => (await api<PromotionPreview>(`/promotion/${sectionId}`)).data,
+  });
+}
+
+export function useSubstitutionDay(date: string) {
+  return useQuery({ queryKey: ["substitutions", date], queryFn: async () => (await api<SubstitutionDay>("/substitutions", { query: { date } })).data });
+}
+
+export function useMyCovers(enabled = true) {
+  return useQuery({ queryKey: ["substitutions", "mine"], enabled, queryFn: async () => (await api<Substitution[]>("/substitutions/mine")).data });
 }

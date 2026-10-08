@@ -1,6 +1,7 @@
 "use client";
 
-import { CalendarDays } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { CalendarDays, Repeat2 } from "lucide-react";
 import { useState } from "react";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
@@ -10,8 +11,34 @@ import { useSession } from "@/components/session-provider";
 import { DAY_NAMES, TimetableGrid, TodayList } from "@/components/timetable/grid";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMyTimetables } from "@/lib/queries";
+import { useMyCovers, useMyTimetables } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+
+function MyCovers() {
+  const q = useMyCovers();
+  if (!q.data?.length) return null;
+  return (
+    <Card className="mb-6 border-warning/40 bg-warning/5">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Repeat2 className="size-5 text-warning" aria-hidden />Your covers</CardTitle>
+        <CardDescription>Periods you&apos;re taking for colleagues who are away.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ul className="divide-y">
+          {q.data.map((c) => (
+            <li key={c.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2 text-sm">
+              <span className="w-32 font-medium">{format(parseISO(c.date), "EEE d MMM")}</span>
+              <span className="w-28 text-muted-foreground tabular">{c.period_name} · {c.start_time}</span>
+              <span className="font-medium">{c.section_label} · {c.subject_name}</span>
+              <span className="text-muted-foreground">for {c.absent_teacher}</span>
+              {c.note && <span className="w-full text-xs text-muted-foreground">Note: {c.note}</span>}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function MyTimetablePage() {
   const me = useSession();
@@ -27,6 +54,7 @@ export default function MyTimetablePage() {
         title={isParent ? "Children's timetable" : "My timetable"}
         description={me.role === "teacher" || me.role === "principal" ? "Where you're teaching this week." : "The week's lessons, period by period."}
       />
+      {(me.role === "teacher" || me.role === "principal") && <MyCovers />}
       {views.isLoading ? <Skeleton className="h-[520px] rounded-xl" /> : !view ? (
         <EmptyState className="rounded-2xl border bg-card" illustration={<ClassesIllustration />} title="No timetable yet"
           description={isParent ? "Your children aren't linked yet, or their class has no timetable. Contact the school office." : "Nothing has been scheduled for you yet."} />

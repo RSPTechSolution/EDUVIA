@@ -2,6 +2,7 @@
 
 Built with reportlab's platypus. Amounts use "Rs." because the standard PDF fonts have no rupee sign.
 """
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -11,6 +12,8 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen import canvas as pdfcanvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from app.schemas.exams import ReportCard
@@ -66,6 +69,24 @@ def _facts(pairs: list[tuple[str, str]], width: float) -> Table:
     t = Table(cells, colWidths=[width / 2] * 2)
     t.setStyle(TableStyle([("BOX", (0, 0), (-1, -1), 0.5, LINE), ("INNERGRID", (0, 0), (-1, -1), 0.5, LINE),
                            ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6)]))
+    return t
+
+
+def _signatures(labels: list[str]) -> Table:
+    """Separate signature lines with a gap between them."""
+    gap = 10 * mm
+    w = (WIDTH - gap * (len(labels) - 1)) / len(labels)
+    cells, widths = [], []
+    for i, label in enumerate(labels):
+        if i:
+            cells.append("")
+            widths.append(gap)
+        cells.append(label)
+        widths.append(w)
+    t = Table([cells], colWidths=widths)
+    style = [("ALIGN", (0, 0), (-1, -1), "CENTER"), ("FONT", (0, 0), (-1, -1), "Helvetica", 9.5)]
+    style += [("LINEABOVE", (c, 0), (c, 0), 0.6, colors.black) for c in range(0, len(cells), 2)]
+    t.setStyle(TableStyle(style))
     return t
 
 
@@ -151,10 +172,7 @@ def report_card(rc: ReportCard) -> bytes:
         ("Attendance this year", f"{rc.attendance_percent:.1f}%" if rc.attendance_percent is not None else "—"),
     ], WIDTH))
     story += [Spacer(1, 10), Paragraph("<b>Class teacher's remark</b>", BODY), Paragraph(_esc(res.remark or "—"), BODY), Spacer(1, 36)]
-    sig = Table([["Class teacher", "Principal", "Parent"]], colWidths=[WIDTH / 3] * 3)
-    sig.setStyle(TableStyle([("LINEABOVE", (0, 0), (-1, 0), 0.6, colors.black), ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                             ("FONT", (0, 0), (-1, -1), "Helvetica", 9), ("LEFTPADDING", (0, 0), (-1, -1), 18),
-                             ("RIGHTPADDING", (0, 0), (-1, -1), 18)]))
+    sig = _signatures(["Class teacher", "Principal", "Parent"])
     story += [sig, Spacer(1, 10), Paragraph("Grades: A1 91–100, A2 81–90, B1 71–80, B2 61–70, C1 51–60, C2 41–50, D 33–40, E below 33.", SMALL)]
     return build(story, f"Report card {rc.student_name}")
 
@@ -167,3 +185,168 @@ def pdf_response(data: bytes, filename: str, download: bool = False):
 
 def today_str() -> str:
     return f"{date.today():%d %b %Y}"
+
+
+# ---- certificates -----------------------------------------------------------------------------
+
+@dataclass
+class CertificateData:
+    title: str
+    kind: str
+    serial_no: str
+    issued_on: date
+    school_name: str
+    school_address: str | None
+    school_phone: str | None
+    student_name: str
+    gender: str
+    date_of_birth: date
+    admission_no: str
+    admission_date: date
+    class_section: str
+    parents: dict = field(default_factory=dict)
+    details: dict = field(default_factory=dict)
+    cancelled: bool = False
+
+
+CERT_BODY = ParagraphStyle("cert", parent=BODY, fontSize=12, leading=20, alignment=4)  # justified
+
+
+def _d(v) -> str:
+    if not v:
+        return "—"
+    if isinstance(v, str):
+        v = date.fromisoformat(v)
+    return f"{v:%d %B %Y}"
+
+
+def certificate(c: CertificateData) -> bytes:
+    he, his = ("He", "his") if c.gender == "male" else ("She", "her") if c.gender == "female" else ("They", "their")
+    child = "son" if c.gender == "male" else "daughter" if c.gender == "female" else "ward"
+    parent = c.parents.get("father") or c.parents.get("mother") or c.parents.get("guardian")
+    of = f"{child} of <b>{_esc(parent)}</b>, " if parent else ""
+    d = c.details
+    story = []
+    if c.cancelled:
+        story.append(Paragraph("<font color='#dc2626'><b>CANCELLED — NOT VALID</b></font>", H2))
+    story += _header(c.school_name, c.school_address, c.school_phone)
+    story += [Spacer(1, 6), Paragraph(c.title.upper(), ParagraphStyle("ct", parent=H2, fontSize=16, textColor=BRAND, spaceAfter=2)),
+              Paragraph(f"No. {_esc(c.serial_no)} &nbsp;&nbsp;·&nbsp;&nbsp; Date: {_d(c.issued_on)}", SUB), Spacer(1, 16)]
+    who = (f"This is to certify that <b>{_esc(c.student_name)}</b>, {of}admission number <b>{_esc(c.admission_no)}</b>, "
+           f"date of birth <b>{_d(c.date_of_birth)}</b>")
+    if c.kind == "bonafide":
+        story.append(Paragraph(f"{who}, is a bonafide student of this school, studying in <b>{_esc(c.class_section)}</b> "
+                               f"in the current academic session. {he} has been on our rolls since {_d(c.admission_date)}.", CERT_BODY))
+        story += [Spacer(1, 10), Paragraph(f"This certificate is issued on request for the purpose of <b>{_esc(d.get('purpose'))}</b>.",
+                                           CERT_BODY)]
+    elif c.kind == "character":
+        story.append(Paragraph(f"{who}, has been a student of this school since {_d(c.admission_date)} and is at present in "
+                               f"<b>{_esc(c.class_section)}</b>.", CERT_BODY))
+        story += [Spacer(1, 10), Paragraph(f"To the best of our knowledge, {his} conduct and character have been "
+                                           f"<b>{_esc(d.get('conduct') or 'good')}</b>. We wish {'them' if his == 'their' else his} "
+                                           f"every success.", CERT_BODY)]
+    else:
+        story += [Paragraph(f"{who}, was a student of this school.", CERT_BODY), Spacer(1, 10)]
+        rows = [
+            ["Name of the student", c.student_name], ["Father's name", c.parents.get("father") or "—"],
+            ["Mother's name", c.parents.get("mother") or "—"], ["Date of birth", _d(c.date_of_birth)],
+            ["Admission number", c.admission_no], ["Date of admission", _d(c.admission_date)],
+            ["Class at the time of leaving", d.get("last_class") or c.class_section],
+            ["Promoted to the next class", {"yes": "Yes", "no": "No", "na": "Not applicable"}.get(d.get("promoted"), "—")],
+            ["Fees paid up to", d.get("fees_paid_upto") or "—"], ["Date of leaving", _d(d.get("leaving_date"))],
+            ["Reason for leaving", d.get("reason") or "—"], ["General conduct", d.get("conduct") or "Good"],
+        ]
+        story.append(_grid([[Paragraph(f"<font color='#64748b'>{i + 1}. {_esc(k)}</font>", BODY), Paragraph(f"<b>{_esc(v)}</b>", BODY)]
+                            for i, (k, v) in enumerate(rows)], [WIDTH * 0.45, WIDTH * 0.55], header=False))
+    if d.get("remarks"):
+        story += [Spacer(1, 10), Paragraph(f"<b>Remarks:</b> {_esc(d['remarks'])}", BODY)]
+    story += [Spacer(1, 60)]
+    sig = _signatures(["Prepared by", "Checked by", "Principal"])
+    story += [sig, Spacer(1, 6), Paragraph("School seal", ParagraphStyle("seal", parent=SMALL, alignment=TA_RIGHT))]
+    return build(story, f"{c.title} {c.serial_no}")
+
+
+# ---- ID cards ---------------------------------------------------------------------------------
+
+@dataclass
+class IdCard:
+    name: str
+    class_section: str
+    admission_no: str
+    date_of_birth: date
+    blood_group: str | None
+    parent: str | None
+    phone: str | None
+    address: str | None
+    photo: bytes | None = None
+
+
+def _qr(text: str) -> ImageReader:
+    import qrcode
+    img = qrcode.make(text, box_size=4, border=1)
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return ImageReader(buf)
+
+
+def id_cards(school_name: str, school_phone: str | None, valid_until: date, cards: list[IdCard]) -> bytes:
+    """Credit-card sized cards (85.6 x 54 mm), ten to an A4 page."""
+    buf = BytesIO()
+    cv = pdfcanvas.Canvas(buf, pagesize=A4)
+    cv.setTitle("Student ID cards")
+    w, h = 85.6 * mm, 54 * mm
+    gap_x, gap_y = 8 * mm, 4 * mm
+    left = (A4[0] - 2 * w - gap_x) / 2
+    top = A4[1] - 12 * mm
+    for i, card in enumerate(cards):
+        if i and i % 10 == 0:
+            cv.showPage()
+        col, row = i % 2, (i % 10) // 2
+        x, y = left + col * (w + gap_x), top - (row + 1) * h - row * gap_y
+        cv.setStrokeColor(LINE)
+        cv.roundRect(x, y, w, h, 3 * mm, stroke=1, fill=0)
+        cv.setFillColor(BRAND)  # band with the school name
+        cv.roundRect(x, y + h - 11 * mm, w, 11 * mm, 3 * mm, stroke=0, fill=1)
+        cv.rect(x, y + h - 11 * mm, w, 4 * mm, stroke=0, fill=1)
+        cv.setFillColor(colors.white)
+        cv.setFont("Helvetica-Bold", 9)
+        cv.drawCentredString(x + w / 2, y + h - 5.3 * mm, school_name[:42])
+        cv.setFont("Helvetica", 6)
+        cv.drawCentredString(x + w / 2, y + h - 8.8 * mm, "STUDENT IDENTITY CARD" + (f"  ·  {school_phone}" if school_phone else ""))
+        px, py, pw, ph = x + 3 * mm, y + 9 * mm, 20 * mm, 25 * mm
+        cv.setFillColor(SOFT)
+        cv.rect(px, py, pw, ph, stroke=0, fill=1)
+        drawn = False
+        if card.photo:
+            try:
+                cv.drawImage(ImageReader(BytesIO(card.photo)), px, py, pw, ph, preserveAspectRatio=True, anchor="c", mask="auto")
+                drawn = True
+            except Exception:
+                drawn = False
+        if not drawn:
+            cv.setFillColor(MUTED)
+            cv.setFont("Helvetica-Bold", 14)
+            cv.drawCentredString(px + pw / 2, py + ph / 2 - 2 * mm, "".join(p[0] for p in card.name.split()[:2]).upper())
+        tx = px + pw + 3 * mm
+        cv.setFillColor(colors.black)
+        cv.setFont("Helvetica-Bold", 9.5)
+        cv.drawString(tx, y + h - 16 * mm, card.name[:30])
+        cv.setFont("Helvetica", 7)
+        lines = [("Class", card.class_section), ("Adm. no.", card.admission_no), ("DOB", f"{card.date_of_birth:%d %b %Y}"),
+                 ("Blood", card.blood_group or "—"), ("Parent", card.parent or "—"), ("Phone", card.phone or "—")]
+        for j, (k, v) in enumerate(lines):
+            yy = y + h - 20.5 * mm - j * 3.6 * mm
+            cv.setFillColor(MUTED)
+            cv.drawString(tx, yy, k)
+            cv.setFillColor(colors.black)
+            cv.drawString(tx + 12 * mm, yy, str(v)[:26])
+        cv.drawImage(_qr(card.admission_no), x + w - 15 * mm, y + 3 * mm, 12 * mm, 12 * mm)
+        cv.setFont("Helvetica", 5.5)
+        cv.setFillColor(MUTED)
+        if card.address:
+            cv.drawString(x + 3 * mm, y + 5.5 * mm, card.address[:62])
+        cv.drawString(x + 3 * mm, y + 2.5 * mm, f"Valid until {valid_until:%d %b %Y}")
+    cv.showPage()
+    cv.save()
+    return buf.getvalue()

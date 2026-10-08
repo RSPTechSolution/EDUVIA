@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Copy, KeyRound, Plus, Trash2, UserPlus, UsersRound } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ParentPicker } from "@/components/academics/pickers";
@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { ApiError, api } from "@/lib/api/client";
-import type { StudentDetail } from "@/lib/api/types";
+import type { Enquiry, StudentDetail } from "@/lib/api/types";
 import { generatePassword } from "@/lib/hooks";
 import { useClasses } from "@/lib/queries";
 
@@ -58,6 +58,24 @@ function NewStudentPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [done, setDone] = useState<{ student: StudentDetail; passwords: Record<string, string> } | null>(null);
 
+  // Admitting from an admission enquiry: fill in what the family already told us.
+  const enquiryId = useSearchParams().get("enquiry");
+  const [enquiry, setEnquiry] = useState<Enquiry | null>(null);
+  useEffect(() => {
+    if (!enquiryId) return;
+    api<Enquiry>(`/admissions/${enquiryId}`).then(({ data: e }) => {
+      setEnquiry(e);
+      const [first, ...rest] = e.student_name.split(" ");
+      setValue("first_name", first);
+      setValue("last_name", rest.join(" "));
+      if (e.date_of_birth) setValue("date_of_birth", e.date_of_birth);
+      if (e.gender) setValue("gender", e.gender as StudentValues["gender"]);
+      if (e.class_id) setValue("class_id", e.class_id);
+      if (e.email) setGuardians([{ kind: "new", full_name: e.parent_name, phone: e.phone, email: e.email, relationship: "father" }]);
+      else setNewParent({ full_name: e.parent_name, phone: e.phone, email: "" });
+    }).catch(() => null);
+  }, [enquiryId, setValue]);
+
   const create = useMutation({
     mutationFn: (v: StudentValues) =>
       api<{ student: StudentDetail; new_parent_passwords: Record<string, string> }>("/students", {
@@ -72,7 +90,11 @@ function NewStudentPage() {
           login: loginOn ? login : null,
         },
       }),
-    onSuccess: ({ data }) => {
+    onSuccess: async ({ data }) => {
+      if (enquiry) {
+        await api(`/admissions/${enquiry.id}`, { method: "PATCH", body: { student_id: data.student.id } }).catch(() => null);
+        qc.invalidateQueries({ queryKey: ["enquiries"] });
+      }
       qc.invalidateQueries({ queryKey: ["students"] });
       qc.invalidateQueries({ queryKey: ["classes"] });
       if (Object.keys(data.new_parent_passwords).length || loginOn) {
@@ -121,6 +143,9 @@ function NewStudentPage() {
     <>
       <Link href="/students" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" aria-hidden />Students</Link>
       <PageHeader title="Add a student" description="Fields marked * are required. Every student belongs to a class and section." />
+      {enquiry && (
+        <Alert className="mb-6"><AlertDescription>Admitting <strong>{enquiry.student_name}</strong> from an admission enquiry. Their details are filled in; the enquiry is marked admitted when you save.</AlertDescription></Alert>
+      )}
 
       <form onSubmit={handleSubmit((v) => { setFormError(null); create.mutate(v); })} noValidate className="space-y-6">
         <FadeIn>
@@ -266,7 +291,7 @@ function Credential({ who, email, password }: { who: string; email: string; pass
 export default function Page() {
   return (
     <PermissionGate permission="students.manage">
-      <NewStudentPage />
+      <Suspense><NewStudentPage /></Suspense>
     </PermissionGate>
   );
 }

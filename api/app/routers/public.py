@@ -10,7 +10,8 @@ from app.schemas.billing import (
     ContactRequest, ModulePrice, PlanBrief, PlanOut, PricingCatalog, QuoteOut, QuoteRequest, SignupOut, SignupRequest,
 )
 from app.schemas.common import ApiResponse, Message, ok
-from app.services import billing_service
+from app.schemas.academics_extra import PublicEnquiry
+from app.services import billing_service, enquiry_service
 
 router = APIRouter()
 
@@ -78,3 +79,29 @@ async def contact(body: ContactRequest, request: Request, db: DB):
         modules=body.modules or [], quoted_monthly=quoted,
     )
     return ok(Message(message="Thanks! Our team will get back to you within one business day."))
+
+
+@router.post("/schools/{slug}/enquiry", response_model=ApiResponse[Message], status_code=201)
+async def admission_enquiry(slug: str, body: PublicEnquiry, request: Request, db: DB):
+    """Admission enquiry form on a school's own website."""
+    await _limit(request, "enquiry", settings.CONTACT_RATE_LIMIT, 3600)
+    await enquiry_service.create_public(db, slug, body)
+    return ok(Message(message="Thank you! The school office will call you soon."))
+
+
+@router.get("/schools/{slug}", response_model=ApiResponse[dict])
+async def school_card(slug: str, db: DB):
+    """What a school's public admission page shows: name, place, logo and the classes it offers."""
+    from sqlalchemy import select
+
+    from app.core.database import elevated
+    from app.core.errors import NotFound
+    from app.models import School, SchoolClass
+    async with elevated(db):
+        school = await db.scalar(select(School).where(School.slug == slug, School.is_active.is_(True)))
+        if not school:
+            raise NotFound("School not found")
+        classes = (await db.scalars(select(SchoolClass.name).where(SchoolClass.school_id == school.id)
+                                    .order_by(SchoolClass.sort_order, SchoolClass.name))).all()
+    return ok({"name": school.name, "city": school.city, "phone": school.phone, "email": school.email,
+               "logo_url": school.logo_url, "classes": list(classes)})
