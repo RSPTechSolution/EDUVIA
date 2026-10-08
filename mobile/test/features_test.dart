@@ -305,4 +305,37 @@ void main() {
     expect(find.text('Your covers'), findsOneWidget);
     expect(find.textContaining('Class 7 – A Science for Priya Verma'), findsOneWidget);
   });
+
+  testWidgets('parent asks for leave and sees it pending', (tester) async {
+    var sent = <String, dynamic>{};
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson()..['modules'] = ['attendance'])))
+      ..on('GET /attendance/my', (_) => (200, FakeApi.ok([{
+            'student_id': 's1', 'name': 'Aarav Patel', 'class_section': 'Class 5 – A', 'month': '2026-10', 'days': [],
+            'month_counts': counts(), 'month_percent': null, 'year_counts': counts(), 'year_percent': null}])))
+      ..on('GET /leave', (_) => (200, FakeApi.ok(sent.isEmpty ? [] : [{
+            'id': 'l1', 'student_id': 's1', 'student_name': 'Aarav Patel', 'class_section': 'Class 5 – A', 'from_date': '2026-10-12',
+            'to_date': '2026-10-13', 'days': 2, 'kind': 'sick', 'reason': sent['reason'], 'status': 'pending', 'requested_by': 'Suresh Patel',
+            'requested_at': '2026-10-08T10:00:00Z', 'decided_by': null, 'decided_at': null, 'decision_note': null, 'can_decide': false, 'can_cancel': true}])))
+      ..on('POST /leave', (req) {
+        sent = Map<String, dynamic>.from(req.data as Map);
+        return (201, FakeApi.ok({}));
+      });
+    await pump(tester, container(fake));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Leave'));
+    await tester.pumpAndSettle();
+    expect(find.text('No leave requests'), findsOneWidget);
+    await tester.tap(find.text('Ask for leave'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Fever since last night');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Send request'));
+    await tester.pumpAndSettle();
+    expect(sent['student_id'], 's1');
+    expect(sent['kind'], 'sick');
+    expect(find.text('Fever since last night'), findsOneWidget);
+    expect(find.text('Pending'), findsOneWidget);
+  });
 }

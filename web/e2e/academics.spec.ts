@@ -1,5 +1,5 @@
 import { expect, test } from "./fixtures";
-import { loginAsAdmin, unique } from "./helpers";
+import { DEMO, apiAs, loginAsAdmin, unique } from "./helpers";
 
 test("admin adds a class with sections", async ({ page }) => {
   await loginAsAdmin(page);
@@ -12,6 +12,10 @@ test("admin adds a class with sections", async ({ page }) => {
   await dialog.getByRole("button", { name: /save|add class/i }).click();
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await expect(page.getByLabel(/^Section B: 0 students/).last()).toBeVisible();
+  // Leave the demo school as it was (an extra class would become the "last class" for promotion).
+  const admin = await apiAs(DEMO.admin);
+  const created = (await admin("GET", "/classes")).find((c: { name: string }) => c.name === name);
+  await admin("DELETE", `/classes/${created.id}`);
 });
 
 test("adding a student requires a class and section, and links a new parent", async ({ page }) => {

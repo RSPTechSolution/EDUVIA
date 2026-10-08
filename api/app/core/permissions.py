@@ -45,6 +45,10 @@ PERMISSIONS: dict[str, list[Role]] = {
     "attendance.view": ADMINS + [Role.TEACHER, Role.RECEPTIONIST],
     "attendance.mark": ADMINS + [Role.TEACHER],  # teachers: only sections they teach
     "attendance.manage": ADMINS,  # any section, any past date
+    "attendance.scan": ADMINS + [Role.TEACHER, Role.RECEPTIONIST, Role.SECURITY_GUARD],  # QR scan at the gate or in class
+    "leave.approve": ADMINS + [Role.TEACHER],  # teachers: their own class's students
+    "calendar.manage": ADMINS + [Role.RECEPTIONIST],
+    "devices.manage": [Role.SCHOOL_ADMIN],
     "fees.view": ADMINS + [Role.ACCOUNTANT, Role.RECEPTIONIST],
     "fees.collect": ADMINS + [Role.ACCOUNTANT, Role.RECEPTIONIST],
     "fees.manage": [Role.SCHOOL_ADMIN, Role.ACCOUNTANT],

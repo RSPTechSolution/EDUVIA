@@ -20,6 +20,8 @@ class MoreScreen extends ConsumerWidget {
       if (me.hasModule('communication')) (Icons.campaign_outlined, 'Notices', 'Announcements from the school', '/notices',
           unread > 0 ? Badge(label: Text('$unread')) : null),
       if (me.hasModule('academics') && (me.isFamily || me.teaches)) (Icons.calendar_month_outlined, 'Timetable', me.isFamily ? 'The week, period by period' : 'Where you teach this week', '/timetable', null),
+      if (me.hasModule('attendance') && (me.isFamily || me.can('leave.approve'))) (Icons.event_busy_outlined, me.isFamily ? 'Leave' : 'Leave requests', me.isFamily ? 'Tell the school before a day away' : 'Approve leave for your class', '/leave', null),
+      (Icons.event_note_outlined, 'School calendar', 'Holidays, exams and events', '/calendar', null),
       if (me.hasModule('academics') && me.isFamily) (Icons.menu_book_outlined, 'Syllabus', 'How far each subject has got', '/syllabus', null),
       if (me.hasModule('exams') && me.isFamily) (Icons.emoji_events_outlined, 'Results', 'Report cards and upcoming exams', '/results', null),
       if (me.hasModule('exams') && me.can('exams.marks')) (Icons.edit_note_rounded, 'Marks entry', 'Enter marks for your subjects', '/marks', null),

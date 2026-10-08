@@ -15,6 +15,7 @@ from app.schemas.attendance import (
 )
 from app.services import audit_service, notification_service
 from app.services.academics_service import field_error, get_section
+from app.services.attendance_extra_service import closed_reason
 from app.services.family_service import school_today, student_label
 
 TEACHER_EDIT_DAYS = 3  # teachers can correct the last few days; admins any past date
@@ -113,8 +114,8 @@ async def roster(db: AsyncSession, user: User, section_id: uuid.UUID, day: date)
         locked = "You can view this class but not mark it."
     elif not has_permission(user.role, "attendance.manage") and (today - day).days > TEACHER_EDIT_DAYS:
         locked = f"Attendance older than {TEACHER_EDIT_DAYS} days can only be changed by the office."
-    elif day.weekday() == 6:
-        locked = "Sunday is a holiday."
+    elif closed := await closed_reason(db, user.school_id, day):
+        locked = closed
 
     students = await _active_students(db, section.id)
     records = {r.student_id: r for r in (await db.scalars(select(AttendanceRecord).where(

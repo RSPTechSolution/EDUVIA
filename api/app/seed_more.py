@@ -1,6 +1,7 @@
 """Demo data for syllabus, lesson plans, admission enquiries, certificates and substitutions. Called from app.seed."""
 import random
 from datetime import UTC, date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 
@@ -181,3 +182,74 @@ async def seed_academics_extras(db, school: School, today: date) -> None:
     await db.flush()
     print(f"  Syllabus: {topic_count} topics, {done_count} finished; lesson plans: {plans}; enquiries: {len(ENQUIRIES)}; "
           f"certificates: 3; covers today: {covers}")
+
+
+async def seed_attendance_extras(db, school: School, today: date) -> None:
+    from app.models import BiometricDevice, BiometricPunch, CalendarEvent, LeaveRequest, StudentGuardian
+    if await db.scalar(select(CalendarEvent.id).where(CalendarEvent.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(71)
+    y = today.year if today.month >= 4 else today.year - 1
+    events = [("Independence Day", "holiday", date(y, 8, 15), date(y, 8, 15)), ("Raksha Bandhan", "holiday", date(y, 8, 28), date(y, 8, 28)),
+              ("Gandhi Jayanti", "holiday", date(y, 10, 2), date(y, 10, 2)), ("Diwali vacation", "vacation", date(y, 10, 19), date(y, 10, 24)),
+              ("Guru Nanak Jayanti", "holiday", date(y, 11, 5), date(y, 11, 5)), ("Christmas", "holiday", date(y, 12, 25), date(y, 12, 25)),
+              ("Winter vacation", "vacation", date(y + 1, 1, 1), date(y + 1, 1, 10)), ("Republic Day", "holiday", date(y + 1, 1, 26), date(y + 1, 1, 26)),
+              ("Summer vacation", "vacation", date(y, 6, 1), date(y, 6, 30)),
+              ("Parent-teacher meeting", "ptm", today + timedelta(days=9), today + timedelta(days=9)),
+              ("Annual sports day", "event", today + timedelta(days=16), today + timedelta(days=16)),
+              ("Science exhibition", "event", today + timedelta(days=30), today + timedelta(days=30)),
+              ("Half-yearly exams", "exam", date(y, 9, 14), date(y, 9, 24)), ("Final exams", "exam", date(y + 1, 3, 2), date(y + 1, 3, 14))]
+    for title, kind, start, end in events:
+        db.add(CalendarEvent(school_id=school.id, title=title, kind=kind, start_date=start, end_date=end))
+
+    # Leave: the Patels have one waiting and one approved earlier; a few other families too.
+    users = {u.email: u for u in (await db.scalars(select(User).where(User.school_id == school.id))).all()}
+    parent = users.get("parent@demo.com")
+    kids = (await db.scalars(select(Student).join(StudentGuardian, StudentGuardian.student_id == Student.id)
+                             .where(StudentGuardian.user_id == parent.id).order_by(Student.first_name))).all() if parent else []
+    nxt = today + timedelta(days=4 if today.weekday() != 2 else 5)
+    nxt += timedelta(days=1) if nxt.weekday() == 6 else timedelta(0)
+    if kids:
+        db.add(LeaveRequest(school_id=school.id, student_id=kids[0].id, from_date=nxt, to_date=nxt + timedelta(days=1), kind="family",
+                            reason="Cousin's wedding in Jaipur. We'll be back on Monday.", requested_by=parent.id))
+        past = today - timedelta(days=12)
+        db.add(LeaveRequest(school_id=school.id, student_id=kids[0].id, from_date=past, to_date=past, kind="sick",
+                            reason="Fever and cold; doctor advised a day's rest.", requested_by=parent.id, status="approved",
+                            decided_by=users["teacher@demo.com"].id if "teacher@demo.com" in users else None,
+                            decided_at=datetime.now(UTC) - timedelta(days=13), decision_note="Get well soon"))
+    others = (await db.execute(select(Student, StudentGuardian.user_id).join(StudentGuardian, StudentGuardian.student_id == Student.id)
+                               .where(Student.school_id == school.id, Student.status == "active").limit(40))).all()
+    for s, uid in rnd.sample(others, min(4, len(others))):
+        if parent and uid == parent.id:
+            continue
+        start = today + timedelta(days=rnd.randint(1, 10))
+        start += timedelta(days=1) if start.weekday() == 6 else timedelta(0)
+        db.add(LeaveRequest(school_id=school.id, student_id=s.id, from_date=start, to_date=start + timedelta(days=rnd.choice([0, 1, 2])),
+                            kind=rnd.choice(["sick", "family", "travel"]), requested_by=uid,
+                            reason=rnd.choice(["Going to grandparents' village for a family function.", "Doctor's appointment in the morning.",
+                                               "Travelling for a family wedding.", "Unwell since yesterday."])))
+
+    # A biometric machine at the gate, with Class 5's numbers enrolled and this morning's punches.
+    settings = dict(school.settings or {})
+    settings.setdefault("late_after", "08:10")
+    school.settings = settings
+    dev = BiometricDevice(school_id=school.id, serial_no="CQZ7231460001", name="Main gate", location="Front entrance", punches=0)
+    db.add(dev)
+    await db.flush()
+    c5 = await db.scalar(select(Section).join(SchoolClass, SchoolClass.id == Section.class_id)
+                         .where(SchoolClass.school_id == school.id, SchoolClass.name == "Class 5", Section.name == "A"))
+    if c5:
+        tz = ZoneInfo(school.timezone or "Asia/Kolkata")
+        for i, s in enumerate((await db.scalars(select(Student).where(Student.section_id == c5.id, Student.status == "active")
+                                                .order_by(Student.roll_no))).all()):
+            s.biometric_id = str(501 + i)
+            if today.weekday() != 6:
+                at = datetime.combine(today, datetime.min.time(), tz).replace(hour=7, minute=40) + timedelta(minutes=rnd.randint(0, 35))
+                db.add(BiometricPunch(school_id=school.id, device_id=dev.id, pin=s.biometric_id, punched_at=at, student_id=s.id))
+                dev.punches += 1
+        dev.last_seen = datetime.now(UTC) - timedelta(hours=2)
+    for i, email in enumerate(["teacher@demo.com", "principal@demo.com", "reception@demo.com"]):
+        if email in users:
+            users[email].biometric_id = str(9001 + i)
+    await db.flush()
+    print(f"  Calendar: {len(events)} entries; leave requests seeded; 1 attendance machine")

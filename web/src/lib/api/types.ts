@@ -837,3 +837,82 @@ export interface SubstitutionDay {
   absent_teachers: { id: string; full_name: string; periods: number; covered: number }[];
   periods: Substitution[];
 }
+
+// ---- calendar, leave, scan, devices, period-wise ------------------------------------------------
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  kind: "holiday" | "vacation" | "event" | "exam" | "ptm";
+  start_date: string;
+  end_date: string;
+  description: string | null;
+  closed: boolean;
+}
+
+export interface LeaveRequest {
+  id: string;
+  student_id: string;
+  student_name: string;
+  class_section: string;
+  from_date: string;
+  to_date: string;
+  days: number;
+  kind: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  requested_by: string | null;
+  requested_at: string;
+  decided_by: string | null;
+  decided_at: string | null;
+  decision_note: string | null;
+  can_decide: boolean;
+  can_cancel: boolean;
+}
+
+export interface ScanResult {
+  student_id: string;
+  name: string;
+  class_section: string;
+  photo_file_id: string | null;
+  status: string;
+  already: boolean;
+  time: string;
+}
+
+export interface BiometricDevice {
+  id: string;
+  serial_no: string;
+  name: string;
+  location: string | null;
+  is_enabled: boolean;
+  last_seen: string | null;
+  punches: number;
+  online: boolean;
+}
+
+export interface Punch { pin: string; punched_at: string; device: string; matched: string | null }
+
+export interface PeriodCard {
+  entry_id: string;
+  period_name: string;
+  start_time: string;
+  end_time: string;
+  section_id: string;
+  section_label: string;
+  subject_name: string;
+  subject_color: string;
+  marked: boolean;
+  absent: number;
+  cover: boolean;
+}
+
+export interface PeriodRoster {
+  entry_id: string;
+  date: string;
+  label: string;
+  marked: boolean;
+  students: { student_id: string; name: string; roll_no: number | null; day_status: string | null; absent: boolean }[];
+}
+
+export interface BunkRow { student_id: string; name: string; section_label: string; periods: string[] }

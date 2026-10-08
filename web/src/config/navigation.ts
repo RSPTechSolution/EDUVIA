@@ -1,5 +1,5 @@
 import {
-  Award, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Award, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -48,6 +48,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Classes & sections", href: "/academics/classes", icon: School, module: "students", permission: "students.view", keywords: ["grades", "sections", "class teacher"] },
       { label: "Timetable", href: "/timetable", icon: CalendarRange, module: "academics", permission: "timetable.view", keywords: ["schedule", "periods", "free teacher", "substitute"] },
       { label: "Attendance", href: "/attendance", icon: ClipboardCheck, module: "attendance", permission: "attendance.view", keywords: ["absent", "present", "roll call", "register"] },
+      { label: "Scan ID cards", href: "/attendance/scan", icon: QrCode, module: "attendance", permission: "attendance.scan", keywords: ["qr", "gate", "check in", "barcode"] },
+      { label: "Period attendance", href: "/attendance/periods", icon: ListChecks, module: "attendance", permission: "attendance.mark", keywords: ["bunk", "subject attendance", "period-wise"] },
+      { label: "Leave requests", href: "/leave", icon: CalendarOff, module: "attendance", permission: "leave.approve", keywords: ["leave", "absence", "application"] },
+      { label: "Leave", href: "/leave", icon: CalendarOff, module: "attendance", roles: ["parent", "student"], keywords: ["leave", "absent", "sick"] },
       { label: "Attendance", href: "/my-attendance", icon: ClipboardCheck, module: "attendance", roles: ["parent", "student"], keywords: ["absent", "present"] },
       { label: "Fees", href: "/my-fees", icon: Wallet, module: "fees", roles: ["parent", "student"], keywords: ["pay", "dues", "receipt", "invoice"] },
       { label: "Exams", href: "/exams", icon: FileSpreadsheet, module: "exams", permission: "exams.view", keywords: ["marks", "results", "report card", "date sheet"] },
@@ -64,6 +68,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Communication",
     items: [
+      { label: "Calendar", href: "/calendar", icon: CalendarHeart, keywords: ["holidays", "events", "vacation", "ptm", "academic calendar"] },
       { label: "Notices", href: "/notices", icon: Megaphone, module: "communication", badge: "notices", keywords: ["announcements", "circular", "news"] },
     ],
   },
@@ -81,6 +86,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Plan & billing", href: "/settings/billing", icon: CreditCard, permission: "billing.view", keywords: ["subscription", "upgrade", "pricing", "trial"] },
       { label: "Users & roles", href: "/settings/users", icon: Users, permission: "users.view", keywords: ["staff", "accounts", "permissions"] },
       { label: "Email", href: "/settings/emails", icon: Mail, permission: "emails.view", keywords: ["brevo", "smtp", "sent", "receipts"] },
+      { label: "Attendance machines", href: "/settings/devices", icon: Fingerprint, module: "attendance", permission: "devices.manage", keywords: ["biometric", "fingerprint", "face", "zkteco", "adms"] },
       { label: "Audit log", href: "/settings/audit", icon: ScrollText, permission: "audit.view", keywords: ["history", "activity"] },
     ],
   },

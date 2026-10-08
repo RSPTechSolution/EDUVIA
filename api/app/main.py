@@ -11,7 +11,7 @@ from app.core.errors import install_error_handlers
 from app.core.permissions import MODULES
 from app.core.redis import close_redis, get_redis
 from app.core import roles
-from app.routers import academics, academics_extra, attendance, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
+from app.routers import academics, academics_extra, attendance, attendance_extra, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
 from app.schemas.common import ok
 
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -55,7 +55,12 @@ app.include_router(academics_extra.admissions, prefix=f"{API}/admissions", tags=
 app.include_router(academics_extra.promotion, prefix=f"{API}/promotion", tags=["Promotion"])
 app.include_router(academics_extra.substitutions, prefix=f"{API}/substitutions", tags=["Substitutions"])
 app.include_router(timetable.router, prefix=f"{API}/timetable", tags=["Timetable"])
+app.include_router(attendance_extra.attendance, prefix=f"{API}/attendance", tags=["Attendance"])
 app.include_router(attendance.router, prefix=f"{API}/attendance", tags=["Attendance"])
+app.include_router(attendance_extra.calendar, prefix=f"{API}/calendar", tags=["Calendar"])
+app.include_router(attendance_extra.leave, prefix=f"{API}/leave", tags=["Leave"])
+app.include_router(attendance_extra.devices, prefix=f"{API}/devices", tags=["Biometric devices"])
+app.include_router(attendance_extra.iclock, prefix="/iclock", tags=["ADMS"])
 app.include_router(fees.router, prefix=f"{API}/fees", tags=["Fees"])
 app.include_router(exams.router, prefix=f"{API}/exams", tags=["Exams"])
 app.include_router(emails.router, prefix=f"{API}/emails", tags=["Email"])

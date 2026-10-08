@@ -4,7 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
   AppNotification, StoredFile, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
-  Substitution, SubstitutionDay, SyllabusView,
+  Substitution, SubstitutionDay, SyllabusView, BiometricDevice, BunkRow, CalendarEvent, LeaveRequest, PeriodCard, PeriodRoster, Punch,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
   MarksSheetRef, MyHomework, Notice, ReportCard, SectionResults, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
   SectionCard, SectionReport, StructureMatrix, StudentAttendance, ClassItem, DashboardSummary, ModuleState, Period, RoleRules, School, Student, StudentDetail, StudentOption, Subject,
@@ -87,6 +87,7 @@ export function useClasses(enabled = true) {
 
 export interface StudentListParams {
   page: number;
+  page_size?: number;
   search?: string;
   class_id?: string;
   section_id?: string;
@@ -428,4 +429,42 @@ export function useSubstitutionDay(date: string) {
 
 export function useMyCovers(enabled = true) {
   return useQuery({ queryKey: ["substitutions", "mine"], enabled, queryFn: async () => (await api<Substitution[]>("/substitutions/mine")).data });
+}
+
+// ---- calendar, leave, devices, period-wise ------------------------------------------------------
+
+export function useCalendar(from: string, to: string) {
+  return useQuery({
+    queryKey: ["calendar", from, to],
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<CalendarEvent[]>("/calendar", { query: { from, to } })).data,
+  });
+}
+
+export function useLeave(status?: string, enabled = true) {
+  return useQuery({ queryKey: ["leave", status], enabled, queryFn: async () => (await api<LeaveRequest[]>("/leave", { query: { status } })).data });
+}
+
+export function useDevices() {
+  return useQuery({ queryKey: ["devices"], refetchInterval: 30_000, queryFn: async () => (await api<BiometricDevice[]>("/devices")).data });
+}
+
+export function usePunches() {
+  return useQuery({ queryKey: ["devices", "punches"], refetchInterval: 30_000, queryFn: async () => (await api<Punch[]>("/devices/punches")).data });
+}
+
+export function useMyPeriods(date: string, enabled = true) {
+  return useQuery({ queryKey: ["periods", date], enabled, queryFn: async () => (await api<PeriodCard[]>("/attendance/periods", { query: { date } })).data });
+}
+
+export function usePeriodRoster(entryId: string | null, date: string) {
+  return useQuery({
+    queryKey: ["periods", "roster", entryId, date],
+    enabled: !!entryId,
+    queryFn: async () => (await api<PeriodRoster>(`/attendance/periods/${entryId}`, { query: { date } })).data,
+  });
+}
+
+export function useBunks(date: string, enabled = true) {
+  return useQuery({ queryKey: ["periods", "bunks", date], enabled, queryFn: async () => (await api<BunkRow[]>("/attendance/bunks", { query: { date } })).data });
 }

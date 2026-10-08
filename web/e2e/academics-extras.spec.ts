@@ -90,7 +90,14 @@ test("admin arranges cover for an absent teacher; promotion preview suggests by 
   if (today !== 0) {
     const section = page.getByRole("region", { name: /'s periods$/ }).first();
     await expect(section).toBeVisible();
-    const open = section.getByRole("combobox", { name: /^Cover for/ }).filter({ hasText: "Choose a teacher" }).first();
+    const open = section.getByRole("combobox", { name: /^Cover for/ }).last();
+    if (!(await open.textContent())?.includes("Choose a teacher")) { // covered by an earlier run: clear it first
+      await open.click();
+      await page.getByRole("option", { name: "No cover yet" }).click();
+      await expect(page.getByText("Cover removed")).toBeVisible();
+      await expect(open).toHaveText(/Choose a teacher/);
+      await expect(page.getByRole("listbox")).toHaveCount(0);
+    }
     await open.click();
     const free = page.getByRole("option").filter({ hasNotText: "No cover yet" }).and(page.locator(":not([data-disabled])")).first();
     await free.click();
