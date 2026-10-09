@@ -4,3 +4,5 @@
 *.ico binary
 *.zip binary
 *.docx binary
+*.sh text eol=lf
+Dockerfile text eol=lf
