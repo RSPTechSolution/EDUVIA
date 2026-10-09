@@ -26,6 +26,7 @@ EVENTS = {
     "fee_receipt": "Fee received",
     "notice": "Urgent notices",
     "leave": "Leave approved or declined",
+    "transport": "Child boarded or left the bus",
 }
 CHANNELS = ("sms", "whatsapp")
 

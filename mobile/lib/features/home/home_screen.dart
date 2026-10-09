@@ -15,6 +15,7 @@ import '../fees/fees_data.dart';
 import '../homework/homework_screens.dart';
 import '../notices/notices_screen.dart';
 import '../academics/syllabus_screens.dart';
+import '../transport/transport_screens.dart';
 import '../notifications/notifications_screen.dart';
 import '../timetable/timetable_screen.dart';
 
@@ -59,6 +60,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             if (me.school != null) _SchoolCard(school: me.school!, role: me.role),
             const SizedBox(height: 16),
+            if (me.role == 'driver' && me.hasModule('transport')) const DriverCard(),
             if (me.isFamily) ...[
               if (me.hasModule('attendance') || me.hasModule('fees')) const _FamilyCards(),
               if (me.hasModule('academics')) const _HomeworkDue(),

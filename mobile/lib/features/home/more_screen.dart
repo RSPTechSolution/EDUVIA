@@ -26,6 +26,8 @@ class MoreScreen extends ConsumerWidget {
       if (me.hasModule('communication')) (Icons.forum_outlined, 'Messages', me.isFamily ? 'Write to the teachers' : 'Write to parents', '/messages', null),
       if (me.hasModule('communication') && me.isFamily) (Icons.handshake_outlined, 'Parent-teacher meetings', 'Book a time with the class teacher', '/ptm', null),
       if (me.hasModule('communication')) (Icons.poll_outlined, 'Surveys', 'Questions from the school', '/surveys', null),
+      if (me.hasModule('transport') && me.isFamily) (Icons.directions_bus_outlined, 'School bus', 'Where the bus is right now', '/bus', null),
+      if (me.hasModule('transport') && me.role == 'driver') (Icons.directions_bus_outlined, 'Driver', 'Trips, boarding and SOS', '/driver', null),
       (Icons.event_note_outlined, 'School calendar', 'Holidays, exams and events', '/calendar', null),
       if (me.hasModule('academics') && me.isFamily) (Icons.menu_book_outlined, 'Syllabus', 'How far each subject has got', '/syllabus', null),
       if (me.hasModule('exams') && me.isFamily) (Icons.emoji_events_outlined, 'Results', 'Report cards and upcoming exams', '/results', null),

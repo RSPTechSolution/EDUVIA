@@ -16,6 +16,7 @@ from app.models.exams import Exam, ExamMark, ExamPaper, ExamRemark
 from app.models.finance import FeeCategory, FeeInvoice, FeeInvoiceItem, FeePayment, FeeStructure, PaymentOrder
 from app.models.school import School, SchoolModule
 from app.models.timetable import Period, Subject, TeacherSubject, TeacherUnavailability, TimetableEntry
+from app.models.transport import Boarding, Route, SosAlert, Stop, TransportAssignment, Trip, TripPing, Vehicle
 from app.models.user import PasswordResetToken, User, UserSession
 
 __all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan", "Lead", "School", "SchoolModule", "User", "UserSession", "PasswordResetToken", "AuditLog",
@@ -27,4 +28,5 @@ __all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan
            "CalendarEvent", "LeaveRequest", "BiometricDevice", "BiometricPunch", "PeriodAttendance",
            "LedgerHead", "AccountEntry",
            "Question", "OnlineTest", "TestAttempt", "CoScholasticArea", "CoScholasticGrade", "LiveClass",
-           "MessageLog", "Conversation", "ChatMessage", "PtmEvent", "PtmBooking", "Survey", "SurveyResponse"]
+           "MessageLog", "Conversation", "ChatMessage", "PtmEvent", "PtmBooking", "Survey", "SurveyResponse",
+           "Vehicle", "Route", "Stop", "TransportAssignment", "Trip", "TripPing", "Boarding", "SosAlert"]

@@ -11,7 +11,7 @@ from app.core.errors import install_error_handlers
 from app.core.permissions import MODULES
 from app.core.redis import close_redis, get_redis
 from app.core import roles
-from app.routers import academics, academics_extra, accounts, messaging, online, attendance, attendance_extra, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
+from app.routers import academics, academics_extra, accounts, transport, messaging, online, attendance, attendance_extra, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
 from app.schemas.common import ok
 
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -79,6 +79,7 @@ app.include_router(communication.notices, prefix=f"{API}/notices", tags=["Notice
 app.include_router(communication.homework, prefix=f"{API}/homework", tags=["Homework"])
 app.include_router(files.router, prefix=f"{API}/files", tags=["Files"])
 app.include_router(notifications.router, prefix=f"{API}/notifications", tags=["Notifications"])
+app.include_router(transport.router, prefix=f"{API}/transport", tags=["Transport"])
 app.include_router(billing.router, prefix=f"{API}/subscription", tags=["Subscription"])
 app.include_router(dashboard.router, prefix=f"{API}/dashboard", tags=["Dashboard"])
 app.include_router(platform.router, prefix=f"{API}/platform", tags=["Platform"])

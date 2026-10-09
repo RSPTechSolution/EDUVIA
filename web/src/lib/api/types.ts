@@ -1111,3 +1111,28 @@ export interface SurveyResults {
   survey: Survey; responses: number; audience_size: number;
   questions: { id: string; kind: SurveyQuestionKind; text: string; answers: number; counts: Record<string, number>; average: number | null; texts: { text: string; by: string | null }[] }[];
 }
+
+
+// ---- transport ------------------------------------------------------------------------------------
+
+export interface Vehicle {
+  id: string; number: string; model: string | null; capacity: number; driver_id: string | null; driver_name: string | null; driver_phone: string | null;
+  helper_name: string | null; helper_phone: string | null; insurance_until: string | null; fitness_until: string | null; permit_until: string | null;
+  is_active: boolean; routes: string[]; riders: number; expiring: string[];
+}
+export interface BusStop { id: string; name: string; sort_order: number; lat: number | null; lng: number | null; pickup_time: string | null; drop_time: string | null; riders: number }
+export interface BusRoute {
+  id: string; name: string; vehicle_id: string | null; vehicle_number: string | null; driver_name: string | null; monthly_fee: number;
+  is_active: boolean; stops: BusStop[]; riders: number; capacity: number | null;
+}
+export interface Rider { student_id: string; name: string; class_section: string; stop_id: string | null; stop_name: string | null; parent_phone: string | null }
+export interface Trip {
+  id: string; route_id: string; route_name: string; vehicle_number: string | null; driver_name: string | null; driver_phone: string | null;
+  direction: "pickup" | "drop"; status: string; started_at: string; ended_at: string | null; lat: number | null; lng: number | null; speed: number | null;
+  last_ping_at: string | null; stale: boolean; on_board: number; riders: number; stops: BusStop[]; path: number[][];
+}
+export interface ChildTransport { student_id: string; name: string; route: BusRoute | null; stop: BusStop | null; trip: Trip | null; today: { event: string; at: string; direction: string }[] }
+export interface SosAlert {
+  id: string; route_name: string | null; vehicle_number: string | null; raised_by: string | null; phone: string | null; lat: number | null; lng: number | null;
+  message: string | null; raised_at: string; resolved_at: string | null; resolution: string | null;
+}

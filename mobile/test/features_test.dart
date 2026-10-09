@@ -419,4 +419,42 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 9));
   });
+
+  testWidgets('driver starts a trip and marks a student on the bus', (tester) async {
+    var boarded = false;
+    Map<String, dynamic> trip() => {
+          'id': 'tr1', 'route_id': 'r1', 'route_name': 'Route 1', 'vehicle_number': 'PB01 AB 1234', 'driver_name': 'Harpreet', 'driver_phone': null,
+          'direction': 'pickup', 'status': 'running', 'started_at': '2026-10-09T02:00:00Z', 'ended_at': null, 'lat': null, 'lng': null, 'speed': null,
+          'last_ping_at': null, 'stale': true, 'on_board': boarded ? 1 : 0, 'riders': 1, 'stops': [], 'path': [],
+          'roster': [{'student_id': 's1', 'name': 'Aarav Patel', 'class_section': 'Class 5 – A', 'stop_id': null, 'stop_name': 'Sector 21',
+                      'parent_phone': null, 'boarded_at': boarded ? '2026-10-09T02:10:00Z' : null, 'dropped_at': null, 'absent': false}],
+        };
+    final me = meJson(role: 'driver')..['modules'] = ['transport']..['permissions'] = ['transport.drive'];
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(me)))
+      ..on('GET /transport/driver/today', (_) => (200, FakeApi.ok({
+            'vehicle': {'id': 'v1', 'number': 'PB01 AB 1234'}, 'running': null,
+            'routes': [{'id': 'r1', 'name': 'Route 1', 'stops': [], 'riders': 1}]})))
+      ..on('POST /transport/trips', (_) => (201, FakeApi.ok(trip())))
+      ..on('POST /transport/trips/tr1/board', (_) {
+        boarded = true;
+        return (200, FakeApi.ok(trip()));
+      });
+    await pump(tester, container(fake, flavor: AppFlavor.driver));
+    await tester.tap(find.text('Start a trip'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Morning pickup'));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.textContaining('0 of 1 on board'), findsOneWidget);
+    await tester.tap(find.text('On bus'));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(boarded, isTrue);
+    expect(find.text('Got off'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 16));
+  });
 }

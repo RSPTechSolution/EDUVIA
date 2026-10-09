@@ -354,6 +354,7 @@ class LiveClassesScreen extends ConsumerWidget {
                         subtitle: Text('${_when.format(l.startsAt)} · ${l.minutes} min · ${l.provider}${l.subject != null ? ' · ${l.subject}' : ''}'),
                         trailing: l.state == 'live' || l.state == 'upcoming'
                             ? FilledButton(
+                                style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
                                 onPressed: () => launchUrl(Uri.parse(l.url), mode: LaunchMode.externalApplication),
                                 child: Text(l.state == 'live' ? 'Join now' : 'Join'),
                               )

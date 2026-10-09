@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AppNotification, StoredFile, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
+  AppNotification, StoredFile, BusRoute, ChildTransport, Rider, SosAlert, Trip, Vehicle, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
   PtmScheduleRow, Survey, SurveyResults, AttemptResult, CoSheet, LiveClass, MyTest, OnlineTest, Question, TestResults, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
   Substitution, SubstitutionDay, SyllabusView, BiometricDevice, BunkRow, CalendarEvent, LeaveRequest, PeriodCard, PeriodRoster, Punch,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
@@ -576,4 +576,30 @@ export function useSurveys() {
 
 export function useSurveyResults(id: string | null) {
   return useQuery({ queryKey: ["surveys", "results", id], enabled: !!id, queryFn: async () => (await api<SurveyResults>(`/surveys/${id}/results`)).data });
+}
+
+// ---- transport ------------------------------------------------------------------------------------
+
+export function useVehicles() {
+  return useQuery({ queryKey: ["transport", "vehicles"], queryFn: async () => (await api<Vehicle[]>("/transport/vehicles")).data });
+}
+
+export function useBusRoutes() {
+  return useQuery({ queryKey: ["transport", "routes"], queryFn: async () => (await api<BusRoute[]>("/transport/routes")).data });
+}
+
+export function useRiders(routeId: string | null) {
+  return useQuery({ queryKey: ["transport", "riders", routeId], enabled: !!routeId, queryFn: async () => (await api<Rider[]>(`/transport/routes/${routeId}/riders`)).data });
+}
+
+export function useLiveTrips() {
+  return useQuery({ queryKey: ["transport", "live"], refetchInterval: 10_000, queryFn: async () => (await api<Trip[]>("/transport/live")).data });
+}
+
+export function useSosAlerts() {
+  return useQuery({ queryKey: ["transport", "sos"], refetchInterval: 20_000, queryFn: async () => (await api<SosAlert[]>("/transport/sos")).data });
+}
+
+export function useMyTransport() {
+  return useQuery({ queryKey: ["transport", "my"], refetchInterval: 10_000, queryFn: async () => (await api<ChildTransport[]>("/transport/my")).data });
 }

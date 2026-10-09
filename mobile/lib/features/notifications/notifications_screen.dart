@@ -33,6 +33,8 @@ class AppNotification {
         'leave' => Icons.event_busy_outlined,
         'online_test' => Icons.quiz_outlined,
         'chat' => Icons.forum_outlined,
+        'transport' => Icons.directions_bus_outlined,
+        'sos' => Icons.sos_outlined,
         'ptm' => Icons.handshake_outlined,
         'survey' => Icons.poll_outlined,
         'live_class' => Icons.videocam_outlined,
@@ -56,6 +58,7 @@ String? appRouteFor(String? link) => link != null && link.startsWith('/messages'
       '/my-tests' => '/tests',
       '/live-classes' => '/live',
       '/ptm' => '/ptm',
+      '/my-transport' => '/bus',
       '/surveys' => '/surveys',
       _ => null,
     };

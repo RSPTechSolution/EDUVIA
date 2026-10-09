@@ -447,3 +447,55 @@ async def seed_communication(db, school: School, today: date) -> None:
                           created_at=datetime.now(UTC) - timedelta(days=i % 3, hours=i)))
     await db.flush()
     print(f"  Communication: PTM on {ptm_day:%d %b}, 1 chat, 1 survey with {len(families)} answers, SMS for absences")
+
+
+async def seed_transport(db, school: School, today: date) -> None:
+    from datetime import time as dtime
+    from decimal import Decimal
+
+    from app.models import Route, Stop, TransportAssignment, Vehicle
+    if await db.scalar(select(Vehicle.id).where(Vehicle.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(151)
+    users = {u.email: u for u in (await db.scalars(select(User).where(User.school_id == school.id))).all()}
+    plan = [
+        ("PB01 AB 4521", "Tata Starbus 40", 40, "driver@demo.com", "Route 1 – Sector 21 & 22", 1500, [
+            ("Sector 21 market", 30.7262, 76.7704, "07:15", "14:20"), ("Sector 22 B gurdwara", 30.7344, 76.7720, "07:22", "14:28"),
+            ("ISBT 17", 30.7383, 76.7841, "07:30", "14:35"), ("Sector 18 park", 30.7290, 76.7898, "07:38", "14:42")]),
+        ("CH01 TA 1180", "Eicher Skyline 32", 32, "driver2@demo.com", "Route 2 – Sector 34 & 35", 1500, [
+            ("Sector 35 C market", 30.7238, 76.7600, "07:10", "14:15"), ("Sector 34 piccadily", 30.7230, 76.7678, "07:18", "14:23"),
+            ("Sector 44 D", 30.7120, 76.7530, "07:28", "14:33")]),
+        ("PB65 BB 2209", "Force Traveller 26", 26, "driver3@demo.com", "Route 3 – Mohali Phase 7", 1800, [
+            ("Phase 7 market", 30.7046, 76.7179, "07:00", "14:30"), ("Phase 3B2", 30.7180, 76.7275, "07:12", "14:40"),
+            ("Sector 70", 30.7056, 76.7036, "07:20", "14:48")]),
+    ]
+    students = list((await db.scalars(select(Student).where(Student.school_id == school.id, Student.status == "active")
+                                      .order_by(Student.admission_no))).all())
+    aarav = next((s for s in students if s.first_name == "Aarav" and s.last_name == "Patel"), None)
+    pool = [s for s in students if s is not aarav]
+    rnd.shuffle(pool)
+    riders = 0
+    for i, (number, model, cap, driver, rname, fee, stops) in enumerate(plan):
+        d = users.get(driver)
+        v = Vehicle(school_id=school.id, number=number, model=model, capacity=cap, driver_id=d.id if d else None, helper_name=["Rekha", "Shanti", "Kamla"][i],
+                    helper_phone=f"+91 98150 4{i}210", insurance_until=today + timedelta(days=[200, 18, 340][i]),
+                    fitness_until=today + timedelta(days=[120, 260, 25][i]), permit_until=today + timedelta(days=300))
+        db.add(v)
+        await db.flush()
+        r = Route(school_id=school.id, name=rname, vehicle_id=v.id, monthly_fee=Decimal(fee))
+        db.add(r)
+        await db.flush()
+        rows = []
+        for j, (name, lat, lng, up, down) in enumerate(stops):
+            st = Stop(school_id=school.id, route_id=r.id, name=name, sort_order=j, lat=lat, lng=lng,
+                      pickup_time=dtime.fromisoformat(up), drop_time=dtime.fromisoformat(down))
+            db.add(st)
+            rows.append(st)
+        await db.flush()
+        take = [aarav] if i == 0 and aarav else []
+        take += [pool.pop() for _ in range(min(len(pool), rnd.randint(14, 20)))]
+        for s in take:
+            db.add(TransportAssignment(school_id=school.id, student_id=s.id, route_id=r.id, stop_id=rnd.choice(rows).id))
+            riders += 1
+    await db.flush()
+    print(f"  Transport: 3 buses and routes, {riders} riders (Aarav on Route 1)")

@@ -7,7 +7,8 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  // Map tiles (transport tracking) and files the API serves publicly, such as a school's logo.
+  `img-src 'self' data: blob: https://*.tile.openstreetmap.org ${new URL(process.env.API_URL ?? "http://localhost:8000").origin}`,
   "font-src 'self' data:",
   `connect-src 'self'${isDev ? " ws:" : ""}`,
   "frame-ancestors 'none'",

@@ -22,6 +22,7 @@ import '../../features/notices/notices_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/timetable/timetable_screen.dart';
+import '../../features/transport/transport_screens.dart';
 import '../auth/auth_controller.dart';
 
 const _publicRoutes = {'/login', '/forgot-password'};
@@ -78,6 +79,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/leave', builder: (_, _) => const LeaveScreen()),
       GoRoute(path: '/tests', builder: (_, _) => const MyTestsScreen()),
       GoRoute(path: '/messages', builder: (_, _) => const MessagesScreen()),
+      GoRoute(path: '/driver', builder: (_, _) => const DriverScreen()),
+      GoRoute(path: '/bus', builder: (_, _) => const MyBusScreen()),
       GoRoute(path: '/ptm', builder: (_, _) => const PtmScreen()),
       GoRoute(path: '/surveys', builder: (_, _) => const SurveysScreen()),
       GoRoute(path: '/live', builder: (_, _) => const LiveClassesScreen()),

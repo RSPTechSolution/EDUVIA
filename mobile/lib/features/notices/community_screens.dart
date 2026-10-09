@@ -307,6 +307,7 @@ class SurveysScreen extends ConsumerWidget {
                           ? Icon(Icons.check_circle, color: statusColors(context).success, semanticLabel: 'Answered')
                           : s['open'] == true
                               ? FilledButton(
+                                  style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
                                   onPressed: () async {
                                     final done = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => AnswerSurveyScreen(survey: s)));
                                     if (done == true) ref.invalidate(surveysProvider);

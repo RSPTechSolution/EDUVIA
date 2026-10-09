@@ -60,6 +60,9 @@ PERMISSIONS: dict[str, list[Role]] = {
     "notices.post": ADMINS + [Role.TEACHER, Role.RECEPTIONIST],  # teachers: only to classes they teach
     "notices.manage": ADMINS + [Role.RECEPTIONIST],  # any audience, edit or remove any notice
     "homework.manage": ADMINS + [Role.TEACHER],
+    "transport.view": ADMINS + [Role.TRANSPORT_MANAGER],
+    "transport.manage": [Role.SCHOOL_ADMIN, Role.TRANSPORT_MANAGER],
+    "transport.drive": [Role.DRIVER, Role.SCHOOL_ADMIN, Role.TRANSPORT_MANAGER],  # admins can run a trip on a driver's behalf
     "ptm.manage": ADMINS + [Role.RECEPTIONIST],
     "surveys.manage": ADMINS,
     "tests.manage": ADMINS + [Role.TEACHER],  # question bank and online tests, for subjects they teach
