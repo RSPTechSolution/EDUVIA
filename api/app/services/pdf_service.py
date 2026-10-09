@@ -355,3 +355,33 @@ def id_cards(school_name: str, school_phone: str | None, valid_until: date, card
     cv.showPage()
     cv.save()
     return buf.getvalue()
+
+
+# ---- payslip ----------------------------------------------------------------------------------
+
+def payslip(*, school_name: str, school_address: str | None, month_label: str, name: str, employee_id: str | None, designation: str | None,
+            department: str | None, pan: str | None, uan: str | None, bank: str | None, account: str | None, days_in_month: int,
+            paid_days, lop_days, earnings: dict, deductions: dict, gross, total_deductions, net) -> bytes:
+    story = _header(school_name, school_address)
+    story += [Paragraph(f"Payslip · {_esc(month_label)}", H2),
+              _facts([("Name", name), ("Employee ID", employee_id or "—"), ("Designation", designation or "—"), ("Department", department or "—"),
+                      ("PAN", pan or "—"), ("UAN", uan or "—"), ("Bank account", f"{bank or ''} {('xxxx' + account[-4:]) if account else '—'}".strip()),
+                      ("Days paid", f"{_num(paid_days)} of {days_in_month}" + (f" ({_num(lop_days)} without pay)" if Decimal(str(lop_days)) else ""))], WIDTH),
+              Spacer(1, 10)]
+    e_rows, d_rows = list(earnings.items()), list(deductions.items())
+    n = max(len(e_rows), len(d_rows), 1)
+    rows = [["Earnings", "Amount", "Deductions", "Amount"]]
+    for i in range(n):
+        e = e_rows[i] if i < len(e_rows) else ("", None)
+        d = d_rows[i] if i < len(d_rows) else ("", None)
+        rows.append([e[0], money(e[1]) if e[1] is not None else "", d[0], money(d[1]) if d[1] is not None else ""])
+    rows.append(["Gross earnings", money(gross), "Total deductions", money(total_deductions)])
+    t = _grid(rows, [WIDTH * 0.3, WIDTH * 0.2, WIDTH * 0.3, WIDTH * 0.2])
+    t.setStyle(TableStyle([("ALIGN", (1, 0), (1, -1), "RIGHT"), ("ALIGN", (3, 0), (3, -1), "RIGHT"),
+                           ("FONT", (0, -1), (-1, -1), "Helvetica-Bold", 9.5)]))
+    story += [t, Spacer(1, 10)]
+    tot = _grid([["Net pay", money(net)]], [WIDTH * 0.7, WIDTH * 0.3], header=False)
+    tot.setStyle(TableStyle([("ALIGN", (1, 0), (1, 0), "RIGHT"), ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", 12), ("TEXTCOLOR", (0, 0), (-1, 0), BRAND),
+                             ("BACKGROUND", (0, 0), (-1, 0), SOFT)]))
+    story += [tot, Spacer(1, 14), Paragraph("This is a computer-generated payslip and needs no signature.", SMALL)]
+    return build(story, f"Payslip {name} {month_label}")

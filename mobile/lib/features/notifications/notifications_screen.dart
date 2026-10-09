@@ -34,6 +34,8 @@ class AppNotification {
         'online_test' => Icons.quiz_outlined,
         'chat' => Icons.forum_outlined,
         'transport' => Icons.directions_bus_outlined,
+        'payslip' => Icons.receipt_long_outlined,
+        'staff_leave' => Icons.event_busy_outlined,
         'sos' => Icons.sos_outlined,
         'ptm' => Icons.handshake_outlined,
         'survey' => Icons.poll_outlined,
@@ -59,6 +61,7 @@ String? appRouteFor(String? link) => link != null && link.startsWith('/messages'
       '/live-classes' => '/live',
       '/ptm' => '/ptm',
       '/my-transport' => '/bus',
+      '/my-leave' || '/my-payslips' || '/my-hr' => '/my-hr',
       '/surveys' => '/surveys',
       _ => null,
     };

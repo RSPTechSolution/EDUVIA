@@ -1136,3 +1136,25 @@ export interface SosAlert {
   id: string; route_name: string | null; vehicle_number: string | null; raised_by: string | null; phone: string | null; lat: number | null; lng: number | null;
   message: string | null; raised_at: string; resolved_at: string | null; resolution: string | null;
 }
+
+
+// ---- HR and payroll -------------------------------------------------------------------------------
+
+export interface StaffRow {
+  user_id: string; full_name: string; email: string; phone: string | null; role: string; employee_id: string | null; designation: string | null;
+  department: string | null; date_of_joining: string | null; gross_monthly: number; has_bank: boolean; today: string | null;
+}
+export interface StaffDetail extends StaffRow { profile: Record<string, string | number | boolean | null>; leave_balance: LeaveBalance[] }
+export interface LeaveBalance { id: string; name: string; code: string; allowed: number; used: number; left: number | null; paid: boolean }
+export interface StaffDayRow { user_id: string; full_name: string; role: string; designation: string | null; status: string | null; check_in: string | null; check_out: string | null; source: string | null; on_leave: boolean }
+export interface LeaveTypeRow { id: string; name: string; code: string; days_per_year: number; paid: boolean; is_active: boolean }
+export interface StaffLeave {
+  id: string; user_id: string; full_name: string; leave_type: string; code: string; from_date: string; to_date: string; half_day: boolean; days: number;
+  reason: string; status: string; decided_by: string | null; decision_note: string | null; created_at: string; can_decide: boolean; can_cancel: boolean;
+}
+export interface Payslip {
+  id: string; user_id: string; full_name: string; employee_id: string | null; designation: string | null; days_in_month: number; paid_days: number;
+  lop_days: number; earnings: Record<string, number>; deductions: Record<string, number>; adjustments: Record<string, number>; gross: number;
+  total_deductions: number; net: number; note: string | null; bank_ready: boolean;
+}
+export interface PayrollRun { id: string; month: string; status: "draft" | "finalised" | "paid"; staff: number; gross: number; net: number; finalised_at: string | null; paid_on: string | null; payslips: Payslip[] }

@@ -9,6 +9,7 @@ from app.models.base import Base
 from app.models.billing import Lead, Plan
 from app.models.communication import Homework, HomeworkStatus, Notice, NoticeRead
 from app.models.email import EmailLog
+from app.models.hr import LeaveType, PayrollRun, Payslip, StaffAttendance, StaffLeave, StaffProfile
 from app.models.messaging import ChatMessage, Conversation, MessageLog, PtmBooking, PtmEvent, Survey, SurveyResponse
 from app.models.online import CoScholasticArea, CoScholasticGrade, LiveClass, OnlineTest, Question, TestAttempt
 from app.models.platform import DeviceToken, Notification, StoredFile
@@ -29,4 +30,5 @@ __all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan
            "LedgerHead", "AccountEntry",
            "Question", "OnlineTest", "TestAttempt", "CoScholasticArea", "CoScholasticGrade", "LiveClass",
            "MessageLog", "Conversation", "ChatMessage", "PtmEvent", "PtmBooking", "Survey", "SurveyResponse",
-           "Vehicle", "Route", "Stop", "TransportAssignment", "Trip", "TripPing", "Boarding", "SosAlert"]
+           "Vehicle", "Route", "Stop", "TransportAssignment", "Trip", "TripPing", "Boarding", "SosAlert",
+           "StaffProfile", "StaffAttendance", "LeaveType", "StaffLeave", "PayrollRun", "Payslip"]

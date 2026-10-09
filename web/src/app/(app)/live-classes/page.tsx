@@ -90,7 +90,7 @@ function LiveCard({ l }: { l: LiveClass }) {
         {(l.state === "live" || l.state === "upcoming") && (
           <Button size="sm" variant={l.state === "live" ? "default" : "outline"} render={<a href={l.meeting_url} target="_blank" rel="noreferrer" />}><ExternalLink aria-hidden />Join</Button>
         )}
-        {l.can_edit && l.state === "upcoming" && <Button size="sm" variant="ghost" onClick={() => cancel.mutate()} loading={cancel.isPending}><Ban aria-hidden />Cancel</Button>}
+        {l.can_edit && (l.state === "upcoming" || l.state === "live") && <Button size="sm" variant="ghost" onClick={() => cancel.mutate()} loading={cancel.isPending}><Ban aria-hidden />Cancel</Button>}
       </div>
     </li>
   );

@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AppNotification, StoredFile, BusRoute, ChildTransport, Rider, SosAlert, Trip, Vehicle, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
+  AppNotification, StoredFile, LeaveBalance, LeaveTypeRow, PayrollRun, StaffDayRow, StaffDetail, StaffLeave, StaffRow, BusRoute, ChildTransport, Rider, SosAlert, Trip, Vehicle, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
   PtmScheduleRow, Survey, SurveyResults, AttemptResult, CoSheet, LiveClass, MyTest, OnlineTest, Question, TestResults, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
   Substitution, SubstitutionDay, SyllabusView, BiometricDevice, BunkRow, CalendarEvent, LeaveRequest, PeriodCard, PeriodRoster, Punch,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
@@ -602,4 +602,42 @@ export function useSosAlerts() {
 
 export function useMyTransport() {
   return useQuery({ queryKey: ["transport", "my"], refetchInterval: 10_000, queryFn: async () => (await api<ChildTransport[]>("/transport/my")).data });
+}
+
+// ---- HR and payroll -------------------------------------------------------------------------------
+
+export function useStaffDirectory() {
+  return useQuery({ queryKey: ["hr", "staff"], queryFn: async () => (await api<StaffRow[]>("/hr/staff")).data });
+}
+
+export function useStaffDetail(id: string | null) {
+  return useQuery({ queryKey: ["hr", "staff", id], enabled: !!id, queryFn: async () => (await api<StaffDetail>(`/hr/staff/${id}`)).data });
+}
+
+export function useStaffDay(date: string) {
+  return useQuery({ queryKey: ["hr", "attendance", date], queryFn: async () => (await api<StaffDayRow[]>("/hr/attendance", { query: { date } })).data });
+}
+
+export function useLeaveTypes() {
+  return useQuery({ queryKey: ["hr", "leave-types"], queryFn: async () => (await api<LeaveTypeRow[]>("/hr/leave-types")).data });
+}
+
+export function useStaffLeave(mine: boolean, status?: string) {
+  return useQuery({ queryKey: ["hr", "leave", mine, status], queryFn: async () => (await api<StaffLeave[]>("/hr/leave", { query: { mine, status } })).data });
+}
+
+export function useMyLeaveBalance() {
+  return useQuery({ queryKey: ["hr", "balance"], queryFn: async () => (await api<LeaveBalance[]>("/hr/my/leave-balance")).data });
+}
+
+export function usePayrollRuns() {
+  return useQuery({ queryKey: ["hr", "payroll"], queryFn: async () => (await api<PayrollRun[]>("/hr/payroll")).data });
+}
+
+export function usePayrollRun(id: string) {
+  return useQuery({ queryKey: ["hr", "payroll", id], queryFn: async () => (await api<PayrollRun>(`/hr/payroll/${id}`)).data });
+}
+
+export function useMyPayslips() {
+  return useQuery({ queryKey: ["hr", "my-payslips"], queryFn: async () => (await api<{ id: string; month: string; net: number; gross: number; status: string; paid_on: string | null }[]>("/hr/my/payslips")).data });
 }

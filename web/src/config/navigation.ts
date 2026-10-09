@@ -1,5 +1,5 @@
 import {
-  Award, Bus, Calculator, ClipboardPen, Handshake, MessagesSquare, Smartphone, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Award, Briefcase, BriefcaseBusiness, Bus, Calculator, ClipboardPen, Handshake, MessagesSquare, Smartphone, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -83,6 +83,13 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Fees", href: "/fees", icon: Wallet, module: "fees", permission: "fees.view", keywords: ["collect", "dues", "invoice", "receipt", "payment", "concession"] },
       { label: "Accounts", href: "/accounts", icon: Calculator, module: "accounts", permission: "accounts.view", keywords: ["expenses", "income", "ledger", "day book", "tally", "profit"] },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { label: "HR and payroll", href: "/hr", icon: Briefcase, module: "hr", permission: "hr.view", keywords: ["staff", "salary", "payslip", "payroll", "staff attendance", "leave"] },
+      { label: "My leave and pay", href: "/my-hr", icon: BriefcaseBusiness, module: "hr", roles: ["school_admin", "principal", "teacher", "accountant", "receptionist", "librarian", "hr_manager", "transport_manager", "security_guard", "staff", "driver"], keywords: ["payslip", "salary", "apply leave", "leave balance"] },
     ],
   },
   {

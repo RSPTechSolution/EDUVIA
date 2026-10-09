@@ -499,3 +499,59 @@ async def seed_transport(db, school: School, today: date) -> None:
             riders += 1
     await db.flush()
     print(f"  Transport: 3 buses and routes, {riders} riders (Aarav on Route 1)")
+
+
+async def seed_hr(db, school: School, today: date) -> None:
+    from decimal import Decimal
+
+    from app.core.permissions import STAFF_ROLES
+    from app.models import LeaveType, StaffAttendance, StaffLeave, StaffProfile
+    from app.services.attendance_extra_service import closed_days
+    if await db.scalar(select(StaffProfile.id).where(StaffProfile.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(171)
+    staff = list((await db.scalars(select(User).where(User.school_id == school.id, User.role.in_(STAFF_ROLES + ["driver"]),
+                                                      User.is_active.is_(True)))).all())
+    pay = {"school_admin": 65000, "principal": 90000, "teacher": 42000, "accountant": 38000, "receptionist": 24000, "librarian": 26000,
+           "hr_manager": 40000, "transport_manager": 30000, "security_guard": 17000, "staff": 15000, "driver": 18000}
+    banks = [("State Bank of India", "SBIN0001234"), ("HDFC Bank", "HDFC0000456"), ("Punjab National Bank", "PUNB0123400")]
+    depts = {"teacher": ["Mathematics", "Science", "English", "Hindi", "Social Science", "Primary"], "driver": ["Transport"], "security_guard": ["Security"]}
+    for i, u in enumerate(staff):
+        gross = Decimal(pay.get(u.role, 20000) + rnd.randint(-4, 6) * 1000)
+        basic = (gross * Decimal("0.5")).quantize(Decimal("1"))
+        bank, ifsc = banks[i % 3]
+        db.add(StaffProfile(school_id=school.id, user_id=u.id, department=rnd.choice(depts.get(u.role, ["Administration"])),
+                            date_of_joining=date(rnd.randint(2012, 2025), rnd.randint(1, 12), 1), qualification="B.Ed" if u.role == "teacher" else None,
+                            bank_name=bank, ifsc=ifsc, bank_account=f"{rnd.randint(10**10, 10**11 - 1)}", basic=basic, hra=(basic * Decimal("0.4")).quantize(Decimal("1")),
+                            da=Decimal(0), conveyance=Decimal(1600), special=gross - basic - (basic * Decimal("0.4")).quantize(Decimal("1")) - 1600,
+                            pf_enabled=u.role != "staff", esi_enabled=True, professional_tax=Decimal(200), tds=Decimal(2500 if gross > 60000 else 0)))
+    await db.flush()
+    # Leave types and two months of staff attendance (most present, a few late or absent).
+    types = {}
+    for name, code, days, paid in [("Casual leave", "CL", 12, True), ("Sick leave", "SL", 10, True), ("Earned leave", "EL", 15, True),
+                                   ("Leave without pay", "LWP", 0, False)]:
+        types[code] = LeaveType(school_id=school.id, name=name, code=code, days_per_year=days, paid=paid)
+        db.add(types[code])
+    await db.flush()
+    start = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+    closed = await closed_days(db, school.id, start, today)
+    d = start
+    from datetime import time as dtime
+    while d <= today:
+        if d not in closed:
+            for u in staff:
+                r = rnd.random()
+                status = "absent" if r < 0.02 else "late" if r < 0.06 else "present"
+                db.add(StaffAttendance(school_id=school.id, user_id=u.id, date=d, status=status, source="manual",
+                                       check_in=None if status == "absent" else dtime(7, rnd.randint(30, 59)) if status == "present" else dtime(8, rnd.randint(16, 40)),
+                                       check_out=None if status == "absent" else dtime(14, rnd.randint(30, 59))))
+        d += timedelta(days=1)
+    users = {u.email: u for u in staff}
+    teacher = users.get("teacher@demo.com")
+    if teacher:
+        nxt = today + timedelta(days=6)
+        nxt += timedelta(days=1) if nxt.weekday() == 6 else timedelta(0)
+        db.add(StaffLeave(school_id=school.id, user_id=teacher.id, leave_type_id=types["CL"].id, from_date=nxt, to_date=nxt, days=Decimal(1),
+                          reason="Sister's wedding"))
+    await db.flush()
+    print(f"  HR: {len(staff)} staff with salaries, 2 months of staff attendance, leave types")

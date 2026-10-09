@@ -16,6 +16,7 @@ import '../../features/exams/exam_screens.dart';
 import '../../features/exams/online_screens.dart';
 import '../../features/fees/fees_screens.dart';
 import '../../features/home/more_screen.dart';
+import '../../features/hr/hr_screens.dart';
 import '../../features/homework/homework_screens.dart';
 import '../../features/notices/community_screens.dart';
 import '../../features/notices/notices_screen.dart';
@@ -80,6 +81,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/tests', builder: (_, _) => const MyTestsScreen()),
       GoRoute(path: '/messages', builder: (_, _) => const MessagesScreen()),
       GoRoute(path: '/driver', builder: (_, _) => const DriverScreen()),
+      GoRoute(path: '/my-hr', builder: (_, _) => const MyHrScreen()),
       GoRoute(path: '/bus', builder: (_, _) => const MyBusScreen()),
       GoRoute(path: '/ptm', builder: (_, _) => const PtmScreen()),
       GoRoute(path: '/surveys', builder: (_, _) => const SurveysScreen()),
