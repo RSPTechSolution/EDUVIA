@@ -11,7 +11,7 @@ from app.core.errors import install_error_handlers
 from app.core.permissions import MODULES
 from app.core.redis import close_redis, get_redis
 from app.core import roles
-from app.routers import academics, academics_extra, accounts, campus, hr, transport, messaging, online, attendance, attendance_extra, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
+from app.routers import academics, academics_extra, accounts, campus, hr, security, transport, messaging, online, attendance, attendance_extra, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
 from app.schemas.common import ok
 
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -84,6 +84,9 @@ app.include_router(hr.router, prefix=f"{API}/hr", tags=["HR and payroll"])
 app.include_router(campus.library, prefix=f"{API}/library", tags=["Library"])
 app.include_router(campus.hostel, prefix=f"{API}/hostels", tags=["Hostel"])
 app.include_router(campus.inventory, prefix=f"{API}/inventory", tags=["Inventory and assets"])
+app.include_router(security.gate, prefix=f"{API}/gate", tags=["Gate and security"])
+app.include_router(security.compliance, prefix=f"{API}/compliance", tags=["Compliance"])
+app.include_router(security.cctv, prefix=f"{API}/cctv", tags=["CCTV"])
 app.include_router(billing.router, prefix=f"{API}/subscription", tags=["Subscription"])
 app.include_router(dashboard.router, prefix=f"{API}/dashboard", tags=["Dashboard"])
 app.include_router(platform.router, prefix=f"{API}/platform", tags=["Platform"])

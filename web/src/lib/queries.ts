@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  Asset, Book, BookIssue, Hostel, LibrarySettings, LibraryStats, MyHostel, StockItem, StockMove, AppNotification, StoredFile, LeaveBalance, LeaveTypeRow, PayrollRun, StaffDayRow, StaffDetail, StaffLeave, StaffRow, BusRoute, ChildTransport, Rider, SosAlert, Trip, Vehicle, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
+  Camera, CctvSettings, CctvViewRow, ComplianceDoc, ConsentCoverage, ConsentRow, GatePass, GateSummary, Visitor, Worker, Asset, Book, BookIssue, Hostel, LibrarySettings, LibraryStats, MyHostel, StockItem, StockMove, AppNotification, StoredFile, LeaveBalance, LeaveTypeRow, PayrollRun, StaffDayRow, StaffDetail, StaffLeave, StaffRow, BusRoute, ChildTransport, Rider, SosAlert, Trip, Vehicle, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
   PtmScheduleRow, Survey, SurveyResults, AttemptResult, CoSheet, LiveClass, MyTest, OnlineTest, Question, TestResults, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
   Substitution, SubstitutionDay, SyllabusView, BiometricDevice, BunkRow, CalendarEvent, LeaveRequest, PeriodCard, PeriodRoster, Punch,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
@@ -690,4 +690,50 @@ export function useStockMoves(id: string | null) {
 
 export function useAssets(q: string, condition?: string) {
   return useQuery({ queryKey: ["inventory", "assets", q, condition], placeholderData: keepPreviousData, queryFn: async () => (await api<Asset[]>("/inventory/assets", { query: { q: q || undefined, condition } })).data });
+}
+
+// ---- gate and security --------------------------------------------------------------------------
+
+export function useGateSummary() {
+  return useQuery({ queryKey: ["gate", "summary"], refetchInterval: 30_000, queryFn: async () => (await api<GateSummary>("/gate/summary")).data });
+}
+
+export function useVisitors(date: string | null, status?: string, mine = false) {
+  return useQuery({ queryKey: ["gate", "visitors", date, status, mine], refetchInterval: 30_000, queryFn: async () => (await api<Visitor[]>("/gate/visitors", { query: { date: date ?? undefined, status, mine: mine || undefined } })).data });
+}
+
+export function useGatePasses(date: string | null, status?: string) {
+  return useQuery({ queryKey: ["gate", "passes", date, status], refetchInterval: 30_000, queryFn: async () => (await api<GatePass[]>("/gate/passes", { query: { date: date ?? undefined, status } })).data });
+}
+
+export function useWorkers(q: string) {
+  return useQuery({ queryKey: ["gate", "workers", q], placeholderData: keepPreviousData, queryFn: async () => (await api<Worker[]>("/gate/workers", { query: { q: q || undefined } })).data });
+}
+
+export function useComplianceDocs() {
+  return useQuery({ queryKey: ["compliance"], queryFn: async () => (await api<ComplianceDoc[]>("/compliance")).data });
+}
+
+export function useCctvSettings() {
+  return useQuery({ queryKey: ["cctv", "settings"], queryFn: async () => (await api<CctvSettings>("/cctv/settings")).data });
+}
+
+export function useCameras() {
+  return useQuery({ queryKey: ["cctv", "cameras"], queryFn: async () => (await api<Camera[]>("/cctv/cameras")).data });
+}
+
+export function useMyConsent() {
+  return useQuery({ queryKey: ["cctv", "consent"], queryFn: async () => (await api<ConsentRow[]>("/cctv/consent")).data });
+}
+
+export function useConsentCoverage() {
+  return useQuery({ queryKey: ["cctv", "coverage"], queryFn: async () => (await api<ConsentCoverage[]>("/cctv/coverage")).data });
+}
+
+export function useCctvViews() {
+  return useQuery({ queryKey: ["cctv", "views"], queryFn: async () => (await api<CctvViewRow[]>("/cctv/views")).data });
+}
+
+export function useGateHosts(enabled = true) {
+  return useQuery({ queryKey: ["gate", "hosts"], enabled, staleTime: 300_000, queryFn: async () => (await api<{ user_id: string; full_name: string; designation: string | null }[]>("/gate/hosts")).data });
 }

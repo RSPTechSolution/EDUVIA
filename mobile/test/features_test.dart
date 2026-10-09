@@ -487,4 +487,53 @@ void main() {
     expect(find.text('Warden: Meenakshi Rao'), findsOneWidget);
     expect(find.text('Call'), findsOneWidget);
   });
+  Map<String, dynamic> pass({String status = 'approved', String? code = '482913'}) => {
+        'id': 'gp1', 'student_id': 's1', 'student_name': 'Aarav Patel', 'class_section': 'Class 5 – A', 'photo_file_id': null, 'reason': 'Dentist',
+        'pickup_name': 'Suresh Patel', 'pickup_relation': 'Father', 'pickup_phone': null, 'leave_at': '2026-10-09T07:00:00Z', 'status': status, 'code': code,
+        'requested_by': 'Suresh Patel', 'decided_by': 'Priya Verma', 'decision_note': null, 'used_at': status == 'used' ? '2026-10-09T07:05:00Z' : null,
+        'verified_by': null, 'can_decide': false, 'can_cancel': status == 'approved',
+      };
+
+  testWidgets('parent sees the gate pass code', (tester) async {
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson()..['modules'] = ['security'])))
+      ..on('GET /gate/passes', (_) => (200, FakeApi.ok([pass()])));
+    await pump(tester, container(fake));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Gate passes'));
+    await tester.pumpAndSettle();
+    expect(find.text('482913'), findsOneWidget);
+    expect(find.text('Show this code at the gate'), findsOneWidget);
+    expect(find.text('Early pickup'), findsOneWidget);
+  });
+
+  testWidgets('guard checks a gate pass code and lets the child leave', (tester) async {
+    var left = false;
+    final me = meJson(role: 'security_guard')..['modules'] = ['security']..['permissions'] = ['gate.view', 'gate.manage', 'visitors.invite'];
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(me)))
+      ..on('GET /gate/visitors', (_) => (200, FakeApi.ok([])))
+      ..on('GET /gate/passes/verify', (_) => (200, FakeApi.ok(pass())))
+      ..on('POST /gate/passes/gp1/left', (_) {
+        left = true;
+        return (200, FakeApi.ok(pass(status: 'used', code: null)));
+      });
+    await pump(tester, container(fake, flavor: AppFlavor.staff));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Gate desk'));
+    await tester.tap(find.text('Gate desk'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '482913');
+    await tester.pump();
+    await tester.tap(find.text('Check'));
+    await tester.pumpAndSettle();
+    expect(find.text('Aarav Patel · Class 5 – A'), findsOneWidget);
+    expect(find.text('Going with Suresh Patel (Father)'), findsOneWidget);
+    await tester.tap(find.text('Checked ID: let them leave'));
+    await tester.pumpAndSettle();
+    expect(left, isTrue);
+    expect(find.text('Left school'), findsOneWidget);
+  });
 }

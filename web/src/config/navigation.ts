@@ -1,5 +1,5 @@
 import {
-  Hotel, Library, Package, BookOpen, Award, Briefcase, BriefcaseBusiness, Bus, Calculator, ClipboardPen, Handshake, MessagesSquare, Smartphone, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Cctv, DoorOpen, FileCheck2, Ticket, UserCheck, Hotel, Library, Package, BookOpen, Award, Briefcase, BriefcaseBusiness, Bus, Calculator, ClipboardPen, Handshake, MessagesSquare, Smartphone, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -100,6 +100,17 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Hostel", href: "/hostel", icon: Hotel, module: "hostel", permission: "hostel.view", keywords: ["rooms", "beds", "boarding", "warden"] },
       { label: "Hostel", href: "/my-hostel", icon: Hotel, module: "hostel", roles: ["parent", "student"], keywords: ["room", "warden"] },
       { label: "Inventory and assets", href: "/inventory", icon: Package, module: "inventory", permission: "inventory.view", keywords: ["stock", "store", "assets", "equipment", "register"] },
+    ],
+  },
+  {
+    label: "Safety",
+    items: [
+      { label: "Gate and security", href: "/gate", icon: DoorOpen, module: "security", permission: "gate.view", keywords: ["visitor", "guard", "gate", "workers", "contractor", "check in"] },
+      { label: "Gate passes", href: "/gate-pass", icon: Ticket, module: "security", roles: ["parent", "student", "teacher", "principal", "school_admin", "receptionist"], keywords: ["early pickup", "leave early", "collect child", "out pass"] },
+      { label: "My visitors", href: "/my-visitors", icon: UserCheck, module: "security", permission: "visitors.invite", keywords: ["guest", "expected", "visitor"] },
+      { label: "Compliance vault", href: "/compliance", icon: FileCheck2, module: "security", permission: "compliance.view", keywords: ["fire noc", "certificate", "affiliation", "expiry", "renewal", "documents"] },
+      { label: "CCTV", href: "/cctv", icon: Cctv, module: "cctv", permission: "cctv.manage", keywords: ["camera", "consent", "surveillance", "nvr"] },
+      { label: "Classroom CCTV", href: "/my-cctv", icon: Cctv, module: "cctv", roles: ["parent", "student"], keywords: ["camera", "watch", "consent"] },
     ],
   },
   {

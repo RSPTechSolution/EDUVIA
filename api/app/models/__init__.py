@@ -8,6 +8,7 @@ from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.billing import Lead, Plan
 from app.models.campus import Asset, Book, BookCopy, BookIssue, Hostel, HostelAllocation, HostelRoom, StockItem, StockMove
+from app.models.security import Camera, CctvConsent, CctvView, ComplianceDoc, GatePass, Visitor, Worker, WorkerLog
 from app.models.communication import Homework, HomeworkStatus, Notice, NoticeRead
 from app.models.email import EmailLog
 from app.models.hr import LeaveType, PayrollRun, Payslip, StaffAttendance, StaffLeave, StaffProfile
@@ -33,4 +34,5 @@ __all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan
            "MessageLog", "Conversation", "ChatMessage", "PtmEvent", "PtmBooking", "Survey", "SurveyResponse",
            "Vehicle", "Route", "Stop", "TransportAssignment", "Trip", "TripPing", "Boarding", "SosAlert",
            "StaffProfile", "StaffAttendance", "LeaveType", "StaffLeave", "PayrollRun", "Payslip",
-           "Book", "BookCopy", "BookIssue", "Hostel", "HostelRoom", "HostelAllocation", "StockItem", "StockMove", "Asset"]
+           "Book", "BookCopy", "BookIssue", "Hostel", "HostelRoom", "HostelAllocation", "StockItem", "StockMove", "Asset",
+           "Visitor", "GatePass", "Worker", "WorkerLog", "ComplianceDoc", "Camera", "CctvConsent", "CctvView"]

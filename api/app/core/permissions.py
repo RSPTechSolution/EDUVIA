@@ -73,6 +73,14 @@ PERMISSIONS: dict[str, list[Role]] = {
     "hostel.manage": [Role.SCHOOL_ADMIN, Role.PRINCIPAL],
     "inventory.view": ADMINS + [Role.ACCOUNTANT, Role.STAFF],
     "inventory.manage": [Role.SCHOOL_ADMIN, Role.ACCOUNTANT],
+    "gate.view": ADMINS + [Role.SECURITY_GUARD, Role.RECEPTIONIST],
+    "gate.manage": ADMINS + [Role.SECURITY_GUARD, Role.RECEPTIONIST],  # visitors in and out, gate passes at the gate, workers in and out
+    "gatepass.issue": ADMINS + [Role.RECEPTIONIST],  # the office issues a pass on the spot (already approved)
+    "visitors.invite": STAFF_ROLES,  # any staff member can tell the gate they expect someone
+    "workers.manage": [Role.SCHOOL_ADMIN, Role.PRINCIPAL],
+    "compliance.view": ADMINS,
+    "compliance.manage": [Role.SCHOOL_ADMIN, Role.PRINCIPAL],
+    "cctv.manage": [Role.SCHOOL_ADMIN, Role.PRINCIPAL],
     "ptm.manage": ADMINS + [Role.RECEPTIONIST],
     "surveys.manage": ADMINS,
     "tests.manage": ADMINS + [Role.TEACHER],  # question bank and online tests, for subjects they teach

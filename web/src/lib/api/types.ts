@@ -1187,3 +1187,38 @@ export interface Asset {
   warranty_until: string | null; warranty_ok: boolean | null; condition: "good" | "needs_repair" | "broken" | "disposed"; assigned_to: string | null;
   assigned_name: string | null; notes: string | null;
 }
+
+
+// ---- gate and security ----------------------------------------------------------------------------
+
+export interface Visitor {
+  id: string; name: string; phone: string | null; purpose: string; meeting: string | null; host_id: string | null; host_name: string | null;
+  id_proof: string | null; vehicle_no: string | null; people: number; badge_no: string | null; status: "expected" | "in" | "out" | "cancelled";
+  expected_on: string | null; in_at: string | null; out_at: string | null; photo_file_id: string | null; logged_by: string | null; can_cancel: boolean;
+}
+export interface VisitorLookup { name: string; purpose: string; meeting: string | null; visits: number; last_at: string | null }
+export interface GatePass {
+  id: string; student_id: string; student_name: string; class_section: string; photo_file_id: string | null; reason: string; pickup_name: string;
+  pickup_relation: string; pickup_phone: string | null; leave_at: string; status: "pending" | "approved" | "rejected" | "cancelled" | "used";
+  code: string | null; requested_by: string | null; decided_by: string | null; decision_note: string | null; used_at: string | null; verified_by: string | null;
+  can_decide: boolean; can_cancel: boolean;
+}
+export interface Worker {
+  id: string; name: string; phone: string | null; trade: string; agency: string | null; id_proof: string | null; police_verified: boolean;
+  verified_on: string | null; valid_until: string | null; is_active: boolean; notes: string | null; photo_file_id: string | null;
+  on_campus_since: string | null; can_enter: boolean; blocked_reason: string | null;
+}
+export interface GateSummary { visitors_inside: number; visitors_today: number; expected_today: number; workers_inside: number; passes_pending: number; passes_today: number; compliance_due: number }
+export interface ComplianceDoc {
+  id: string; title: string; category: string; reference_no: string | null; authority: string | null; issued_on: string | null; expires_on: string | null;
+  notes: string | null; state: "valid" | "expiring" | "expired" | "no_expiry"; days_left: number | null; files: number;
+}
+export interface CctvSettings { policy: string; parent_viewing: boolean }
+export interface Camera {
+  id: string; name: string; location: string | null; section_id: string | null; section_label: string | null; stream_url: string | null;
+  parent_viewable: boolean; is_active: boolean; consent: { students: number; yes: number; no: number; unanswered: number; complete: boolean } | null;
+  watchable: boolean; blocked_reason: string | null;
+}
+export interface ConsentRow { student_id: string; name: string; class_section: string; consent: boolean | null; decided_at: string | null }
+export interface ConsentCoverage { section_id: string; label: string; students: number; yes: number; no: number; unanswered: number }
+export interface CctvViewRow { camera: string; user: string | null; role: string | null; at: string }

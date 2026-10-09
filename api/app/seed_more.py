@@ -703,3 +703,125 @@ async def seed_campus(db, school: School, today: date) -> None:
                      assigned_to=care[cat].id if care.get(cat) else None))
     await db.flush()
     print(f"  Campus: {len(BOOKS)} titles, {len(copies)} copies and loans; 2 hostels with {beds} boarders; {len(store)} stock items, {len(assets)} assets")
+
+
+async def seed_security(db, school: School, today: date) -> None:
+    import secrets as _secrets
+
+    from app.models import Camera, CctvConsent, ComplianceDoc, GatePass, StudentGuardian, Visitor, Worker, WorkerLog
+    if await db.scalar(select(ComplianceDoc.id).where(ComplianceDoc.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(211)
+    tz = ZoneInfo(school.timezone or "Asia/Kolkata")
+    users = {u.email: u for u in (await db.scalars(select(User).where(User.school_id == school.id))).all()}
+    guard, front = users.get("security@demo.com"), users.get("reception@demo.com")
+
+    def at(day: date, hh: int, mm: int) -> datetime:
+        return datetime.combine(day, datetime.min.time(), tzinfo=tz).replace(hour=hh, minute=mm).astimezone(UTC)
+
+    now = datetime.now(UTC)
+    # Visitors: two weeks of the log, a few still inside today, two expected.
+    people = [("Rakesh Bansal", "Fee enquiry", "Accounts office"), ("Sunita Arora", "Admission enquiry", "Front office"), ("Amit Courier (Blue Dart)", "Delivery", "Office"),
+              ("Kuldeep Singh", "Meeting the principal", None), ("Mrs. Kohli", "Parent meeting", None), ("Vendor – Gupta Stationers", "Supply delivery", "Store"),
+              ("Dr. Anjali Mehta", "Health check-up camp", None), ("Ravi (Electrician)", "AC repair", "Admin office"), ("Pooja Sethi", "Collect TC", "Front office"),
+              ("Inspector J. S. Gill", "Fire safety inspection", None), ("Harjeet Kaur", "Parent meeting", None), ("Manish Jain", "Book fair setup", "Library")]
+    hosts = [u for u in users.values() if u.role in ("principal", "teacher", "accountant", "school_admin") and not u.email.lower().startswith("e2e")]
+    for d in range(14, -1, -1):
+        day = today - timedelta(days=d)
+        if day.weekday() == 6:
+            continue
+        for _ in range(rnd.randint(3, 7) if d else 5):
+            name, purpose, meeting = rnd.choice(people)
+            host = rnd.choice(hosts) if meeting is None and hosts else None
+            t_in = at(day, rnd.randint(8, 13), rnd.choice([0, 10, 20, 30, 40, 50]))
+            if t_in > now:
+                continue
+            t_out = t_in + timedelta(minutes=rnd.randint(10, 90))
+            inside = d == 0 and t_out > now - timedelta(minutes=20)
+            db.add(Visitor(school_id=school.id, name=name, phone=f"+91 98{rnd.randint(100, 999)} {rnd.randint(10000, 99999)}", purpose=purpose, meeting=meeting or (host.full_name if host else None),
+                           host_id=host.id if host else None, id_proof=f"Aadhaar ••••{rnd.randint(1000, 9999)}", people=rnd.choice([1, 1, 1, 2]),
+                           badge_no=f"V-{rnd.randint(1, 40):02d}", status="in" if inside else "out", in_at=t_in, out_at=None if inside else min(t_out, now),
+                           logged_by=guard.id if guard else None, created_at=t_in))
+    teacher = users.get("teacher@demo.com")
+    if teacher:
+        db.add(Visitor(school_id=school.id, name="Prof. S. Raman", phone="+91 98140 77001", purpose="Guest talk on Olympiad maths for Class 9", people=1,
+                       expected_on=today, host_id=teacher.id, meeting=teacher.full_name, status="expected", logged_by=teacher.id))
+        db.add(Visitor(school_id=school.id, name="Ms. Nidhi Kapoor", phone="+91 98140 77002", purpose="Counselling session", people=2,
+                       expected_on=today + timedelta(days=2), host_id=teacher.id, meeting=teacher.full_name, status="expected", logged_by=teacher.id))
+
+    # Gate passes: one waiting for the class teacher, one approved for today, and past ones used.
+    students = list((await db.scalars(select(Student).where(Student.school_id == school.id, Student.status == "active").order_by(Student.admission_no))).all())
+    aarav = next((s for s in students if s.first_name == "Aarav" and s.last_name == "Patel"), None)
+    parent = users.get("parent@demo.com")
+    if aarav and parent:
+        db.add(GatePass(school_id=school.id, student_id=aarav.id, requested_by=parent.id, reason="Dentist appointment", pickup_name="Suresh Patel",
+                        pickup_relation="Father", pickup_phone="+91 98140 20001", leave_at=at(today + timedelta(days=1), 12, 30), status="pending",
+                        code=f"{_secrets.randbelow(10**6):06d}"))
+    others = [s for s in students if s is not aarav]
+    rnd.shuffle(others)
+    for i, s in enumerate(others[:9]):
+        day = today - timedelta(days=i * 2)
+        if day.weekday() == 6:
+            day -= timedelta(days=1)
+        leave = at(day, rnd.choice([10, 11, 12, 13]), rnd.choice([0, 15, 30, 45]))
+        used = leave < now and i > 0
+        db.add(GatePass(school_id=school.id, student_id=s.id, requested_by=front.id if front else None, reason=rnd.choice(["Fever, going home", "Family function", "Doctor's appointment", "Passport office visit"]),
+                        pickup_name=rnd.choice(["Mother", "Father", "Uncle"]) + " – " + s.last_name, pickup_relation=rnd.choice(["Mother", "Father", "Uncle"]),
+                        pickup_phone=f"+91 98{rnd.randint(100, 999)} {rnd.randint(10000, 99999)}", leave_at=leave, status="used" if used else "approved",
+                        code=f"{_secrets.randbelow(10**6):06d}", decided_by=front.id if front else None, decided_at=leave - timedelta(hours=1),
+                        used_at=leave + timedelta(minutes=5) if used else None, verified_by=guard.id if used and guard else None))
+
+    # Workers: police-verified staff of the housekeeping and canteen contractors, one pending, one expired.
+    crew = [("Kamla Devi", "Housekeeping", "CleanCare Services", True, 400), ("Raju Kumar", "Housekeeping", "CleanCare Services", True, 400),
+            ("Shanti", "Housekeeping", "CleanCare Services", True, 400), ("Mohan Lal", "Gardener", None, True, 300), ("Bittu Singh", "Canteen", "Annapurna Caterers", True, 200),
+            ("Sonu", "Canteen", "Annapurna Caterers", False, 200), ("Deepak Verma", "Electrician", "Bright Electricals", True, -5),
+            ("Salim Khan", "Construction", "Gill Builders", True, 60)]
+    for i, (name, trade, agency, verified, valid) in enumerate(crew):
+        w = Worker(school_id=school.id, name=name, phone=f"+91 97{rnd.randint(100, 999)} {rnd.randint(10000, 99999)}", trade=trade, agency=agency,
+                   id_proof=f"Aadhaar ••••{rnd.randint(1000, 9999)}", police_verified=verified, verified_on=today - timedelta(days=rnd.randint(30, 300)) if verified else None,
+                   valid_until=today + timedelta(days=valid), notes="Verification papers submitted to Sector 17 police station" if not verified else None)
+        db.add(w)
+        await db.flush()
+        if verified and valid > 0:
+            for d in range(6, -1, -1):
+                day = today - timedelta(days=d)
+                if day.weekday() == 6:
+                    continue
+                t_in = at(day, 7, rnd.randint(0, 40))
+                if t_in > now:
+                    continue
+                t_out = at(day, 15, rnd.randint(0, 50))
+                db.add(WorkerLog(school_id=school.id, worker_id=w.id, in_at=t_in, out_at=None if d == 0 and t_out > now and i < 6 else min(t_out, now), by=guard.id if guard else None))
+
+    # Compliance vault.
+    docs = [("Fire NOC", "Fire safety", "Chandigarh Fire & Emergency Services", "FS/CHD/2025/1182", -340, 25),
+            ("Building safety certificate", "Building safety", "UT Engineering Department", "BSC/0442", -200, 165),
+            ("CBSE affiliation", "Affiliation", "Central Board of Secondary Education", "1630087", -900, None),
+            ("Drinking water test report", "Health", "Punjab Water Testing Lab", "WT-2026-219", -185, -3),
+            ("School bus permits (3 buses)", "Transport", "State Transport Authority", "STA/CHD/PB01-4521", -120, 245),
+            ("POCSO committee and staff training record", "Child protection", "School safety committee", None, -60, 305),
+            ("Land lease deed", "Land and lease", "Chandigarh Administration", "LD/S21/77", -3000, None),
+            ("Canteen FSSAI licence", "Health", "FSSAI", "22125987000418", -330, 35)]
+    for title, cat, authority, ref, issued, expires in docs:
+        db.add(ComplianceDoc(school_id=school.id, title=title, category=cat, authority=authority, reference_no=ref, issued_on=today + timedelta(days=issued),
+                             expires_on=today + timedelta(days=expires) if expires is not None else None))
+
+    # CCTV: corridor and gate cameras, plus a classroom camera for Aarav's class open to families once all agree.
+    school.settings = {**(school.settings or {}), "cctv": {"parent_viewing": True, "policy": (
+        "Cameras cover the gates, corridors and classrooms during school hours for the safety of students and staff. Recordings are kept for 30 days "
+        "and viewed only by the principal, or on a written police request. Classroom cameras can be watched live by families of that class, during "
+        "school hours, only when every family in the class has agreed. You can change your answer at any time.")}}
+    for name, loc in (("Main gate", "Gate 1"), ("Reception", "Ground floor"), ("Corridor A", "First floor"), ("Playground", "Sports ground")):
+        db.add(Camera(school_id=school.id, name=name, location=loc, stream_url=f"https://nvr.demo.eduvia.in/live/{name.lower().replace(' ', '-')}.m3u8"))
+    if aarav:
+        sec = await db.get(Section, aarav.section_id)
+        klass = await db.get(SchoolClass, aarav.class_id)
+        db.add(Camera(school_id=school.id, name=f"{klass.name}-{sec.name} classroom", location="Classroom", section_id=sec.id, parent_viewable=True,
+                      stream_url="https://nvr.demo.eduvia.in/live/classroom-5a.m3u8"))
+        # Every other family in that class has said yes; the Patels decide for themselves in the demo.
+        rows = (await db.execute(select(StudentGuardian.student_id, StudentGuardian.user_id).join(Student, Student.id == StudentGuardian.student_id)
+                                 .where(Student.section_id == sec.id, Student.status == "active", Student.id != aarav.id))).all()
+        for sid, gid in rows:
+            db.add(CctvConsent(school_id=school.id, student_id=sid, guardian_id=gid, consent=True))
+    await db.flush()
+    print("  Security: visitor log, gate passes, 8 contract workers, 8 compliance documents, 5 cameras with consent")

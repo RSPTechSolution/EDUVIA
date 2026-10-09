@@ -27,6 +27,7 @@ EVENTS = {
     "notice": "Urgent notices",
     "leave": "Leave approved or declined",
     "transport": "Child boarded or left the bus",
+    "gate": "Child left school early with a gate pass",
 }
 CHANNELS = ("sms", "whatsapp")
 
