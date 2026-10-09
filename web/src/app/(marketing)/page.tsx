@@ -10,49 +10,66 @@ import { Faq, GlowBackdrop, PRICING_FAQ, Section, SectionHeading } from "@/compo
 import { buttonVariants } from "@/components/ui/button";
 import { getPlans } from "@/lib/api/public";
 import { inr } from "@/lib/format";
+import { JsonLd, SOFTWARE, faqPage, graph, pageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: { absolute: "Vidyanexa — School management software for Indian schools" },
+export const metadata: Metadata = pageMetadata({
+  title: "School Management Software & School ERP in India | Vidyanexa",
+  absoluteTitle: true,
   description:
-    "Admissions, attendance, fees, exams, transport, HR and parent communication in one secure platform, with apps for parents, staff and drivers. Start a 14-day free trial.",
-};
+    "Vidyanexa is school management software for Indian schools: admissions, attendance, fees, exams, bus tracking, HR and a parent app. Start a 14-day free trial.",
+  path: "/",
+  keywords: [
+    "school management software", "school ERP", "school management system India", "school ERP software", "school administration software",
+    "CBSE school software", "school app for parents", "school fee management software", "student attendance software", "school bus tracking app",
+  ],
+});
+
+const HOME_FAQ = [
+  { q: "What is school management software?", a: "School management software (also called a school ERP) brings a school's daily work into one system: admissions, student records, attendance, fees, exams and report cards, timetables, transport, staff and payroll, and communication with parents. Vidyanexa does all of this on the web and in mobile apps for parents, staff and drivers." },
+  { q: "Is Vidyanexa suitable for CBSE, ICSE and state board schools?", a: "Yes. Vidyanexa is built for Indian schools. It supports CBSE grading (A1 to E), co-scholastic grades, Indian fee practices such as quarterly terms and sibling concessions, and prices in rupees." },
+  { q: "Do parents get a mobile app?", a: "Yes. Parents and students use the Vidyanexa app on Android and iOS for attendance, homework, fees and receipts, results, notices, messages with teachers and live school bus tracking." },
+  { q: "How much does Vidyanexa cost?", a: "Plans start at ₹2,999 a month for the Basic plan, with Pro at ₹7,999 and Max at ₹17,999. You can also build a custom plan with only the modules you need. Prices exclude GST, and every plan starts with a 14-day free trial." },
+  { q: "Is our school's data secure?", a: "Each school's data is isolated inside the database with row-level security, all traffic is encrypted, every important action is recorded in an audit log, and data is backed up daily. Schools can export all their data at any time." },
+  { q: "Can we move our existing data into Vidyanexa?", a: "Yes. Students, parents and staff can be imported from Excel or CSV files, and parent accounts are created automatically." },
+  ...PRICING_FAQ.slice(0, 2),
+];
 
 const FEATURE_GROUPS = [
   {
     title: "Academics",
     color: "text-primary bg-primary/10",
     items: [
-      { icon: GraduationCap, name: "Students & admissions", text: "Profiles, documents, promotions and CSV import." },
-      { icon: CalendarCheck, name: "Attendance", text: "Class, period, QR and biometric attendance with alerts." },
-      { icon: ClipboardList, name: "Exams & report cards", text: "Marks entry, grading, online tests and printable report cards." },
+      { href: "/features/school-admission-management", icon: GraduationCap, name: "Students & admissions", text: "Profiles, documents, promotions and CSV import." },
+      { href: "/features/attendance-management-system", icon: CalendarCheck, name: "Attendance", text: "Class, period, QR and biometric attendance with alerts." },
+      { href: "/features/online-exam-report-card-software", icon: ClipboardList, name: "Exams & report cards", text: "Marks entry, grading, online tests and printable report cards." },
     ],
   },
   {
     title: "Finance",
     color: "text-success bg-success/10",
     items: [
-      { icon: Wallet, name: "Fee collection", text: "Fee structures, concessions, UPI and online payments, instant receipts." },
-      { icon: Landmark, name: "Accounts", text: "Expenses, ledgers and Tally export for your accountant." },
-      { icon: UserCog, name: "HR & payroll", text: "Staff records, leave approvals and salary slips." },
+      { href: "/features/school-fee-management-software", icon: Wallet, name: "Fee collection", text: "Fee structures, concessions, UPI and online payments, instant receipts." },
+      { href: "/features/school-fee-management-software", icon: Landmark, name: "Accounts", text: "Expenses, ledgers and Tally export for your accountant." },
+      { href: "/features/school-hr-payroll-software", icon: UserCog, name: "HR & payroll", text: "Staff records, leave approvals and salary slips." },
     ],
   },
   {
     title: "Operations",
     color: "text-warning bg-warning/10",
     items: [
-      { icon: Bus, name: "Transport", text: "Routes, live bus location and boarding with the driver app." },
-      { icon: Library, name: "Library & hostel", text: "Catalogue, issue and return, rooms and allocations." },
-      { icon: ShieldCheck, name: "Gate & security", text: "Gate passes, visitor logs and campus workers." },
+      { href: "/features/school-bus-gps-tracking", icon: Bus, name: "Transport", text: "Routes, live bus location and boarding with the driver app." },
+      { href: "/features/school-library-management-system", icon: Library, name: "Library & hostel", text: "Catalogue, issue and return, rooms and allocations." },
+      { href: "/features/school-visitor-gate-pass-management", icon: ShieldCheck, name: "Gate & security", text: "Gate passes, visitor logs and campus workers." },
     ],
   },
   {
     title: "Engagement",
     color: "text-info bg-info/10",
     items: [
-      { icon: MessageSquare, name: "Communication", text: "Notices, SMS, WhatsApp, email and chat with parents." },
-      { icon: BellRing, name: "Notifications", text: "Absences, fee reminders and announcements, automatically." },
-      { icon: Bot, name: "AI assistant", text: "Ask questions about your school's data in plain English." },
+      { href: "/features/parent-teacher-communication-app", icon: MessageSquare, name: "Communication", text: "Notices, SMS, WhatsApp, email and chat with parents." },
+      { href: "/features/parent-teacher-communication-app", icon: BellRing, name: "Notifications", text: "Absences, fee reminders and announcements, automatically." },
+      { href: "/features", icon: Bot, name: "AI assistant", text: "Ask questions about your school's data in plain English." },
     ],
   },
 ];
@@ -87,6 +104,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd data={graph(SOFTWARE, faqPage(HOME_FAQ))} />
       {/* Hero */}
       <section className="relative isolate overflow-hidden px-5 pt-16 pb-20 sm:px-8 lg:pt-24">
         <GlowBackdrop />
@@ -96,12 +114,13 @@ export default async function HomePage() {
               <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">NEW</span>
               Build a custom plan with only the modules you need <ArrowRight className="size-3.5" aria-hidden />
             </Link>
-            <h1 className="mt-6 font-heading text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-6xl">
+            <p className="mt-6 text-sm font-semibold tracking-wide text-primary uppercase">School management software for Indian schools</p>
+            <h1 className="mt-3 font-heading text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-6xl">
               Run your whole school{" "}
               <span className="shimmer-text bg-gradient-to-r from-primary via-[oklch(0.65_0.105_74)] to-primary bg-clip-text text-transparent">from one place</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-pretty text-muted-foreground sm:text-xl">
-              Admissions, attendance, fees, exams, transport and parent communication — in one secure platform, with apps for parents, staff and drivers.
+              A complete school ERP for admissions, attendance, fees, exams, transport and parent communication, in one secure platform with apps for parents, staff and drivers.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/signup" className={buttonVariants({ size: "lg", className: "h-12 px-7 text-base shadow-lg shadow-primary/25" })}>
@@ -146,11 +165,11 @@ export default async function HomePage() {
             <div key={g.title} className="rounded-2xl border bg-card p-7 shadow-xs">
               <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{g.title}</p>
               <ul className="mt-5 space-y-5">
-                {g.items.map(({ icon: Icon, name, text }) => (
+                {g.items.map(({ href, icon: Icon, name, text }) => (
                   <li key={name} className="flex gap-4">
                     <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", g.color)}><Icon className="size-5" aria-hidden /></span>
                     <span>
-                      <span className="block font-semibold">{name}</span>
+                      <Link href={href} className="block font-semibold hover:text-primary hover:underline">{name}</Link>
                       <span className="block text-sm text-muted-foreground">{text}</span>
                     </span>
                   </li>
@@ -160,8 +179,8 @@ export default async function HomePage() {
           ))}
         </div>
         <p className="mt-10 text-center">
-          <Link href="/pricing" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline">
-            See which modules each plan includes <ArrowRight className="size-4" aria-hidden />
+          <Link href="/features" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline">
+            Explore every feature in detail <ArrowRight className="size-4" aria-hidden />
           </Link>
         </p>
       </Section>
@@ -258,8 +277,8 @@ export default async function HomePage() {
 
       {/* FAQ */}
       <Section>
-        <SectionHeading eyebrow="FAQ" title="Questions schools ask us" />
-        <div className="mt-12"><Faq items={PRICING_FAQ} /></div>
+        <SectionHeading eyebrow="FAQ" title="Questions schools ask about school management software" />
+        <div className="mt-12"><Faq items={HOME_FAQ} /></div>
       </Section>
 
       {/* CTA */}

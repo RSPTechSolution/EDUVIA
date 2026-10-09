@@ -4,7 +4,7 @@ import { DEMO, login, unique } from "./helpers";
 test("public pages load and link together", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Run your whole school");
-  for (const [link, heading] of [["Pricing", "Plans that grow with your school"], ["About", "Less paperwork. More teaching."], ["Contact", "Let's talk about your school"]] as const) {
+  for (const [link, heading] of [["Pricing", "School management software pricing: plans that grow with your school"], ["About", "Less paperwork. More teaching."], ["Contact", "Let's talk about your school"]] as const) {
     await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: link }).click();
     // First visit compiles the page in dev mode, which can take a while.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading, { timeout: 45_000 });

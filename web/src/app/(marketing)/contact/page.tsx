@@ -1,14 +1,17 @@
 import { Clock, MessageSquare, Rocket } from "lucide-react";
 import type { Metadata } from "next";
+import { JsonLd, breadcrumbs, graph, pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Suspense } from "react";
 import { GlowBackdrop } from "@/components/marketing/section";
 import { ContactForm } from "./contact-form";
 
-export const metadata: Metadata = {
-  title: "Contact us",
-  description: "Talk to the Vidyanexa team about a demo, a custom plan or moving your school onto Vidyanexa.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Contact Vidyanexa: Book a School ERP Demo",
+  description: "Talk to the Vidyanexa team: book a demo of the school management software, ask about a custom plan for your school or group, or get help moving your data.",
+  path: "/contact",
+  keywords: ["school ERP demo", "school management software demo", "contact Vidyanexa"],
+});
 
 const POINTS = [
   { icon: MessageSquare, title: "Demos and questions", text: "See Vidyanexa with your own school's workflow in mind." },
@@ -19,6 +22,7 @@ const POINTS = [
 export default function ContactPage() {
   return (
     <section className="relative isolate overflow-hidden px-5 py-16 sm:px-8 lg:py-24">
+      <JsonLd data={graph(breadcrumbs([{ name: "Contact", path: "/contact" }]), { "@type": "ContactPage", name: "Contact Vidyanexa", inLanguage: "en-IN" })} />
       <GlowBackdrop />
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div>

@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Suspense } from "react";
 import { GlowBackdrop } from "@/components/marketing/section";
 import { SignupForm } from "./signup-form";
 
-export const metadata: Metadata = {
-  title: "Start your free trial",
-  description: "Create your school on Vidyanexa in a minute. 14-day free trial, no card needed.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Start Your Free Trial of School Management Software",
+  description: "Set up your school on Vidyanexa in a minute: 14-day free trial of the complete school ERP, no card needed. Add students, staff and parents straight away.",
+  path: "/signup",
+  keywords: ["school management software free trial", "school ERP free trial", "try school software"],
+});
 
 export default function SignupPage() {
   return (

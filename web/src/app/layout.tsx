@@ -8,9 +8,19 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: "Vidyanexa", template: "%s · Vidyanexa" },
-  description: "Vidyanexa — intelligent education management platform for schools.",
+  title: { default: "Vidyanexa", template: "%s | Vidyanexa" },
+  description: "Vidyanexa school management software for Indian schools.",
   applicationName: "Vidyanexa",
+  authors: [{ name: "Vidyanexa", url: SITE_URL }],
+  creator: "Vidyanexa",
+  publisher: "Vidyanexa",
+  category: "education",
+  formatDetection: { telephone: false, email: false, address: false },
+  // Search Console and Bing Webmaster ownership checks, set from the environment when the site goes live.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } : undefined,
+  },
   // The app is private: nothing behind sign-in should be indexed.
   robots: { index: false, follow: false },
 };
@@ -24,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={cn(inter.variable, jakarta.variable, jetbrains.variable, cinzel.variable)}>
+    <html lang="en-IN" suppressHydrationWarning className={cn(inter.variable, jakarta.variable, jetbrains.variable, cinzel.variable)}>
       {/* Extensions such as Grammarly add attributes to <body> before React loads. */}
       <body className="min-h-dvh" suppressHydrationWarning>
         <Providers>{children}</Providers>

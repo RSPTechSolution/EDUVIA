@@ -10,7 +10,7 @@ const PUBLIC_PAGES = [
 // API calls that are allowed without a session (forwarded through the proxy).
 const PUBLIC_API_PREFIXES = ["/api/proxy/auth/password-reset/", "/api/proxy/public/"];
 // Public page prefixes (a school's admission form lives at /apply/<school id>).
-const PUBLIC_PREFIXES = ["/apply/"];
+const PUBLIC_PREFIXES = ["/apply/", "/features"];
 
 function unauthenticated(req: NextRequest) {
   const isApi = req.nextUrl.pathname.startsWith("/api/");
@@ -53,5 +53,5 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   runtime: "nodejs",
-  matcher: ["/((?!_next/static|_next/image|brand/|marketing/|icon.png|apple-icon.png|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw.js).*)"],
+  matcher: ["/((?!_next/static|_next/image|brand/|marketing/|og/|icon.png|apple-icon.png|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw.js).*)"],
 };

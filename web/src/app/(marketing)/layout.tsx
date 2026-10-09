@@ -4,11 +4,12 @@ import { GoogleAnalytics } from "@/components/marketing/analytics";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { REFRESH_COOKIE } from "@/lib/auth/cookies";
+import { DEFAULT_OG, JsonLd, ORGANIZATION, WEBSITE, graph } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  // Public pages are meant to be found (the app itself stays noindex).
+  // Public pages are meant to be found (the app itself stays noindex). Each page sets its own title, canonical and cards.
   robots: { index: true, follow: true },
-  openGraph: { siteName: "Vidyanexa", type: "website", locale: "en_IN", images: [{ url: "/marketing/dashboard-light.png", width: 1600, height: 1000, alt: "The Vidyanexa dashboard" }] },
+  openGraph: { siteName: "Vidyanexa", type: "website", locale: "en_IN", images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Vidyanexa school management software" }] },
   twitter: { card: "summary_large_image" },
 };
 
@@ -20,11 +21,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <main id="main" className="flex-1">{children}</main>
       <SiteFooter />
       <GoogleAnalytics />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        "@context": "https://schema.org", "@type": "SoftwareApplication", name: "Vidyanexa", applicationCategory: "EducationalApplication",
-        operatingSystem: "Web, Android, iOS", description: "School management for Indian schools: admissions, attendance, fees, exams, transport, HR and parent communication.",
-        offers: { "@type": "Offer", priceCurrency: "INR", price: "2999" },
-      }) }} />
+      <JsonLd data={graph(ORGANIZATION, WEBSITE)} />
     </div>
   );
 }

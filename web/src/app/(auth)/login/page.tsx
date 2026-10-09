@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Suspense } from "react";
 import { SignIn } from "./sign-in";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = pageMetadata({
+  title: "Sign In",
+  description: "Sign in to Vidyanexa with your school ID and email, or with a one-time code. For principals, teachers, office staff, parents and students.",
+  path: "/login",
+  keywords: ["Vidyanexa login", "school ERP login", "parent login"],
+});
 
 export default function LoginPage() {
   return (

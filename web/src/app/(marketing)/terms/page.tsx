@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { LegalPage } from "@/components/marketing/legal-page";
 
-export const metadata: Metadata = {
-  title: "Terms of service",
-  description: "The terms that apply when a school uses Vidyanexa.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Terms of Service",
+  description: "The terms that apply when a school uses Vidyanexa school management software: accounts, plans and trials, payment, data ownership, acceptable use and support.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

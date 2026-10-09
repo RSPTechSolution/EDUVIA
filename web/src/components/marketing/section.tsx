@@ -27,7 +27,7 @@ export function Faq({ items }: { items: { q: string; a: React.ReactNode }[] }) {
       {items.map((it) => (
         <AccordionItem key={it.q} value={it.q} className="border-0">
           <AccordionTrigger className="py-5 text-left text-base font-semibold hover:no-underline">{it.q}</AccordionTrigger>
-          <AccordionContent className="pb-5 text-muted-foreground">{it.a}</AccordionContent>
+          <AccordionContent keepMounted className="pb-5 text-muted-foreground">{it.a}</AccordionContent>
         </AccordionItem>
       ))}
     </Accordion>

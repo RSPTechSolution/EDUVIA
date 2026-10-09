@@ -1,13 +1,16 @@
 import { HeartHandshake, Lock, Sparkles, Users } from "lucide-react";
 import type { Metadata } from "next";
+import { JsonLd, breadcrumbs, graph, pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { GlowBackdrop, Section, SectionHeading } from "@/components/marketing/section";
 import { buttonVariants } from "@/components/ui/button";
 
-export const metadata: Metadata = {
-  title: "About",
-  description: "Vidyanexa helps schools spend less time on paperwork and more time on teaching.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "About Us: School Software Built for Indian Schools",
+  description: "Vidyanexa is school management software made for Indian schools, built to save principals, teachers and office staff hours of paperwork every week.",
+  path: "/about",
+  keywords: ["about Vidyanexa", "school software company India", "edtech for schools"],
+});
 
 const VALUES = [
   { icon: Users, title: "Built for everyone at school", text: "Principals, teachers, office staff, parents and drivers all use Vidyanexa — so every screen has to be simple enough for a busy morning." },
@@ -19,6 +22,7 @@ const VALUES = [
 export default function AboutPage() {
   return (
     <>
+      <JsonLd data={graph(breadcrumbs([{ name: "About", path: "/about" }]), { "@type": "AboutPage", name: "About Vidyanexa", inLanguage: "en-IN" })} />
       <section className="relative isolate overflow-hidden px-5 py-20 sm:px-8 lg:py-28">
         <GlowBackdrop />
         <div className="mx-auto max-w-3xl text-center">

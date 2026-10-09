@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { LegalPage } from "@/components/marketing/legal-page";
 
-export const metadata: Metadata = {
-  title: "Privacy policy",
-  description: "How Vidyanexa collects, uses and protects personal data, including children's data, under India's DPDP Act 2023.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Privacy Policy (DPDP Act 2023)",
+  description: "How Vidyanexa collects, uses and protects personal data, including children's data, for schools under India's Digital Personal Data Protection Act 2023.",
+  path: "/privacy",
+});
 
 const contact = <Link href="/contact" className="font-medium text-primary hover:underline">contact page</Link>;
 

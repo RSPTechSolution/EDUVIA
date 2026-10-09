@@ -2,7 +2,8 @@ import Link from "next/link";
 import { BrandMark, Wordmark } from "@/components/brand/logo";
 
 const COLUMNS = [
-  { title: "Product", links: [["Features", "/#features"], ["Pricing", "/pricing"], ["Custom plan", "/pricing#custom"], ["Start free trial", "/signup"]] },
+  { title: "Product", links: [["All features", "/features"], ["Pricing", "/pricing"], ["Custom plan", "/pricing#custom"], ["Start free trial", "/signup"]] },
+  { title: "Solutions", links: [["Attendance", "/features/attendance-management-system"], ["Fee management", "/features/school-fee-management-software"], ["Exams & report cards", "/features/online-exam-report-card-software"], ["Bus tracking", "/features/school-bus-gps-tracking"], ["HR & payroll", "/features/school-hr-payroll-software"], ["Parent app", "/features/parent-teacher-communication-app"]] },
   { title: "Company", links: [["About", "/about"], ["Contact", "/contact"], ["Sign in", "/login"]] },
   { title: "Legal", links: [["Privacy policy", "/privacy"], ["Terms of service", "/terms"]] },
 ] as const;
@@ -10,7 +11,7 @@ const COLUMNS = [
 export function SiteFooter() {
   return (
     <footer className="border-t bg-muted/30">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 md:grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
         <div className="max-w-xs">
           <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Vidyanexa home">
             <BrandMark size={32} />

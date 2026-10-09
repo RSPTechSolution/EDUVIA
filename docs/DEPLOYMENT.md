@@ -112,3 +112,23 @@ flutter build apk --dart-define=FLAVOR=parent --dart-define=API_URL=https://your
 ```
 
 Repeat with `FLAVOR=staff` and `FLAVOR=driver`.
+
+## Getting found on Google (SEO)
+
+The public website is set up for search:
+- Every page has its own title and description, a canonical URL and share images.
+- Ten feature pages target real searches, such as "school fee management software" and "school bus GPS tracking".
+- There is structured data (organisation, product with prices, FAQs and breadcrumbs), plus a sitemap and robots rules.
+- The signed-in app is kept out of search.
+
+When the site is live:
+
+1. Set `PUBLIC_URL` to the final https address before building. Canonical URLs, the sitemap and share cards all use it.
+2. In [Google Search Console](https://search.google.com/search-console), add the site using the **HTML tag** method.
+   Put the code (the `content="..."` value) in `GOOGLE_SITE_VERIFICATION`, rebuild, and click **Verify**.
+   Do the same for [Bing Webmaster Tools](https://www.bing.com/webmasters) with `BING_SITE_VERIFICATION`.
+3. In Search Console, submit `PUBLIC_URL/sitemap.xml`. Then use **URL inspection**, and **Request indexing**, for the home page, `/features` and `/pricing`.
+4. Check the structured data with Google's [Rich Results Test](https://search.google.com/test/rich-results) on the home page and one feature page.
+5. Optional: set `GA_ID` for Google Analytics on the public website.
+
+To add a feature page, add an entry to `web/src/content/features.ts`. Then run `node scripts/og-images.mjs` in `web/` to create its share image.

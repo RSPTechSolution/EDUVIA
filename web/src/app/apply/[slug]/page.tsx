@@ -13,7 +13,13 @@ async function getSchool(slug: string): Promise<SchoolCard | null> {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const school = await getSchool((await params).slug);
-  return { title: school ? `Admissions · ${school.name}` : "Admissions", description: school ? `Ask about admission to ${school.name}.` : undefined };
+  // A school's own enquiry form: reachable by link, but kept out of search results (it isn't Vidyanexa's content).
+  return {
+    title: school ? `Admissions · ${school.name}` : "Admissions",
+    description: school ? `Ask about admission to ${school.name}.` : undefined,
+    robots: { index: false, follow: true },
+    alternates: { canonical: `/apply/${(await params).slug}` },
+  };
 }
 
 /** A school's public admission enquiry form. Schools link to it from their own website. */
