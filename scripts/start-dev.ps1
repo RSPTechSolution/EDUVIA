@@ -1,4 +1,4 @@
-# Starts the whole EDUVIA development stack on Windows:
+# Starts the whole Vidyanexa development stack on Windows:
 #   Docker Desktop -> Postgres + Redis -> API (:8000) -> web (:3000) -> Flutter parent app (:8090, if built)
 # Usage (from the repo root):  powershell -ExecutionPolicy Bypass -File scripts\start-dev.ps1 [-Build]
 #   -Build   rebuild the web app first (needed after pulling new code)
