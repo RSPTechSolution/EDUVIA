@@ -233,8 +233,39 @@ The end-to-end tests run against the dev database and create a few users and sch
 - **Notices:** the office posts to everyone, staff, parents & students, or chosen classes; teachers post to the classes they teach. Notices can be important/urgent and pinned. Authors see "read by X of Y"; everyone gets an unread badge on the web and a bell in the apps.
 - **Homework:** teachers set it for their classes and subjects with a due date; parents or students tick it off (with an optional note); teachers mark it checked or incomplete with a remark, which families see.
 
+## More modules
+
+- **Academics extras:** syllabus with coverage, lesson plans, admission enquiries with a public form (`/apply/<school>`), TC/bonafide/character certificates and ID cards (PDF), year-end promotion, substitutions.
+- **Attendance extras:** school calendar and holidays, leave requests from families, QR scanning of ID cards, period-wise attendance, biometric machines (ZKTeco ADMS at `/iclock`).
+- **Fees and accounts:** late fees, reminders by email, SMS and WhatsApp, PDF receipts, income and expense vouchers, day book CSV, and Tally XML export.
+- **Exams:** online tests with a question bank, co-scholastic grades, live classes (Meet, Zoom or Jitsi), and PDF report cards.
+- **Communication:** SMS and WhatsApp (console mode until keys are added), parent-teacher chat, PTM booking, and surveys.
+- **Transport:** fleet, routes and stops, a driver app with live GPS, boarding alerts to parents, and SOS.
+- **HR and payroll:** staff profiles, staff attendance, leave, monthly payroll with PF, ESI, PT and TDS, and PDF payslips.
+- **Campus:** a library (issue and return, fines, overdue reminders), hostels (rooms, beds, allocation), and inventory with an asset register.
+- **Gate and security:** visitor log, early-pickup gate passes with a code checked at the gate, a contract-workers register with police verification, a compliance vault with expiry reminders, and CCTV with family consent.
+- **Analytics and AI:**
+  - Analytics: school-wide reports (enrolment, attendance, fees, results) and students who need attention.
+  - AI assistant: answers set questions about the school's own data, within each role's permissions. With an Anthropic key, Claude also routes free-form questions.
+- **Platform:**
+  - System health, backups and restore, and a school data export.
+  - An announcement banner, school brand colours, and sign-in with a one-time code by email or SMS.
+  - SEO (sitemap, robots, social previews), an installable web app (PWA), and optional Google Analytics.
+
+## Deploying
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): one server, `docker compose -f infra/compose/docker-compose.prod.yml up -d --build`. nginx serves the website and the API from one address, so no custom domain is needed. Create the first platform admin with `python -m app.create_super_admin`.
+
 ## Build status
 
-Built so far: authentication, roles and permissions, schools, users, modules, audit log, plans and billing, the public website, the web design system, dashboard and app shell, students, classes and sections, timetables, attendance, fees, exams and report cards, notices and homework — on the web and in the mobile apps. Still to come from the plan in `skills/`: transport and bus tracking, HR and leave, library, hostel, inventory, gate security, messaging/SMS, online tests, and AI and analytics.
+All modules in the plan are built on the web and in the mobile apps (parent, staff and driver), with demo data from `python -m app.seed`.
 
-Not verifiable on this development machine yet: Android builds (no Android SDK installed) and iOS builds (need a Mac; iOS flavors also need Xcode schemes — until then use `--dart-define=FLAVOR=…`). Real online payment (Razorpay), PDF receipts and report cards (use the browser's print-to-PDF for now), and biometric/QR attendance are not connected yet.
+Every module is covered by:
+- API integration tests, including a matrix that calls every GET endpoint as each of the 15 roles.
+- End-to-end browser tests, including one that opens every menu page as each demo role.
+- Flutter widget tests.
+
+What needs accounts or hardware before it works for real:
+- **Online fee payment:** Razorpay isn't connected; a simulated gateway is used for testing.
+- **Delivery:** SMS and WhatsApp sending, push notifications (Firebase), and email (Brevo) need their keys. Until then they log to the console.
+- **Builds:** Android builds need the Android SDK; iOS builds need a Mac.

@@ -42,9 +42,19 @@ test("flutter parent app end to end", async ({ page }) => {
   await page.getByRole("button", { name: /Timetable/ }).click();
   await expect(page.getByText(/Assembly/)).toBeVisible({ timeout: 15_000 });
   await page.goBack();
+  // Flutter only exposes on-screen items, so scroll the More list until an item appears.
+  const scrollTo = async (name: RegExp) => {
+    for (let i = 0; i < 12 && !(await page.getByRole("button", { name }).isVisible()); i++) {
+      await page.mouse.move(200, 400);
+      await page.mouse.wheel(0, 300);
+      await page.waitForTimeout(250);
+    }
+  };
+  await scrollTo(/Results/);
   await page.getByRole("button", { name: /Results/ }).click();
   await expect(page.getByText(/Half-Yearly/).first()).toBeVisible({ timeout: 15_000 });
   await page.goBack();
+  await scrollTo(/Profile & settings/);
   await page.getByRole("button", { name: /Profile & settings/ }).click();
   await expect(page.getByRole("button", { name: /Change password/ })).toBeVisible();
   await page.waitForTimeout(500);
