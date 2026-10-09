@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  Camera, CctvSettings, CctvViewRow, ComplianceDoc, ConsentCoverage, ConsentRow, GatePass, GateSummary, Visitor, Worker, Asset, Book, BookIssue, Hostel, LibrarySettings, LibraryStats, MyHostel, StockItem, StockMove, AppNotification, StoredFile, LeaveBalance, LeaveTypeRow, PayrollRun, StaffDayRow, StaffDetail, StaffLeave, StaffRow, BusRoute, ChildTransport, Rider, SosAlert, Trip, Vehicle, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
+  AiStatus, AnalyticsReport, Camera, CctvSettings, CctvViewRow, ComplianceDoc, ConsentCoverage, ConsentRow, GatePass, GateSummary, Visitor, Worker, Asset, Book, BookIssue, Hostel, LibrarySettings, LibraryStats, MyHostel, StockItem, StockMove, AppNotification, StoredFile, LeaveBalance, LeaveTypeRow, PayrollRun, StaffDayRow, StaffDetail, StaffLeave, StaffRow, BusRoute, ChildTransport, Rider, SosAlert, Trip, Vehicle, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
   PtmScheduleRow, Survey, SurveyResults, AttemptResult, CoSheet, LiveClass, MyTest, OnlineTest, Question, TestResults, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
   Substitution, SubstitutionDay, SyllabusView, BiometricDevice, BunkRow, CalendarEvent, LeaveRequest, PeriodCard, PeriodRoster, Punch,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
@@ -736,4 +736,14 @@ export function useCctvViews() {
 
 export function useGateHosts(enabled = true) {
   return useQuery({ queryKey: ["gate", "hosts"], enabled, staleTime: 300_000, queryFn: async () => (await api<{ user_id: string; full_name: string; designation: string | null }[]>("/gate/hosts")).data });
+}
+
+// ---- analytics -----------------------------------------------------------------------------------
+
+export function useAnalytics(from?: string, to?: string) {
+  return useQuery({ queryKey: ["analytics", from, to], placeholderData: keepPreviousData, queryFn: async () => (await api<AnalyticsReport>("/analytics", { query: { from, to } })).data });
+}
+
+export function useAiStatus() {
+  return useQuery({ queryKey: ["ai"], queryFn: async () => (await api<AiStatus>("/ai")).data });
 }

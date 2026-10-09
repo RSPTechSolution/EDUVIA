@@ -225,3 +225,36 @@ export function IncomeExpenseChart({ data }: { data: { month: string; income: nu
     </div>
   );
 }
+
+/** Fees collected per month: one bar a month. */
+export function MonthlyCollectionChart({ data }: { data: { month: string; amount: number }[] }) {
+  const inr = (v: number) => `₹${v >= 100000 ? `${(v / 100000).toFixed(1)}L` : v >= 1000 ? `${Math.round(v / 1000)}k` : v}`;
+  const label = (m: string) => format(parseISO(`${m}-01`), "MMM yy");
+  return (
+    <div
+      className="h-60 w-full text-primary [&_.recharts-cartesian-axis-tick-value]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border"
+      role="img" aria-label="Fees collected per month over the last year">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis dataKey="month" tickFormatter={label} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={16} tick={{ fontSize: 11 }} />
+          <YAxis tickFormatter={inr} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={56} />
+          <Tooltip
+            cursor={{ fill: "currentColor", fillOpacity: 0.06 }}
+            content={({ active, payload }) => active && payload?.length ? (
+              <div className={tooltipClass}>
+                <p className="font-medium">{format(parseISO(`${payload[0].payload.month}-01`), "MMMM yyyy")}</p>
+                <p className="text-muted-foreground"><span className="font-semibold text-foreground">₹{Number(payload[0].value).toLocaleString("en-IN")}</span> collected</p>
+              </div>
+            ) : null}
+          />
+          <Bar dataKey="amount" fill="currentColor" radius={[4, 4, 0, 0]} maxBarSize={32} />
+        </BarChart>
+      </ResponsiveContainer>
+      <table className="sr-only">
+        <caption>Fees collected per month</caption>
+        <tbody>{data.map((d) => <tr key={d.month}><th scope="row">{d.month}</th><td>₹{d.amount}</td></tr>)}</tbody>
+      </table>
+    </div>
+  );
+}

@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     PASSWORD_RESET_EXPIRE_MINUTES: int = 30
+    # AI assistant: "rules" answers from built-in templates; "anthropic" lets Claude pick the template and draft notices.
+    AI_PROVIDER: str = "rules"
+    ANTHROPIC_API_KEY: str = ""
+    AI_MODEL: str = "claude-haiku-5-5"
+    AI_DAILY_LIMIT: int = 100  # questions per user per day
+
     OTP_EXPIRE_MINUTES: int = 10
     OTP_DEBUG: bool = False  # outside production, return the sign-in code in the response (local testing only)
     BCRYPT_ROUNDS: int = 12

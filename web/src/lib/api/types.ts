@@ -1222,3 +1222,23 @@ export interface Camera {
 export interface ConsentRow { student_id: string; name: string; class_section: string; consent: boolean | null; decided_at: string | null }
 export interface ConsentCoverage { section_id: string; label: string; students: number; yes: number; no: number; unanswered: number }
 export interface CctvViewRow { camera: string; user: string | null; role: string | null; at: string }
+
+
+// ---- analytics -----------------------------------------------------------------------------------
+
+export interface AnalyticsReport {
+  frm: string; to: string; academic_year: string; students: number; new_admissions: number;
+  enrolment: { class_id: string; name: string; students: number; boys: number; girls: number }[];
+  attendance_percent: number | null; attendance_trend: { date: string; percent: number | null }[];
+  class_attendance: { class_id: string; name: string; percent: number | null }[]; low_attendance: number;
+  fees: {
+    billed: number; collected: number; outstanding: number; collection_percent: number | null; monthly: { month: string; amount: number }[];
+    aging: { label: string; amount: number }[]; defaulters: { student_id: string; name: string; class_section: string; balance: number; days_overdue: number }[];
+  };
+  exam: { exam_id: string; name: string; pass_rate: number | null; classes: { class_id: string; name: string; students: number; average: number; pass_rate: number | null }[]; subjects: { name: string; average: number }[] } | null;
+  at_risk: { student_id: string; name: string; admission_no: string; class_section: string; reasons: string[] }[]; at_risk_total: number;
+}
+
+export interface AiTemplate { id: string; title: string; example: string }
+export interface AiStatus { mode: "rules" | "ai"; templates: AiTemplate[]; left_today: number }
+export interface AiAnswer { template: string | null; mode: "rules" | "ai"; text: string; columns: string[]; rows: (string | number | null)[][]; link: string | null; suggestions: string[] }

@@ -1,5 +1,5 @@
 import {
-  Cctv, DoorOpen, FileCheck2, Ticket, UserCheck, Hotel, Library, Package, BookOpen, Award, Briefcase, BriefcaseBusiness, Bus, Calculator, ClipboardPen, Handshake, MessagesSquare, Smartphone, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Sparkles, ChartNoAxesCombined, Cctv, DoorOpen, FileCheck2, Ticket, UserCheck, Hotel, Library, Package, BookOpen, Award, Briefcase, BriefcaseBusiness, Bus, Calculator, ClipboardPen, Handshake, MessagesSquare, Smartphone, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -28,7 +28,11 @@ export interface NavGroup {
 export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Overview",
-    items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, keywords: ["home"] }],
+    items: [
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, keywords: ["home"] },
+      { label: "AI assistant", href: "/assistant", icon: Sparkles, module: "ai", permission: "ai.use", keywords: ["ask", "chat", "question", "help", "draft notice"] },
+      { label: "Analytics", href: "/analytics", icon: ChartNoAxesCombined, module: "analytics", permission: "analytics.view", keywords: ["reports", "insights", "at risk", "trends", "performance"] },
+    ],
   },
   {
     label: "Platform",

@@ -73,6 +73,8 @@ PERMISSIONS: dict[str, list[Role]] = {
     "hostel.manage": [Role.SCHOOL_ADMIN, Role.PRINCIPAL],
     "inventory.view": ADMINS + [Role.ACCOUNTANT, Role.STAFF],
     "inventory.manage": [Role.SCHOOL_ADMIN, Role.ACCOUNTANT],
+    "analytics.view": ADMINS,
+    "ai.use": STAFF_ROLES,  # each answer still checks the permission its data needs
     "gate.view": ADMINS + [Role.SECURITY_GUARD, Role.RECEPTIONIST],
     "gate.manage": ADMINS + [Role.SECURITY_GUARD, Role.RECEPTIONIST],  # visitors in and out, gate passes at the gate, workers in and out
     "gatepass.issue": ADMINS + [Role.RECEPTIONIST],  # the office issues a pass on the spot (already approved)
