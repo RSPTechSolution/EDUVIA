@@ -100,6 +100,15 @@ def password_reset(*, to: str, name: str, school_name: str | None, token: str, m
         outro=["If you didn't ask for this, you can ignore this email; your password won't change."])
 
 
+def login_code(*, to: str, name: str, school_name: str | None, code: str, minutes: int) -> Email:
+    return _build(
+        to=to, to_name=name, kind="login_code", school=school_name, subject=f"{code} is your EDUVIA sign-in code",
+        title="Your sign-in code",
+        intro=[f"Hello {escape(name.split()[0])}, use this code to sign in:", f"<b style='font-size:28px;letter-spacing:6px'>{code}</b>",
+               f"It works once and expires in {minutes} minutes."],
+        outro=["If you didn't try to sign in, you can ignore this email. Never share this code with anyone, including school staff."])
+
+
 def fee_receipt(*, to: str, name: str, school_name: str, student: str, class_section: str, term: str, receipt_no: str,
                 amount: Decimal, method: str, paid_at: datetime, balance: Decimal, payment_id: str) -> Email:
     inr = lambda v: f"₹{v:,.0f}" if v == v.to_integral() else f"₹{v:,.2f}"  # noqa: E731

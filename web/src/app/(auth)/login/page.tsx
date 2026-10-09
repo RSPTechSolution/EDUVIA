@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { LoginForm } from "./login-form";
+import { SignIn } from "./sign-in";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -12,7 +12,7 @@ export default function LoginPage() {
         <p className="mt-1.5 text-sm text-muted-foreground">Sign in to your school&apos;s EDUVIA workspace.</p>
       </div>
       <Suspense>
-        <LoginForm />
+        <SignIn />
       </Suspense>
     </>
   );

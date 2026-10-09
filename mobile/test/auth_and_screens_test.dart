@@ -110,6 +110,43 @@ void main() {
       expect(find.text('Bus tracking'), findsNothing);
     });
 
+    testWidgets('parent signs in with a one-time code sent to their phone', (tester) async {
+      Map<String, dynamic>? asked;
+      final fake = FakeApi()
+        ..on('POST /auth/login-code/request', (req) {
+          asked = (req.data as Map).cast<String, dynamic>();
+          return (200, FakeApi.ok({'message': 'sent', 'expires_in': 600}));
+        })
+        ..on('POST /auth/login-code', (req) => (req.data as Map)['code'] == '482913'
+            ? (200, FakeApi.ok({'tokens': tokensJson('1'), 'user': meJson()}))
+            : (401, FakeApi.err('INVALID_CODE', 'That code is wrong or has expired')));
+      await pumpApp(tester, fake, MemoryTokenStore());
+      await tester.ensureVisible(find.text('Use a one-time code instead'));
+      await tester.tap(find.text('Use a one-time code instead'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.widgetWithText(TextField, 'School ID'), 'Demo');
+      await tester.enterText(find.widgetWithText(TextField, 'Email or mobile number'), '98140 20001');
+      await tester.pump();
+      await tester.tap(find.text('Send me a code'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(asked, {'identifier': '98140 20001', 'school_slug': 'demo'});
+      expect(find.textContaining('by SMS and email'), findsOneWidget);
+      await tester.enterText(find.widgetWithText(TextField, 'Sign-in code'), '111111');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('That code is wrong or has expired'), findsOneWidget);
+      await tester.enterText(find.widgetWithText(TextField, 'Sign-in code'), '482913');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+      expect(find.textContaining('Suresh'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 61));
+    });
+
     testWidgets('temporary password forces the change-password screen', (tester) async {
       final fake = FakeApi()..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson(mustChange: true))));
       await pumpApp(tester, fake, MemoryTokenStore()..access = 'a'..refresh = 'r');

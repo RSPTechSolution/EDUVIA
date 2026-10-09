@@ -9,6 +9,7 @@ import '../../features/attendance/leave_calendar_screens.dart';
 import '../../features/campus/campus_screens.dart';
 import '../../features/security/security_screens.dart';
 import '../../features/auth/change_password_screen.dart';
+import '../../features/auth/code_login_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/splash_screen.dart';
@@ -28,7 +29,7 @@ import '../../features/timetable/timetable_screen.dart';
 import '../../features/transport/transport_screens.dart';
 import '../auth/auth_controller.dart';
 
-const _publicRoutes = {'/login', '/forgot-password'};
+const _publicRoutes = {'/login', '/login-code', '/forgot-password'};
 
 /// Bridges Riverpod auth state to go_router's refreshListenable, so the
 /// router instance is created once and only re-runs `redirect`.
@@ -63,6 +64,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordScreen()),
+      GoRoute(path: '/login-code', builder: (_, _) => const CodeLoginScreen()),
       GoRoute(path: '/change-password', builder: (_, _) => const ChangePasswordScreen()),
       // Full-screen pages opened from the tabs.
       GoRoute(

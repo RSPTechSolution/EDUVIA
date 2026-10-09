@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     PASSWORD_RESET_EXPIRE_MINUTES: int = 30
+    OTP_EXPIRE_MINUTES: int = 10
+    OTP_DEBUG: bool = False  # outside production, return the sign-in code in the response (local testing only)
     BCRYPT_ROUNDS: int = 12
 
     LOGIN_RATE_LIMIT: int = 10           # attempts ...

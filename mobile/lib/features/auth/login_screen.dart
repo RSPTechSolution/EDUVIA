@@ -117,6 +117,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     LoadingButton(label: 'Sign in', loading: _busy, onPressed: _submit),
+                    const SizedBox(height: 12),
+                    TextButton(onPressed: () => context.push('/login-code'), child: const Text('Use a one-time code instead')),
                   ]),
                 ),
               ),

@@ -7,7 +7,7 @@ from app.core.deps import DB, Auth, client_ip
 from app.core.errors import TooManyRequests
 from app.core.security import create_download_token
 from app.schemas.auth import (
-    ChangePasswordRequest, LoginRequest, LoginResponse, MeOut, PasswordResetConfirm,
+    ChangePasswordRequest, CodeLogin, CodeRequest, LoginRequest, LoginResponse, MeOut, PasswordResetConfirm,
     PasswordResetRequest, RefreshRequest, TokenPair,
 )
 from app.schemas.common import ApiResponse, Message, ok
@@ -24,6 +24,31 @@ async def login(body: LoginRequest, request: Request, db: DB):
         raise TooManyRequests("Too many login attempts. Try again in 15 minutes.", code="RATE_LIMITED")
     result = await auth_service.login(db, body.email, body.password, body.school_slug,
                                       ip=ip, user_agent=request.headers.get("user-agent"))
+    await ratelimit.reset(key)
+    return ok(result)
+
+
+@router.post("/login-code/request", response_model=ApiResponse[dict])
+async def login_code_request(body: CodeRequest, request: Request, db: DB):
+    ident = body.identifier.strip().lower()
+    if not (await ratelimit.hit(f"rl:otp:{client_ip(request)}", 10, 3600) and await ratelimit.hit(f"rl:otp:id:{ident}", 5, 3600)):
+        raise TooManyRequests("Too many codes asked for. Try again later.", code="RATE_LIMITED")
+    if not await ratelimit.hit(f"rl:otp:gap:{ident}", 1, 60):
+        raise TooManyRequests("Wait a minute before asking for another code.", code="RATE_LIMITED")
+    code = await auth_service.request_login_code(db, body.identifier, body.school_slug)
+    out: dict = {"message": "If that account exists, a sign-in code has been sent.", "expires_in": settings.OTP_EXPIRE_MINUTES * 60}
+    if code and settings.OTP_DEBUG and settings.ENVIRONMENT != "production":
+        out["debug_code"] = code  # local development and automated tests only
+    return ok(out)
+
+
+@router.post("/login-code", response_model=ApiResponse[LoginResponse])
+async def login_code(body: CodeLogin, request: Request, db: DB):
+    ip = client_ip(request)
+    key = f"rl:login:{ip}:{body.identifier.strip().lower()}"
+    if not await ratelimit.hit(key, settings.LOGIN_RATE_LIMIT, settings.LOGIN_RATE_WINDOW_SECONDS):
+        raise TooManyRequests("Too many attempts. Try again in 15 minutes.", code="RATE_LIMITED")
+    result = await auth_service.login_with_code(db, body.identifier, body.code, body.school_slug, ip=ip, user_agent=request.headers.get("user-agent"))
     await ratelimit.reset(key)
     return ok(result)
 

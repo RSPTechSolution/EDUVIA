@@ -47,6 +47,16 @@ async def password_reset(db: AsyncSession, user: User, token: str) -> None:
                               school_id=user.school_id)
 
 
+async def login_code(db: AsyncSession, user: User, code: str, *, by_sms: bool) -> None:
+    school = await _school(db, user.school_id)
+    await email_service.queue(db, t.login_code(to=user.email, name=user.full_name, school_name=school.name if school else None, code=code,
+                                               minutes=settings.OTP_EXPIRE_MINUTES), school_id=user.school_id)
+    if by_sms and user.phone and user.school_id:
+        from app.services import sms_service
+        await sms_service.queue(db, school_id=user.school_id, event_name="login", phones=[user.phone], force=["sms"],
+                                body=f"{code} is your EDUVIA sign-in code. It expires in {settings.OTP_EXPIRE_MINUTES} minutes. Don't share it.")
+
+
 async def fee_paid(db: AsyncSession, payment: FeePayment, invoice: FeeInvoice) -> None:
     """Receipt to every parent of the student who has an email (and the student's own login)."""
     school = await _school(db, invoice.school_id)

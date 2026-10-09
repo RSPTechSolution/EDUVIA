@@ -21,6 +21,20 @@ def _password_rules(v: str) -> str:
 NewPassword = Annotated[str, AfterValidator(_password_rules)]
 
 
+class CodeRequest(BaseModel):
+    identifier: str = Field(min_length=3, max_length=200)  # email, or mobile number (needs the school ID)
+    school_slug: str | None = Field(None, max_length=100)
+
+    @field_validator("school_slug")
+    @classmethod
+    def _blank_to_none(cls, v):
+        return v.strip().lower() or None if v else None
+
+
+class CodeLogin(CodeRequest):
+    code: str = Field(pattern=r"^\s*\d{6}\s*$")
+
+
 class LoginRequest(BaseModel):
     email: str = Field(min_length=3, max_length=200)  # matched, not validated: must equal a stored address
     password: str = Field(min_length=1, max_length=200)

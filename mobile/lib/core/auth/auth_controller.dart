@@ -71,15 +71,43 @@ class AuthController extends AsyncNotifier<AuthState> {
       body: {'email': email.trim(), 'password': password, 'school_slug': (schoolSlug?.trim().isEmpty ?? true) ? null : schoolSlug!.trim()},
       parse: (j) => (j as Map).cast<String, dynamic>(),
     );
-    final tokens = (res.data['tokens'] as Map).cast<String, dynamic>();
+    await _finishSignIn(res.data);
+  }
+
+  Future<void> _finishSignIn(Map<String, dynamic> data) async {
+    final tokens = (data['tokens'] as Map).cast<String, dynamic>();
     await _tokens.save(access: tokens['access_token'] as String, refresh: tokens['refresh_token'] as String);
-    final me = Me.fromJson((res.data['user'] as Map).cast<String, dynamic>());
+    final me = Me.fromJson((data['user'] as Map).cast<String, dynamic>());
     final rejected = await _rejectIfWrongApp(me);
     if (rejected != null) {
       state = AsyncData(rejected);
       throw ApiException(rejected.notice!, code: 'WRONG_APP');
     }
     state = AsyncData(SignedIn(me));
+  }
+
+  String? _slug(String? s) => (s?.trim().isEmpty ?? true) ? null : s!.trim().toLowerCase();
+
+  /// Sends a 6-digit sign-in code by email (and SMS for a mobile number). Returns the code only in local debug setups.
+  Future<String?> requestLoginCode({required String identifier, String? schoolSlug}) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      '/auth/login-code/request',
+      auth: false,
+      body: {'identifier': identifier.trim(), 'school_slug': _slug(schoolSlug)},
+      parse: (j) => (j as Map).cast<String, dynamic>(),
+    );
+    return res.data['debug_code'] as String?;
+  }
+
+  /// Throws [ApiException] with the server's message on failure.
+  Future<void> signInWithCode({required String identifier, required String code, String? schoolSlug}) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      '/auth/login-code',
+      auth: false,
+      body: {'identifier': identifier.trim(), 'code': code.trim(), 'school_slug': _slug(schoolSlug)},
+      parse: (j) => (j as Map).cast<String, dynamic>(),
+    );
+    await _finishSignIn(res.data);
   }
 
   Future<void> refreshProfile() async {

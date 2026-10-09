@@ -125,3 +125,47 @@ async def test_validation_error_shape(client):
     err = res.json()["error"]
     assert err["code"] == "VALIDATION_ERROR"
     assert {d["field"] for d in err["details"]} == {"email", "password"}
+
+
+async def test_sign_in_with_a_code(client, db, school, monkeypatch):
+    from sqlalchemy import select
+
+    from app.core.config import settings
+    from app.models import MessageLog
+    monkeypatch.setattr(settings, "OTP_DEBUG", True)
+    u = await factories.user(db, school, "otp@t.com", "parent")
+    u.phone = "+91 98765 11111"
+    await db.commit()
+
+    # Unknown accounts get the same answer, without a code.
+    res = (await client.post(f"{API}/auth/login-code/request", json={"identifier": "nobody@t.com", "school_slug": school.slug})).json()["data"]
+    assert "debug_code" not in res and "sign-in code has been sent" in res["message"]
+
+    code = (await client.post(f"{API}/auth/login-code/request", json={"identifier": "OTP@t.com", "school_slug": school.slug})).json()["data"]["debug_code"]
+    again = await client.post(f"{API}/auth/login-code/request", json={"identifier": "otp@t.com", "school_slug": school.slug})
+    assert again.status_code == 429  # one a minute
+    wrong = "000000" if code != "000000" else "111111"
+    bad = await client.post(f"{API}/auth/login-code", json={"identifier": "otp@t.com", "school_slug": school.slug, "code": wrong})
+    assert bad.status_code == 401 and bad.json()["error"]["code"] == "INVALID_CODE"
+    ok = await client.post(f"{API}/auth/login-code", json={"identifier": "otp@t.com", "school_slug": school.slug, "code": code})
+    assert ok.status_code == 200 and ok.json()["data"]["user"]["email"] == "otp@t.com"
+    # A code works once.
+    assert (await client.post(f"{API}/auth/login-code", json={"identifier": "otp@t.com", "school_slug": school.slug, "code": code})).status_code == 401
+
+    # By mobile number: the school ID is needed, and an SMS goes out.
+    assert "debug_code" not in (await client.post(f"{API}/auth/login-code/request", json={"identifier": "98765 11111"})).json()["data"]
+    code = (await client.post(f"{API}/auth/login-code/request", json={"identifier": "098765 11111", "school_slug": school.slug})).json()["data"]["debug_code"]
+    sms = (await db.scalars(select(MessageLog).where(MessageLog.kind == "login"))).all()
+    assert [m.to for m in sms] == ["+919876511111"] and code in sms[0].body
+    assert (await client.post(f"{API}/auth/login-code", json={"identifier": "9876511111", "school_slug": school.slug, "code": code})).status_code == 200
+
+
+async def test_code_is_dropped_after_five_wrong_tries(client, db, school, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "OTP_DEBUG", True)
+    await factories.user(db, school, "otp2@t.com", "teacher")
+    code = (await client.post(f"{API}/auth/login-code/request", json={"identifier": "otp2@t.com", "school_slug": school.slug})).json()["data"]["debug_code"]
+    wrong = "000000" if code != "000000" else "111111"
+    for _ in range(5):
+        await client.post(f"{API}/auth/login-code", json={"identifier": "otp2@t.com", "school_slug": school.slug, "code": wrong})
+    assert (await client.post(f"{API}/auth/login-code", json={"identifier": "otp2@t.com", "school_slug": school.slug, "code": code})).status_code == 401

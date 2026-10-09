@@ -143,6 +143,86 @@ async def change_password(db: AsyncSession, user: User, session_id: uuid.UUID, c
     await audit_service.record(db, "auth.password_change", school_id=user.school_id, user_id=user.id)
 
 
+# ---- sign in with a one-time code ------------------------------------------------------------
+
+async def _find_for_otp(db: AsyncSession, identifier: str, school_slug: str | None) -> User | None:
+    from sqlalchemy import func
+
+    from app.services.sms_service import normalise
+    ident = identifier.strip()
+    if "@" in ident:
+        user, _ = await _find_user(db, ident, school_slug)
+        return user
+    phone = normalise(ident)
+    if not phone or not school_slug:
+        return None  # phone sign-in needs the school
+    school = await db.scalar(select(School).where(School.slug == school_slug))
+    if not school:
+        return None
+    rows = (await db.scalars(select(User).where(User.school_id == school.id, User.deleted_at.is_(None), User.phone.isnot(None),
+                                                func.right(func.regexp_replace(User.phone, r"\D", "", "g"), 10) == phone[-10:]))).all()
+    return rows[0] if len(rows) == 1 else None  # a shared number can't say whose account it is: use email instead
+
+
+def _otp_key(user_id: uuid.UUID) -> str:
+    return f"otp:{user_id}"
+
+
+async def request_login_code(db: AsyncSession, identifier: str, school_slug: str | None) -> str | None:
+    """Send a 6-digit code to the account's email (and phone, when signing in by phone). Returns the code, or None if no account matched.
+    Callers answer the same either way."""
+    import secrets
+
+    from app.core.redis import get_redis
+    await set_tenant(db, None, bypass=True)
+    user = await _find_for_otp(db, identifier, school_slug)
+    if not user or not user.is_active:
+        return None
+    code = f"{secrets.randbelow(10**6):06d}"
+    await get_redis().set(_otp_key(user.id), f"{hash_token(code + str(user.id))}|0", ex=settings.OTP_EXPIRE_MINUTES * 60)
+    await audit_service.record(db, "auth.login_code_requested", school_id=user.school_id, user_id=user.id)
+    await notify.login_code(db, user, code, by_sms="@" not in identifier)
+    return code
+
+
+async def login_with_code(db: AsyncSession, identifier: str, code: str, school_slug: str | None,
+                          *, ip: str | None = None, user_agent: str | None = None) -> LoginResponse:
+    from app.core.redis import get_redis
+    await set_tenant(db, None, bypass=True)
+    user = await _find_for_otp(db, identifier, school_slug)
+    bad = Unauthorized("That code is wrong or has expired", code="INVALID_CODE")
+    if not user:
+        raise bad
+    redis = get_redis()
+    stored = await redis.get(_otp_key(user.id))
+    if not stored:
+        raise bad
+    digest, tries = (stored.decode() if isinstance(stored, bytes) else stored).split("|")
+    if not secrets_equal(digest, hash_token(code.strip() + str(user.id))):
+        if int(tries) + 1 >= 5:
+            await redis.delete(_otp_key(user.id))  # too many wrong guesses: ask for a new code
+        else:
+            await redis.set(_otp_key(user.id), f"{digest}|{int(tries) + 1}", keepttl=True)
+        raise bad
+    await redis.delete(_otp_key(user.id))
+    if not user.is_active:
+        raise Unauthorized("This account is disabled", code="ACCOUNT_DISABLED")
+    school = await db.get(School, user.school_id) if user.school_id else None
+    if school and not school.is_active:
+        raise Unauthorized("This school is inactive", code="SCHOOL_INACTIVE")
+    tokens = await _issue_tokens(db, user, ip=ip, user_agent=user_agent)
+    user.last_login_at = _now()
+    await audit_service.record(db, "auth.login", school_id=user.school_id, user_id=user.id, ip=ip, meta={"method": "code"})
+    await db.flush()
+    await set_tenant(db, user.school_id, bypass=user.role == Role.SUPER_ADMIN)
+    return LoginResponse(tokens=tokens, user=await build_me(db, user))
+
+
+def secrets_equal(a: str, b: str) -> bool:
+    import hmac
+    return hmac.compare_digest(a, b)
+
+
 async def request_password_reset(db: AsyncSession, email: str, school_slug: str | None) -> str | None:
     """Creates a reset token. Returns the raw token (for delivery) or None if no such user.
     Callers must respond identically either way to avoid account enumeration."""
