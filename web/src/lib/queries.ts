@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AppNotification, StoredFile, LeaveBalance, LeaveTypeRow, PayrollRun, StaffDayRow, StaffDetail, StaffLeave, StaffRow, BusRoute, ChildTransport, Rider, SosAlert, Trip, Vehicle, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
+  Asset, Book, BookIssue, Hostel, LibrarySettings, LibraryStats, MyHostel, StockItem, StockMove, AppNotification, StoredFile, LeaveBalance, LeaveTypeRow, PayrollRun, StaffDayRow, StaffDetail, StaffLeave, StaffRow, BusRoute, ChildTransport, Rider, SosAlert, Trip, Vehicle, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
   PtmScheduleRow, Survey, SurveyResults, AttemptResult, CoSheet, LiveClass, MyTest, OnlineTest, Question, TestResults, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
   Substitution, SubstitutionDay, SyllabusView, BiometricDevice, BunkRow, CalendarEvent, LeaveRequest, PeriodCard, PeriodRoster, Punch,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
@@ -640,4 +640,54 @@ export function usePayrollRun(id: string) {
 
 export function useMyPayslips() {
   return useQuery({ queryKey: ["hr", "my-payslips"], queryFn: async () => (await api<{ id: string; month: string; net: number; gross: number; status: string; paid_on: string | null }[]>("/hr/my/payslips")).data });
+}
+
+// ---- library, hostel, inventory -----------------------------------------------------------------
+
+export function useLibraryStats() {
+  return useQuery({ queryKey: ["library", "stats"], queryFn: async () => (await api<LibraryStats>("/library/stats")).data });
+}
+
+export function useLibrarySettings() {
+  return useQuery({ queryKey: ["library", "settings"], queryFn: async () => (await api<LibrarySettings>("/library/settings")).data });
+}
+
+export function useBooks(q: string, category?: string) {
+  return useQuery({ queryKey: ["library", "books", q, category], placeholderData: keepPreviousData, queryFn: async () => (await api<Book[]>("/library/books", { query: { q: q || undefined, category } })).data });
+}
+
+export function useBook(id: string | null) {
+  return useQuery({ queryKey: ["library", "book", id], enabled: !!id, queryFn: async () => (await api<Book>(`/library/books/${id}`)).data });
+}
+
+export function useBookIssues(status: string) {
+  return useQuery({ queryKey: ["library", "issues", status], queryFn: async () => (await api<BookIssue[]>("/library/issues", { query: { status } })).data });
+}
+
+export function useMyBooks() {
+  return useQuery({ queryKey: ["library", "mine"], queryFn: async () => (await api<BookIssue[]>("/library/mine")).data });
+}
+
+export function useHostels() {
+  return useQuery({ queryKey: ["hostels"], queryFn: async () => (await api<Hostel[]>("/hostels")).data });
+}
+
+export function useHostel(id: string | null) {
+  return useQuery({ queryKey: ["hostels", id], enabled: !!id, queryFn: async () => (await api<Hostel>(`/hostels/${id}`)).data });
+}
+
+export function useMyHostel() {
+  return useQuery({ queryKey: ["hostels", "mine"], queryFn: async () => (await api<MyHostel[]>("/hostels/mine")).data });
+}
+
+export function useStockItems(low = false) {
+  return useQuery({ queryKey: ["inventory", "items", low], queryFn: async () => (await api<StockItem[]>("/inventory/items", { query: { low } })).data });
+}
+
+export function useStockMoves(id: string | null) {
+  return useQuery({ queryKey: ["inventory", "moves", id], enabled: !!id, queryFn: async () => (await api<StockMove[]>(`/inventory/items/${id}/moves`)).data });
+}
+
+export function useAssets(q: string, condition?: string) {
+  return useQuery({ queryKey: ["inventory", "assets", q, condition], placeholderData: keepPreviousData, queryFn: async () => (await api<Asset[]>("/inventory/assets", { query: { q: q || undefined, condition } })).data });
 }

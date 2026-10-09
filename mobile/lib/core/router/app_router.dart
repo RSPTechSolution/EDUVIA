@@ -6,6 +6,7 @@ import '../../features/academics/syllabus_screens.dart';
 import '../../features/attendance/attendance_data.dart';
 import '../../features/attendance/attendance_screens.dart';
 import '../../features/attendance/leave_calendar_screens.dart';
+import '../../features/campus/campus_screens.dart';
 import '../../features/auth/change_password_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -82,6 +83,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/messages', builder: (_, _) => const MessagesScreen()),
       GoRoute(path: '/driver', builder: (_, _) => const DriverScreen()),
       GoRoute(path: '/my-hr', builder: (_, _) => const MyHrScreen()),
+      GoRoute(path: '/my-library', builder: (_, _) => const MyLibraryScreen()),
+      GoRoute(path: '/my-hostel', builder: (_, _) => const MyHostelScreen()),
       GoRoute(path: '/bus', builder: (_, _) => const MyBusScreen()),
       GoRoute(path: '/ptm', builder: (_, _) => const PtmScreen()),
       GoRoute(path: '/surveys', builder: (_, _) => const SurveysScreen()),

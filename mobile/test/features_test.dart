@@ -457,4 +457,34 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 16));
   });
+  testWidgets('parent sees library books and the hostel room from More', (tester) async {
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson()..['modules'] = ['library', 'hostel'])))
+      ..on('GET /library/mine', (_) => (200, FakeApi.ok([
+            {'id': 'b1', 'accession_no': '00001', 'title': 'Wings of Fire', 'borrower': 'Aarav Patel', 'borrower_kind': 'student', 'class_section': 'Class 5 – A',
+             'issued_on': '2026-09-28', 'due_on': '2026-10-12', 'returned_on': null, 'overdue_days': 0, 'fine': 0, 'fine_paid': false},
+            {'id': 'b2', 'accession_no': '00025', 'title': 'Idgah', 'borrower': 'Diya Patel', 'borrower_kind': 'student', 'class_section': 'Class 1 – A',
+             'issued_on': '2026-09-22', 'due_on': '2026-10-06', 'returned_on': null, 'overdue_days': 3, 'fine': 6, 'fine_paid': false},
+          ])))
+      ..on('GET /hostels/mine', (_) => (200, FakeApi.ok([
+            {'student_id': 's1', 'name': 'Aarav Patel', 'hostel': 'Tagore House', 'room': 'G01', 'floor': 'Ground', 'since': '2026-04-03',
+             'warden': 'Meenakshi Rao', 'warden_phone': '+91 98140 11111'},
+          ])));
+    await pump(tester, container(fake));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Library books'));
+    await tester.pumpAndSettle();
+    expect(find.text('Wings of Fire'), findsOneWidget);
+    expect(find.textContaining('Return by 12 Oct 2026'), findsOneWidget);
+    expect(find.textContaining('3 days late'), findsOneWidget);
+    expect(find.text('Overdue'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hostel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tagore House · Room G01'), findsOneWidget);
+    expect(find.text('Warden: Meenakshi Rao'), findsOneWidget);
+    expect(find.text('Call'), findsOneWidget);
+  });
 }

@@ -555,3 +555,151 @@ async def seed_hr(db, school: School, today: date) -> None:
                           reason="Sister's wedding"))
     await db.flush()
     print(f"  HR: {len(staff)} staff with salaries, 2 months of staff attendance, leave types")
+
+
+BOOKS = [  # (title, author, publisher, category, copies)
+    ("Wings of Fire", "A. P. J. Abdul Kalam", "Universities Press", "Biography", 4), ("Malgudi Days", "R. K. Narayan", "Indian Thought", "Fiction", 3),
+    ("The Story of My Experiments with Truth", "M. K. Gandhi", "Navajivan", "Biography", 2), ("Panchatantra Tales", "Vishnu Sharma", "Rupa", "Children", 5),
+    ("Swami and Friends", "R. K. Narayan", "Indian Thought", "Fiction", 3), ("The Jungle Book", "Rudyard Kipling", "Penguin", "Children", 4),
+    ("Godaan", "Munshi Premchand", "Rajkamal", "Hindi", 3), ("Idgah aur Anya Kahaniyan", "Munshi Premchand", "Rajkamal", "Hindi", 4),
+    ("Ruskin Bond's Book of Nature", "Ruskin Bond", "Penguin", "Fiction", 3), ("The Blue Umbrella", "Ruskin Bond", "Rupa", "Children", 5),
+    ("Discovery of India", "Jawaharlal Nehru", "Penguin", "History", 2), ("India After Gandhi", "Ramachandra Guha", "Picador", "History", 1),
+    ("Mathematics Textbook for Class X", "NCERT", "NCERT", "Reference", 6), ("Science Textbook for Class IX", "NCERT", "NCERT", "Reference", 6),
+    ("R. D. Sharma Mathematics Class 8", "R. D. Sharma", "Dhanpat Rai", "Reference", 4), ("Oxford Student's Atlas", "Oxford", "OUP", "Reference", 3),
+    ("A Brief History of Time", "Stephen Hawking", "Bantam", "Science", 2), ("The Diary of a Young Girl", "Anne Frank", "Penguin", "Biography", 3),
+    ("Harry Potter and the Philosopher's Stone", "J. K. Rowling", "Bloomsbury", "Fiction", 4), ("Charlotte's Web", "E. B. White", "HarperCollins", "Children", 3),
+    ("Tinkle Digest 101", "Anant Pai", "Amar Chitra Katha", "Children", 5), ("Amar Chitra Katha: Shivaji", "Anant Pai", "Amar Chitra Katha", "History", 3),
+    ("Wren & Martin English Grammar", "P. C. Wren", "S. Chand", "Reference", 5), ("Ignited Minds", "A. P. J. Abdul Kalam", "Penguin", "Science", 2),
+]
+
+
+async def seed_campus(db, school: School, today: date) -> None:
+    from decimal import Decimal
+
+    from app.models import Asset, Book, BookCopy, BookIssue, Hostel, HostelAllocation, HostelRoom, StockItem, StockMove
+    if await db.scalar(select(Book.id).where(Book.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(191)
+    users = {u.email: u for u in (await db.scalars(select(User).where(User.school_id == school.id))).all()}
+    librarian = users.get("librarian@demo.com")
+    school.settings = {**(school.settings or {}), "library": {"loan_days": 14, "fine_per_day": 2.0, "max_books_student": 2, "max_books_staff": 5}}
+
+    # Library: the catalogue, then about forty books out, a few overdue, and past loans.
+    copies: list[BookCopy] = []
+    n = 1
+    for title, author, publisher, category, k in BOOKS:
+        b = Book(school_id=school.id, title=title, author=author, publisher=publisher, category=category, rack=f"{category[0]}-{rnd.randint(1, 6)}")
+        db.add(b)
+        await db.flush()
+        for _ in range(k):
+            c = BookCopy(school_id=school.id, book_id=b.id, accession_no=f"{n:05d}")
+            n += 1
+            db.add(c)
+            copies.append(c)
+    await db.flush()
+    students = list((await db.scalars(select(Student).where(Student.school_id == school.id, Student.status == "active").order_by(Student.admission_no))).all())
+    aarav = next((s for s in students if s.first_name == "Aarav" and s.last_name == "Patel"), None)
+    diya = next((s for s in students if s.first_name == "Diya" and s.last_name == "Patel"), None)
+    others = [s for s in students if s not in (aarav, diya)]
+    rnd.shuffle(others)
+    by_no = {c.accession_no: c for c in copies}
+
+    def lend(copy, *, student=None, user=None, ago: int, back_after: int | None = None):
+        issued = today - timedelta(days=ago)
+        due = issued + timedelta(days=14)
+        returned = issued + timedelta(days=back_after) if back_after is not None else None
+        late = max((returned - due).days, 0) if returned else 0
+        db.add(BookIssue(school_id=school.id, copy_id=copy.id, student_id=student.id if student else None, user_id=user.id if user else None,
+                         issued_on=issued, due_on=due, returned_on=returned, fine=Decimal(2 * late), fine_paid=late == 0 or rnd.random() < 0.6,
+                         issued_by=librarian.id if librarian else None))
+        if not returned:
+            copy.status = "issued"
+
+    if aarav:
+        lend(by_no["00001"], student=aarav, ago=11)  # Wings of Fire, due in 3 days
+    if diya:
+        lend(by_no["00025"], student=diya, ago=17)  # Idgah aur Anya Kahaniyan, 3 days late
+    if users.get("teacher@demo.com"):
+        lend(by_no["00058"], user=users["teacher@demo.com"], ago=5)
+    for s in others[40:84]:  # past loans first, a few returned late
+        lend(rnd.choice([c for c in copies if c.status == "available"]), student=s, ago=rnd.randint(25, 120), back_after=rnd.choice([7, 10, 13, 14, 16, 19]))
+    free = [c for c in copies if c.status == "available"]
+    rnd.shuffle(free)
+    for s in others[:36]:
+        lend(free.pop(), student=s, ago=rnd.randint(1, 20))
+    free[0].status, free[1].status = "damaged", "lost"
+    await db.flush()
+
+    # Hostel: a girls' and a boys' house, students from Class 6 up.
+    by_class = dict((await db.execute(select(SchoolClass.id, SchoolClass.name).where(SchoolClass.school_id == school.id))).all())
+
+    def senior(s: Student) -> bool:
+        name = by_class.get(s.class_id, "")
+        return name.startswith("Class ") and int(name.split()[1]) >= 6
+
+    teachers = sorted((u for u in users.values() if u.role == "teacher" and u.email != "teacher@demo.com" and not u.email.lower().startswith("e2e")), key=lambda u: u.email)
+    beds = 0
+    for i, (name, kind, gender) in enumerate((("Sarojini House", "girls", "female"), ("Tagore House", "boys", "male"))):
+        warden = teachers[i] if len(teachers) > i else None
+        h = Hostel(school_id=school.id, name=name, kind=kind, monthly_fee=Decimal(6500), warden_id=warden.id if warden else None, address="School campus, Block C")
+        db.add(h)
+        await db.flush()
+        rooms = []
+        for floor, prefix in (("Ground", "G"), ("First", "1")):
+            for k in range(1, 7):
+                r = HostelRoom(school_id=school.id, hostel_id=h.id, number=f"{prefix}0{k}", floor=floor, capacity=3 if k <= 4 else 2)
+                db.add(r)
+                rooms.append(r)
+        await db.flush()
+        pool = [s for s in students if s.gender == gender and senior(s) and s not in (aarav, diya)]
+        rnd.shuffle(pool)
+        slots = [r for r in rooms for _ in range(r.capacity)]
+        session_start = date(today.year if today.month >= 4 else today.year - 1, 4, 3)
+        for r, s in zip(slots[: len(slots) - 7], pool):
+            db.add(HostelAllocation(school_id=school.id, room_id=r.id, student_id=s.id, from_date=session_start))
+            beds += 1
+    await db.flush()
+
+    # Inventory: store stock with a history (two items already low), and the asset register.
+    store = [("A4 paper ream", "Stationery", "ream", 40, 220, 260), ("Chalk box (white)", "Stationery", "box", 20, 35, 45),
+             ("Whiteboard marker", "Stationery", "pcs", 50, 300, 22), ("Register (200 pages)", "Stationery", "pcs", 30, 60, 85),
+             ("Printer toner HP 88A", "IT", "pcs", 4, 3, 2400), ("Phenyl (5 L)", "Housekeeping", "can", 6, 9, 380),
+             ("Hand wash (5 L)", "Housekeeping", "can", 6, 12, 520), ("Dettol (1 L)", "Medical", "bottle", 5, 8, 210),
+             ("First-aid kit refill", "Medical", "kit", 3, 5, 650), ("Football", "Sports", "pcs", 4, 10, 900),
+             ("Cricket ball (leather)", "Sports", "pcs", 6, 4, 450), ("Beaker 250 ml", "Lab", "pcs", 20, 48, 95)]
+    vendors = ["Gupta Stationers", "Sharma Traders", "Chandigarh Scientific", "Sports Point", "City Medical Store"]
+    issued_to = ["Class 4 – A", "Class 7 – B", "Class 9 – A", "Staff room", "Science lab", "Office", "Sports dept"]
+    acc = users.get("accounts@demo.com")
+    now = datetime.now(UTC)
+    for name, cat, unit, reorder, qty, cost in store:
+        it = StockItem(school_id=school.id, name=name, category=cat, unit=unit, reorder_level=Decimal(reorder), location="Science lab" if cat == "Lab" else "Store room")
+        db.add(it)
+        await db.flush()
+        when = now - timedelta(days=60)
+        bal = Decimal(qty + rnd.randint(10, 40))
+        db.add(StockMove(school_id=school.id, item_id=it.id, kind="in", quantity=bal, unit_cost=Decimal(cost), party=rnd.choice(vendors),
+                         note="Opening purchase", balance_after=bal, by=acc.id if acc else None, at=when))
+        while bal > qty:
+            when = min(when + timedelta(days=rnd.randint(3, 9), hours=rnd.randint(0, 5)), now - timedelta(hours=1))
+            take = min(bal - qty, Decimal(rnd.randint(2, 15)))
+            bal -= take
+            db.add(StockMove(school_id=school.id, item_id=it.id, kind="out", quantity=-take, party=rnd.choice(issued_to), balance_after=bal,
+                             by=acc.id if acc else None, at=when))
+        it.quantity = bal
+    assets = [("Epson EB-X51 projector", "IT", "Room 9-A", 42000, 900, "good"), ("Epson EB-X51 projector", "IT", "Room 10-A", 42000, 900, "needs_repair"),
+              ("Dell OptiPlex desktop", "IT", "Computer lab", 48000, 700, "good"), ("Dell OptiPlex desktop", "IT", "Computer lab", 48000, 700, "good"),
+              ("Dell OptiPlex desktop", "IT", "Computer lab", 48000, 700, "broken"), ("HP LaserJet printer", "IT", "Office", 18500, 400, "good"),
+              ("Interactive panel 75 inch", "IT", "Room 12-A", 165000, 1200, "good"), ("Microscope (compound)", "Lab", "Biology lab", 9500, 1500, "good"),
+              ("Physics balance set", "Lab", "Physics lab", 12000, 1300, "good"), ("Steel almirah", "Furniture", "Staff room", 14500, 2000, "good"),
+              ("Student desk (dual)", "Furniture", "Room 4-A", 4200, 1800, "good"), ("Water cooler 150 L", "Appliances", "Ground floor", 38000, 600, "needs_repair"),
+              ("Generator 62.5 kVA", "Electrical", "Generator room", 640000, 1100, "good"), ("CCTV NVR 16-channel", "Security", "Server room", 28000, 500, "good"),
+              ("Harmonium", "Music", "Music room", 16000, 2400, "good"), ("Treadmill", "Sports", "Gym", 52000, 1400, "disposed")]
+    care = {"IT": users.get("admin@demo.com"), "Furniture": users.get("staff@demo.com"), "Security": users.get("security@demo.com")}
+    for i, (name, cat, loc, cost, age, cond) in enumerate(assets, start=1):
+        bought = today - timedelta(days=age)
+        db.add(Asset(school_id=school.id, tag=f"GV-{cat[:3].upper()}-{i:03d}", name=name, category=cat, location=loc, purchased_on=bought, cost=Decimal(cost),
+                     vendor=rnd.choice(["Chandigarh Computers", "Godrej Interio", "Kirloskar", "Sharma Traders", "Scientific House"]),
+                     warranty_until=bought + timedelta(days=365 * (3 if cat in ("IT", "Electrical") else 1)), condition=cond,
+                     assigned_to=care[cat].id if care.get(cat) else None))
+    await db.flush()
+    print(f"  Campus: {len(BOOKS)} titles, {len(copies)} copies and loans; 2 hostels with {beds} boarders; {len(store)} stock items, {len(assets)} assets")

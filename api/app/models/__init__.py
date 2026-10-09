@@ -7,6 +7,7 @@ from app.models.academics import SchoolClass, Section, Student, StudentGuardian
 from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.billing import Lead, Plan
+from app.models.campus import Asset, Book, BookCopy, BookIssue, Hostel, HostelAllocation, HostelRoom, StockItem, StockMove
 from app.models.communication import Homework, HomeworkStatus, Notice, NoticeRead
 from app.models.email import EmailLog
 from app.models.hr import LeaveType, PayrollRun, Payslip, StaffAttendance, StaffLeave, StaffProfile
@@ -31,4 +32,5 @@ __all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan
            "Question", "OnlineTest", "TestAttempt", "CoScholasticArea", "CoScholasticGrade", "LiveClass",
            "MessageLog", "Conversation", "ChatMessage", "PtmEvent", "PtmBooking", "Survey", "SurveyResponse",
            "Vehicle", "Route", "Stop", "TransportAssignment", "Trip", "TripPing", "Boarding", "SosAlert",
-           "StaffProfile", "StaffAttendance", "LeaveType", "StaffLeave", "PayrollRun", "Payslip"]
+           "StaffProfile", "StaffAttendance", "LeaveType", "StaffLeave", "PayrollRun", "Payslip",
+           "Book", "BookCopy", "BookIssue", "Hostel", "HostelRoom", "HostelAllocation", "StockItem", "StockMove", "Asset"]

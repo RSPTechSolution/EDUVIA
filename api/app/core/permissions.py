@@ -67,6 +67,12 @@ PERMISSIONS: dict[str, list[Role]] = {
     "transport.view": ADMINS + [Role.TRANSPORT_MANAGER],
     "transport.manage": [Role.SCHOOL_ADMIN, Role.TRANSPORT_MANAGER],
     "transport.drive": [Role.DRIVER, Role.SCHOOL_ADMIN, Role.TRANSPORT_MANAGER],  # admins can run a trip on a driver's behalf
+    "library.view": ADMINS + [Role.LIBRARIAN, Role.TEACHER],  # teachers can search the catalogue
+    "library.manage": [Role.SCHOOL_ADMIN, Role.LIBRARIAN],
+    "hostel.view": ADMINS + [Role.RECEPTIONIST],
+    "hostel.manage": [Role.SCHOOL_ADMIN, Role.PRINCIPAL],
+    "inventory.view": ADMINS + [Role.ACCOUNTANT, Role.STAFF],
+    "inventory.manage": [Role.SCHOOL_ADMIN, Role.ACCOUNTANT],
     "ptm.manage": ADMINS + [Role.RECEPTIONIST],
     "surveys.manage": ADMINS,
     "tests.manage": ADMINS + [Role.TEACHER],  # question bank and online tests, for subjects they teach

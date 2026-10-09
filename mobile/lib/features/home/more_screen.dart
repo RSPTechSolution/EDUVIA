@@ -28,6 +28,8 @@ class MoreScreen extends ConsumerWidget {
       if (me.hasModule('communication')) (Icons.poll_outlined, 'Surveys', 'Questions from the school', '/surveys', null),
       if (me.hasModule('transport') && me.isFamily) (Icons.directions_bus_outlined, 'School bus', 'Where the bus is right now', '/bus', null),
       if (me.hasModule('transport') && me.role == 'driver') (Icons.directions_bus_outlined, 'Driver', 'Trips, boarding and SOS', '/driver', null),
+      if (me.hasModule('library')) (Icons.menu_book_outlined, 'Library books', 'Borrowed books, due dates and fines', '/my-library', null),
+      if (me.hasModule('hostel') && me.isFamily) (Icons.hotel_outlined, 'Hostel', 'Room and warden', '/my-hostel', null),
       if (me.hasModule('hr') && !me.isFamily) (Icons.badge_outlined, 'My leave and pay', 'Leave balance, requests and payslips', '/my-hr', null),
       (Icons.event_note_outlined, 'School calendar', 'Holidays, exams and events', '/calendar', null),
       if (me.hasModule('academics') && me.isFamily) (Icons.menu_book_outlined, 'Syllabus', 'How far each subject has got', '/syllabus', null),

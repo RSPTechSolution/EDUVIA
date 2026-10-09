@@ -1158,3 +1158,32 @@ export interface Payslip {
   total_deductions: number; net: number; note: string | null; bank_ready: boolean;
 }
 export interface PayrollRun { id: string; month: string; status: "draft" | "finalised" | "paid"; staff: number; gross: number; net: number; finalised_at: string | null; paid_on: string | null; payslips: Payslip[] }
+
+
+// ---- library, hostel, inventory ---------------------------------------------------------------------
+
+export interface BookCopy { id: string; accession_no: string; status: "available" | "issued" | "lost" | "damaged" | "withdrawn"; borrower: string | null; due_on: string | null }
+export interface Book {
+  id: string; title: string; author: string | null; isbn: string | null; publisher: string | null; category: string | null; rack: string | null;
+  total: number; available: number; copies: BookCopy[];
+}
+export interface BookIssue {
+  id: string; accession_no: string; title: string; borrower: string; borrower_kind: "student" | "staff"; class_section: string | null; issued_on: string;
+  due_on: string; returned_on: string | null; overdue_days: number; fine: number; fine_paid: boolean;
+}
+export interface LibrarySettings { loan_days: number; fine_per_day: number; max_books_student: number; max_books_staff: number }
+export interface LibraryStats { titles: number; copies: number; issued: number; overdue: number; fines_due: number }
+export interface HostelOccupant { allocation_id: string; student_id: string; name: string; class_section: string; from_date: string }
+export interface HostelRoom { id: string; number: string; floor: string | null; capacity: number; occupants: HostelOccupant[] }
+export interface Hostel {
+  id: string; name: string; kind: "boys" | "girls" | "mixed"; warden_id: string | null; warden_name: string | null; monthly_fee: number; address: string | null;
+  rooms: number; beds: number; occupied: number; room_list: HostelRoom[];
+}
+export interface MyHostel { student_id: string; name: string; hostel: string; room: string; floor: string | null; since: string; warden: string | null; warden_phone: string | null }
+export interface StockItem { id: string; name: string; category: string | null; unit: string; quantity: number; reorder_level: number; location: string | null; low: boolean; last_move_at: string | null }
+export interface StockMove { id: string; kind: "in" | "out" | "adjust"; quantity: number; unit_cost: number | null; party: string | null; note: string | null; balance_after: number; by: string | null; at: string }
+export interface Asset {
+  id: string; tag: string; name: string; category: string | null; location: string | null; purchased_on: string | null; cost: number | null; vendor: string | null;
+  warranty_until: string | null; warranty_ok: boolean | null; condition: "good" | "needs_repair" | "broken" | "disposed"; assigned_to: string | null;
+  assigned_name: string | null; notes: string | null;
+}
