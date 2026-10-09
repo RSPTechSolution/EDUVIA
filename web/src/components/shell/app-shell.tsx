@@ -31,7 +31,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
   // The school's own colour, on the whole document so dialogs and menus (rendered in portals) match.
   const brand = me.school?.brand_color;
   useEffect(() => {
-    if (!brand) return;
+    if (!brand || brand.toLowerCase() === "#15233f") return; // navy is the default theme, which already adapts to dark mode
     const root = document.documentElement.style;
     for (const v of ["--primary", "--ring", "--sidebar-primary"]) root.setProperty(v, brand);
     return () => { for (const v of ["--primary", "--ring", "--sidebar-primary"]) root.removeProperty(v); };

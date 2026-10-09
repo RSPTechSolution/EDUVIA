@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
 
 
-/// The leaf mark on a white rounded tile, readable on any background.
+/// The Vidyanexa crest: navy on light surfaces, ivory on dark ones (or on navy when [onDark] is set).
 class BrandMark extends StatelessWidget {
-  const BrandMark({super.key, this.size = 56});
+  const BrandMark({super.key, this.size = 56, this.onDark});
   final double size;
+  final bool? onDark;
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(size * 0.22),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Image.asset('assets/brand/icon.png', semanticLabel: 'Vidyanexa'),
-      );
+  Widget build(BuildContext context) {
+    final dark = onDark ?? Theme.of(context).brightness == Brightness.dark;
+    return SizedBox(
+      width: size,
+      height: size * 1.12,
+      child: Image.asset(dark ? 'assets/brand/crest-reverse.png' : 'assets/brand/crest.png', semanticLabel: 'Vidyanexa', fit: BoxFit.contain),
+    );
+  }
 }
 
-/// The name as one word, in the text colour.
+/// The name in Roman capitals (Cinzel), as in the logo. One word, one colour: never set "NEXA" apart.
 class Wordmark extends StatelessWidget {
   const Wordmark({super.key, this.fontSize = 26, this.suffix});
   final double fontSize;
@@ -28,16 +26,18 @@ class Wordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final base = Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: fontSize, fontWeight: FontWeight.w800, letterSpacing: -0.5);
+    final base = Theme.of(context).textTheme.headlineSmall!
+        .copyWith(fontFamily: 'Cinzel', fontSize: fontSize * 0.86, fontWeight: FontWeight.w600, letterSpacing: fontSize * 0.08);
+    final tag = base.copyWith(fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily, fontSize: fontSize * 0.5, letterSpacing: 0, fontWeight: FontWeight.w500,
+        color: Theme.of(context).colorScheme.onSurfaceVariant);
     return Semantics(
       label: suffix == null ? 'Vidyanexa' : 'Vidyanexa $suffix',
       excludeSemantics: true,
       child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-        // One word in one colour: never set "nexa" apart (keeps clear of other brands).
-        Text('Vidyanexa', style: base),
+        Text('VIDYANEXA', style: base),
         if (suffix != null) ...[
           const SizedBox(width: 6),
-          Text(suffix!, style: base.copyWith(fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text(suffix!, style: tag),
         ],
       ]),
     );

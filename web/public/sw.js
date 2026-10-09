@@ -1,8 +1,8 @@
 // Vidyanexa service worker: makes the web app installable and shows a friendly page when offline.
 // It never caches API responses or signed-in pages, so nothing private is stored on the device.
-const CACHE = "eduvia-shell-v1";
+const CACHE = "eduvia-shell-v2";
 const OFFLINE = "/offline";
-const STATIC = [OFFLINE, "/brand/icon-192.png", "/brand/icon-512.png", "/brand/mark.png"];
+const STATIC = [OFFLINE, "/brand/icon-192.png", "/brand/icon-512.png", "/brand/crest.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(STATIC)).then(() => self.skipWaiting()));

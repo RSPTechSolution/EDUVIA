@@ -201,7 +201,7 @@ export function PayOnlineDialog({ invoice, open, onOpenChange }: { invoice: Pick
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" />Starting secure payment…</div>
               ) : (
                 <div className="mt-4 space-y-4">
-                  <div className="rounded-xl bg-gradient-to-br from-primary to-[oklch(0.5_0.13_220)] p-5 text-white shadow-lg">
+                  <div className="rounded-xl bg-gradient-to-br from-[oklch(0.25_0.058_264)] to-[oklch(0.35_0.07_258)] p-5 text-white shadow-lg">
                     <p className="text-xs opacity-80">Amount to pay</p>
                     <p className="mt-1 font-heading text-3xl font-extrabold tabular">{inr(order.amount)}</p>
                     <p className="mt-2 text-xs opacity-80">Invoice {order.invoice_no}</p>

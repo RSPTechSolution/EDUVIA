@@ -199,7 +199,7 @@ function StudentProfile({ id }: { id: string }) {
       <Link href="/students" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" aria-hidden />Students</Link>
 
       <FadeIn>
-        <div className="aurora relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.3_0.08_264)] via-[oklch(0.42_0.14_256)] to-[oklch(0.52_0.12_210)] p-6 text-white shadow-lg sm:p-8">
+        <div className="aurora relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.23_0.055_264)] via-[oklch(0.28_0.065_263)] to-[oklch(0.34_0.07_258)] p-6 text-white shadow-lg sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <PhotoUpload
               fileId={s.photo_file_id}

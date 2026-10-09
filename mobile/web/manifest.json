@@ -3,9 +3,9 @@
     "short_name": "Vidyanexa",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFFFFF",
-    "theme_color": "#1565D7",
-    "description": "Vidyanexa \u2014 school app for parents, staff and drivers",
+    "background_color": "#F7F2E8",
+    "theme_color": "#15233F",
+    "description": "Vidyanexa — school app for parents, staff and drivers",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

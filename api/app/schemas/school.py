@@ -69,7 +69,7 @@ class SchoolUpdate(BaseModel):
 
 
 # Colours the web app can take as a school's own (all keep white text readable).
-BRAND_COLORS = ["#4f46e5", "#2563eb", "#0f766e", "#15803d", "#b45309", "#be123c", "#7e22ce", "#334155"]
+BRAND_COLORS = ["#15233F", "#4f46e5", "#2563eb", "#0f766e", "#15803d", "#b45309", "#be123c", "#7e22ce", "#334155"]
 
 
 class SchoolAdminUpdate(SchoolUpdate):

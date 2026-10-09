@@ -9,7 +9,9 @@ from html import escape
 from app.core.config import settings
 from app.services.email_service import Email
 
-BLUE = "#1565D7"
+NAVY = "#15233F"
+GOLD = "#B8893C"
+IVORY = "#F7F2E8"
 
 
 def _layout(*, title: str, school: str | None, intro: list[str], rows: list[tuple[str, str]] | None = None,
@@ -25,19 +27,21 @@ def _layout(*, title: str, school: str | None, intro: list[str], rows: list[tupl
     btn = ""
     if button:
         label, url = button
-        btn = (f'<p style="margin:6px 0 22px"><a href="{escape(url)}" style="display:inline-block;background:{BLUE};color:#ffffff;'
+        btn = (f'<p style="margin:6px 0 22px"><a href="{escape(url)}" style="display:inline-block;background:{NAVY};color:#ffffff;'
                f'text-decoration:none;font-weight:600;font-size:15px;padding:12px 22px;border-radius:10px">{escape(label)}</a></p>')
-    return f"""<!doctype html><html><body style="margin:0;background:#f1f5f9;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif">
-<table role="presentation" width="100%" style="background:#f1f5f9;padding:24px 12px"><tr><td align="center">
-<table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb">
-<tr><td style="background:linear-gradient(135deg,#14295A,{BLUE});padding:20px 28px;color:#ffffff">
-<div style="font-size:20px;font-weight:800;letter-spacing:-0.3px">EDU<span style="color:#86efac">VIA</span></div>
-<div style="font-size:13px;opacity:.85">{escape(school or "School management")}</div></td></tr>
+    crest = f"{settings.APP_URL.rstrip('/')}/brand/crest-reverse.png"
+    return f"""<!doctype html><html><body style="margin:0;background:{IVORY};font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+<table role="presentation" width="100%" style="background:{IVORY};padding:24px 12px"><tr><td align="center">
+<table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #E6DECD">
+<tr><td style="background:{NAVY};padding:18px 28px;color:{IVORY};border-bottom:3px solid {GOLD}">
+<table role="presentation"><tr><td style="padding-right:14px;vertical-align:middle"><img src="{crest}" width="34" height="38" alt="" style="display:block;border:0"></td>
+<td style="vertical-align:middle"><div style="font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:600;letter-spacing:3px">VIDYANEXA</div>
+<div style="font-size:12px;color:#D9C9A6;margin-top:3px">{escape(school or "School management")}</div></td></tr></table></td></tr>
 <tr><td style="padding:28px">
-<h1 style="margin:0 0 16px;font-size:21px;color:#111827">{escape(title)}</h1>
+<h1 style="margin:0 0 16px;font-size:21px;color:{NAVY};font-family:Georgia,'Times New Roman',serif">{escape(title)}</h1>
 {"".join(p(x) for x in intro)}{table}{btn}{"".join(p(x) for x in (outro or []))}
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f8fafc;color:#6b7280;font-size:12px;line-height:1.5">
+<tr><td style="padding:16px 28px;background:#FBF8F2;color:#6b7280;font-size:12px;line-height:1.5">
 This email was sent by Vidyanexa on behalf of {escape(school or "your school")}. If you weren't expecting it, you can ignore it.
 </td></tr></table></td></tr></table></body></html>"""
 

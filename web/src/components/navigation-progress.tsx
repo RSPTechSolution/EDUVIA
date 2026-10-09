@@ -135,7 +135,7 @@ function Bar() {
       style={{ opacity: visible ? 1 : 0, transition: "opacity 300ms ease" }}
     >
       <div
-        className="h-full rounded-r-full bg-gradient-to-r from-primary via-[oklch(0.68_0.14_200)] to-[oklch(0.75_0.18_145)] shadow-[0_0_12px_2px_oklch(0.6_0.18_250/0.55)]"
+        className="h-full rounded-r-full bg-gradient-to-r from-primary via-[oklch(0.65_0.105_74)] to-[oklch(0.8_0.1_82)] shadow-[0_0_12px_2px_oklch(0.7_0.11_78/0.55)]"
         style={{ width: `${progress}%`, transition: progress === 0 ? "none" : "width 200ms ease-out" }}
       />
     </div>

@@ -1,30 +1,44 @@
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-/** App icon tile: the leaf mark on white, readable on any background. */
-export function BrandMark({ className, size = 36 }: { className?: string; size?: number }) {
+/* The Vidyanexa crest and wordmark. Source artwork and rules: brand/ at the repository root. */
+
+type Tone = "auto" | "light" | "dark";
+
+/**
+ * The crest. `tone` is the surface it sits on: "light" uses the navy crest, "dark" the ivory one,
+ * "auto" follows the colour theme. Below 48 px the simplified crest (no inner border) stays crisp.
+ */
+export function BrandMark({ className, size = 36, tone = "auto" }: { className?: string; size?: number; tone?: Tone }) {
+  const dark = size < 48 ? "/brand/crest-small.svg" : "/brand/crest.svg";
+  const box = { width: size, height: Math.round(size * 1.12) };
+  /* eslint-disable @next/next/no-img-element -- static vector artwork, nothing to optimise */
   return (
-    <span
-      className={cn("inline-flex shrink-0 items-center justify-center overflow-hidden rounded-[22%] bg-white shadow-sm", className)}
-      style={{ width: size, height: size }}
-    >
-      <Image src="/brand/icon-192.png" alt="" width={size} height={size} priority />
+    <span className={cn("inline-flex shrink-0 items-center justify-center", className)} style={box}>
+      {tone !== "dark" && <img src={dark} alt="" width={box.width} height={box.height} className={cn("h-full w-auto", tone === "auto" && "dark:hidden")} />}
+      {tone !== "light" && <img src="/brand/crest-reverse.svg" alt="" width={box.width} height={box.height} className={cn("h-full w-auto", tone === "auto" && "hidden dark:block")} />}
     </span>
   );
+  /* eslint-enable @next/next/no-img-element */
 }
 
-/** Wordmark set in type so it stays crisp and adapts to dark backgrounds. */
+/** The name in Roman capitals, as in the logo. One word, one colour (never set "NEXA" apart). */
 export function Wordmark({ className, tagline = false }: { className?: string; tagline?: boolean }) {
   return (
     <span className={cn("flex flex-col leading-none", className)}>
-      {/* One word in one colour: never set "nexa" apart (keeps clear of other brands). */}
-      <span className="font-heading text-lg font-extrabold tracking-tight">Vidyanexa</span>
-      {tagline && <span className="mt-1 text-[11px] font-medium tracking-wide opacity-70">Intelligent Education Management</span>}
+      <span className="font-brand text-[1.05rem] font-semibold tracking-[0.08em] [font-feature-settings:normal]">VIDYANEXA</span>
+      {tagline && <span className="mt-1.5 font-brand text-[10px] tracking-[0.22em] text-brand-gold [font-feature-settings:normal]">SCHOOL MANAGEMENT</span>}
     </span>
   );
 }
 
-/** Full-colour logo image, for light surfaces only. */
-export function FullLogo({ className }: { className?: string }) {
-  return <Image src="/brand/logo.png" alt="Vidyanexa" width={1426} height={396} className={cn("h-auto w-48", className)} priority />;
+/** The full horizontal logo (crest + name), for light or dark surfaces. */
+export function FullLogo({ className, tone = "auto" }: { className?: string; tone?: Tone }) {
+  /* eslint-disable @next/next/no-img-element -- static vector artwork */
+  return (
+    <span className={cn("block w-48", className)}>
+      {tone !== "dark" && <img src="/brand/logo.svg" alt="Vidyanexa" className={cn("h-auto w-full", tone === "auto" && "dark:hidden")} />}
+      {tone !== "light" && <img src="/brand/logo-reverse.svg" alt="Vidyanexa" className={cn("h-auto w-full", tone === "auto" && "hidden dark:block")} />}
+    </span>
+  );
+  /* eslint-enable @next/next/no-img-element */
 }

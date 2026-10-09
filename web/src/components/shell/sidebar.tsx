@@ -83,7 +83,7 @@ export function SidebarBrand({ collapsed = false }: { collapsed?: boolean }) {
   const me = useSession();
   return (
     <div className={cn("flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-border px-4", collapsed && "justify-center px-0")}>
-      <BrandMark size={34} />
+      <BrandMark size={30} tone="dark" />
       {!collapsed && (
         <div className="min-w-0 text-sidebar-foreground">
           <Wordmark />

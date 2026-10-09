@@ -17,11 +17,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         className="relative hidden overflow-hidden bg-sidebar p-12 text-sidebar-foreground lg:flex lg:flex-col lg:justify-between"
       >
         <div className="grid-fade pointer-events-none absolute inset-0 text-white" />
-        <div className="blob -top-40 -right-40 size-[520px] bg-[radial-gradient(circle,oklch(0.6_0.17_250/0.45),transparent_65%)]" />
-        <div className="blob blob-delay -bottom-48 -left-32 size-[480px] bg-[radial-gradient(circle,oklch(0.75_0.16_150/0.3),transparent_65%)]" />
-        <div className="blob top-1/3 left-1/2 size-[360px] bg-[radial-gradient(circle,oklch(0.65_0.15_300/0.25),transparent_65%)]" />
+        <div className="blob -top-40 -right-40 size-[520px] bg-[radial-gradient(circle,oklch(0.7_0.11_78/0.28),transparent_65%)]" />
+        <div className="blob blob-delay -bottom-48 -left-32 size-[480px] bg-[radial-gradient(circle,oklch(0.45_0.08_255/0.45),transparent_65%)]" />
+        <div className="blob top-1/3 left-1/2 size-[360px] bg-[radial-gradient(circle,oklch(0.8_0.09_82/0.14),transparent_65%)]" />
         <div className="relative flex items-center gap-3">
-          <BrandMark size={44} />
+          <BrandMark size={44} tone="dark" />
           <Wordmark tagline className="text-sidebar-foreground [&_span:first-child]:text-2xl" />
         </div>
         <div className="relative max-w-md">
@@ -47,7 +47,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </section>
       <main className="flex items-center justify-center bg-background px-5 py-12 sm:px-10">
         <div className="w-full max-w-sm">
-          <FullLogo className="mx-auto mb-10 w-44 lg:hidden dark:rounded-xl dark:bg-white dark:p-2" />
+          <FullLogo className="mx-auto mb-10 w-52 lg:hidden" />
           {children}
         </div>
       </main>

@@ -195,7 +195,7 @@ function SchoolProfilePage() {
 }
 
 const BRAND_COLORS = [
-  ["#4f46e5", "Indigo"], ["#2563eb", "Blue"], ["#0f766e", "Teal"], ["#15803d", "Green"],
+  ["#15233F", "Navy"], ["#2563eb", "Blue"], ["#0f766e", "Teal"], ["#15803d", "Green"],
   ["#b45309", "Amber"], ["#be123c", "Rose"], ["#7e22ce", "Purple"], ["#334155", "Slate"],
 ] as const;
 
@@ -206,7 +206,7 @@ function BrandCard({ current, editable }: { current: string | null; editable: bo
     onSuccess: () => { qc.invalidateQueries({ queryKey: qk.school }); toast.success("Colour saved. Reloading…"); setTimeout(() => window.location.reload(), 600); },
     onError: (e) => toast.error(e instanceof ApiError ? e.message : "Could not save"),
   });
-  const active = current ?? "#4f46e5";
+  const active = current ?? "#15233F";
   return (
     <Card className="mt-6">
       <CardHeader>

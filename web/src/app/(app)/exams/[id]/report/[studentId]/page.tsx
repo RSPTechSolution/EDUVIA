@@ -33,9 +33,9 @@ export default function ReportCardPage({ params }: { params: Promise<{ id: strin
       </div>
       {!c.published && <p className="mb-3 rounded-lg bg-warning/10 p-3 text-sm text-warning print:hidden">Draft: results aren&apos;t published, so families can&apos;t see this yet.</p>}
       <article aria-label={`Report card for ${c.student_name}`} className="relative overflow-hidden rounded-2xl border bg-white p-8 text-slate-900 shadow-sm print:border-0 print:p-0 print:shadow-none">
-        <div className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full bg-blue-500/10" aria-hidden />
+        <div className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full bg-brand-gold/10" aria-hidden />
         <header className="flex items-center gap-4 border-b-2 border-slate-900 pb-4">
-          <BrandMark size={52} />
+          <BrandMark size={52} tone="light" />
           <div className="flex-1">
             <p className="text-xl font-extrabold">{c.school_name}</p>
             {c.school_address && <p className="text-xs text-slate-500">{c.school_address}</p>}

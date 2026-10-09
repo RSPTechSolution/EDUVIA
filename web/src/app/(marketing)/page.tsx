@@ -98,7 +98,7 @@ export default async function HomePage() {
             </Link>
             <h1 className="mt-6 font-heading text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-6xl">
               Run your whole school{" "}
-              <span className="shimmer-text bg-gradient-to-r from-primary via-[oklch(0.7_0.17_145)] to-primary bg-clip-text text-transparent">from one place</span>
+              <span className="shimmer-text bg-gradient-to-r from-primary via-[oklch(0.65_0.105_74)] to-primary bg-clip-text text-transparent">from one place</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-pretty text-muted-foreground sm:text-xl">
               Admissions, attendance, fees, exams, transport and parent communication — in one secure platform, with apps for parents, staff and drivers.
@@ -202,14 +202,14 @@ export default async function HomePage() {
       {/* Security */}
       <Section className="bg-sidebar text-sidebar-foreground">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold tracking-wide text-[oklch(0.8_0.12_200)] uppercase">Security & privacy</p>
+          <p className="text-sm font-semibold tracking-wide text-[oklch(0.82_0.09_82)] uppercase">Security & privacy</p>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Your students&apos; data deserves serious protection</h2>
           <p className="mt-4 text-lg text-sidebar-foreground/80">Built with India&apos;s Digital Personal Data Protection Act in mind, from the database up.</p>
         </div>
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {SECURITY.map(({ icon: Icon, title, text }) => (
             <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
-              <Icon className="size-6 text-[oklch(0.8_0.12_200)]" aria-hidden />
+              <Icon className="size-6 text-[oklch(0.82_0.09_82)]" aria-hidden />
               <p className="mt-4 font-semibold text-white">{title}</p>
               <p className="mt-1.5 text-sm text-sidebar-foreground/75">{text}</p>
             </div>
@@ -264,12 +264,12 @@ export default async function HomePage() {
 
       {/* CTA */}
       <section className="px-5 pb-24 sm:px-8">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-gradient-to-br from-[oklch(0.45_0.17_260)] via-primary to-[oklch(0.6_0.13_195)] px-8 py-16 text-center text-white shadow-xl sm:px-16">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-gradient-to-br from-[oklch(0.21_0.05_264)] via-[oklch(0.27_0.062_264)] to-[oklch(0.35_0.07_258)] px-8 py-16 text-center text-white shadow-xl sm:px-16">
           <LayoutGrid className="absolute -top-10 -right-10 size-64 text-white/5" aria-hidden />
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Ready to bring your school onto Vidyanexa?</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-white/85">Start free for 14 days. Set up takes a minute; no card needed.</p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/signup" className="inline-flex h-12 items-center justify-center rounded-lg bg-white px-7 text-base font-semibold text-[oklch(0.4_0.16_260)] shadow-sm transition hover:bg-white/90 outline-none focus-visible:ring-3 focus-visible:ring-white/60">Start free trial</Link>
+            <Link href="/signup" className="inline-flex h-12 items-center justify-center rounded-lg bg-white px-7 text-base font-semibold text-[oklch(0.25_0.058_264)] shadow-sm transition hover:bg-white/90 outline-none focus-visible:ring-3 focus-visible:ring-white/60">Start free trial</Link>
             <Link href="/contact" className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 border-white/40 bg-transparent px-7 text-base text-white hover:bg-white/10 hover:text-white" })}>Talk to us</Link>
           </div>
         </div>

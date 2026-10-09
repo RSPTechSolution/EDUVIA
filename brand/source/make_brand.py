@@ -198,6 +198,7 @@ FILES = {
     "vidyanexa-icon-navy.svg": icon(NAVY, crest(shield=IVORY, pages=NAVY)),
     "vidyanexa-icon-maskable.svg": icon(IVORY, crest(), radius=0, scale=0.56),
     "vidyanexa-icon-apple.svg": icon(IVORY, crest(), radius=0, scale=0.74),
+    "vidyanexa-icon-foreground.svg": icon(None, crest(), radius=0, scale=0.56),
     "vidyanexa-favicon.svg": icon(None, crest(detailed=False, core=None), radius=0, scale=0.96),
     "vidyanexa-seal.svg": seal(),
 }

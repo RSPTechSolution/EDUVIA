@@ -63,6 +63,13 @@ flutter:
   assets:
     - assets/brand/
 
+  # The wordmark face: Cinzel SemiBold (SIL Open Font License, assets/fonts/OFL-Cinzel.txt).
+  fonts:
+    - family: Cinzel
+      fonts:
+        - asset: assets/fonts/Cinzel-SemiBold.ttf
+          weight: 600
+
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -100,11 +107,14 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 flutter_launcher_icons:
-  image_path: "assets/brand/icon.png"
+  image_path: "assets/brand/launcher.png"
   android: true
   ios: true
   remove_alpha_ios: true
+  adaptive_icon_background: "#F7F2E8"
+  adaptive_icon_foreground: "assets/brand/launcher-foreground.png"
   web:
     generate: true
-    background_color: "#FFFFFF"
-    theme_color: "#1565D7"
+    image_path: "assets/brand/launcher.png"
+    background_color: "#F7F2E8"
+    theme_color: "#15233F"

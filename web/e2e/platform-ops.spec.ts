@@ -33,7 +33,7 @@ test("platform admin checks health, backs up, and posts a banner schools can see
 
 test("school admin picks a school colour and downloads the school's data", async ({ page }) => {
   const admin = await apiAs(DEMO.admin);
-  await admin("PATCH", "/schools/current", { settings: { brand_color: "#4f46e5" } });
+  await admin("PATCH", "/schools/current", { settings: { brand_color: "#15233F" } });
   await login(page, DEMO.admin, DEMO.password);
   await expect(page).toHaveURL(/\/dashboard/);
   await page.goto("/settings/school");
@@ -44,5 +44,5 @@ test("school admin picks a school colour and downloads the school's data", async
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download all school data" }).click();
   expect((await download).suggestedFilename()).toMatch(/\.zip$/);
-  await admin("PATCH", "/schools/current", { settings: { brand_color: "#4f46e5" } });
+  await admin("PATCH", "/schools/current", { settings: { brand_color: "#15233F" } });
 });

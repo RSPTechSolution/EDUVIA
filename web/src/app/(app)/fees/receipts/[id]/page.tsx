@@ -34,7 +34,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
         <div className="pointer-events-none absolute -top-10 -right-10 size-40 rounded-full bg-emerald-500/10" aria-hidden />
         <header className="flex items-start justify-between gap-4 border-b border-slate-200 pb-5">
           <div className="flex items-center gap-3">
-            <BrandMark size={44} />
+            <BrandMark size={44} tone="light" />
             <div>
               <p className="text-lg font-bold">{r.school_name}</p>
               {r.school_address && <p className="text-xs text-slate-500">{r.school_address}</p>}

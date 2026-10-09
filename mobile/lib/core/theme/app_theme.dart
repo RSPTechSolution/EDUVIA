@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Same palette as the web app (converted from its OKLCH tokens).
+/// The Vidyanexa palette (brand/README.md): Ink Navy, Antique Gold and Ivory. Same as the web app.
 class Brand {
-  static const primary = Color(0xFF1565D7);
-  static const primaryDark = Color(0xFF59A0F9);
-  static const navy = Color(0xFF112040);
+  static const primary = Color(0xFF15233F); // Ink Navy
+  static const primaryDark = Color(0xFFD9AE62); // gold leads in dark mode
+  static const navy = Color(0xFF15233F);
+  static const gold = Color(0xFFB8893C);
+  static const ivory = Color(0xFFF7F2E8);
   static const success = Color(0xFF067D4D);
   static const successDark = Color(0xFF54CC8E);
   static const warning = Color(0xFFA65D00);
@@ -13,18 +15,18 @@ class Brand {
   static const info = Color(0xFF057688);
   static const danger = Color(0xFFC51D24);
   static const dangerDark = Color(0xFFF66D67);
-  static const teal = Color(0xFF00BEAF);
-  static const green = Color(0xFF85D353);
-  static const sun = Color(0xFFFC9F30);
+  static const teal = Color(0xFFB8893C); // illustrations now use the gold family
+  static const green = Color(0xFFE2BE74);
+  static const sun = Color(0xFFC9963F);
 
-  static const bgLight = Color(0xFFF9FAFC);
-  static const fg = Color(0xFF131A29);
-  static const muted = Color(0xFF5B6472);
-  static const border = Color(0xFFDDE2E8);
-  static const bgDark = Color(0xFF0B0F18);
-  static const cardDark = Color(0xFF121824);
-  static const fgDark = Color(0xFFE7ECF2);
-  static const mutedDark = Color(0xFF9DA5B1);
+  static const bgLight = Color(0xFFFBF8F2);
+  static const fg = Color(0xFF16213A);
+  static const muted = Color(0xFF5B6478);
+  static const border = Color(0xFFE6DECD);
+  static const bgDark = Color(0xFF0E1729);
+  static const cardDark = Color(0xFF15233F);
+  static const fgDark = Color(0xFFF2ECDF);
+  static const mutedDark = Color(0xFFA9B0C0);
 }
 
 /// Status colours that adapt to the theme.
@@ -70,7 +72,9 @@ class AppTheme {
       seedColor: Brand.primary,
       brightness: brightness,
       primary: isDark ? Brand.primaryDark : Brand.primary,
-      onPrimary: isDark ? Brand.navy : Colors.white,
+      onPrimary: isDark ? Brand.navy : Brand.ivory,
+      secondary: Brand.gold,
+      onSecondary: Brand.navy,
       error: isDark ? Brand.dangerDark : Brand.danger,
       surface: isDark ? Brand.cardDark : Colors.white,
       onSurface: isDark ? Brand.fgDark : Brand.fg,
@@ -134,7 +138,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surface,
-        indicatorColor: scheme.primary.withValues(alpha: 0.14),
+        indicatorColor: (isDark ? Brand.gold : Brand.gold).withValues(alpha: isDark ? 0.22 : 0.18),
         labelTextStyle: WidgetStatePropertyAll(textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600)),
       ),
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),

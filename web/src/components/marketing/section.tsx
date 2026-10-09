@@ -39,10 +39,10 @@ export function GlowBackdrop({ className }: { className?: string }) {
   return (
     <div aria-hidden className={cn("pointer-events-none absolute inset-0 -z-10 overflow-hidden", className)}>
       <div className="absolute -top-40 left-1/2 h-[560px] w-[1100px] -translate-x-1/2">
-        <div className="blob inset-0 bg-[radial-gradient(closest-side,oklch(0.75_0.14_245/0.4),transparent)] dark:bg-[radial-gradient(closest-side,oklch(0.55_0.17_255/0.4),transparent)]" />
+        <div className="blob inset-0 bg-[radial-gradient(closest-side,oklch(0.88_0.06_82/0.55),transparent)] dark:bg-[radial-gradient(closest-side,oklch(0.4_0.08_258/0.45),transparent)]" />
       </div>
-      <div className="blob blob-delay top-40 -right-40 h-[420px] w-[520px] bg-[radial-gradient(closest-side,oklch(0.85_0.15_150/0.4),transparent)] dark:bg-[radial-gradient(closest-side,oklch(0.6_0.14_160/0.25),transparent)]" />
-      <div className="blob top-[28rem] -left-48 h-[380px] w-[480px] bg-[radial-gradient(closest-side,oklch(0.8_0.12_300/0.3),transparent)] dark:bg-[radial-gradient(closest-side,oklch(0.5_0.15_300/0.22),transparent)]" />
+      <div className="blob blob-delay top-40 -right-40 h-[420px] w-[520px] bg-[radial-gradient(closest-side,oklch(0.92_0.035_84/0.6),transparent)] dark:bg-[radial-gradient(closest-side,oklch(0.55_0.08_78/0.18),transparent)]" />
+      <div className="blob top-[28rem] -left-48 h-[380px] w-[480px] bg-[radial-gradient(closest-side,oklch(0.85_0.04_255/0.35),transparent)] dark:bg-[radial-gradient(closest-side,oklch(0.35_0.06_258/0.3),transparent)]" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_at_top,black_20%,transparent_70%)] bg-[size:56px_56px] opacity-60" />
     </div>
   );

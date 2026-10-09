@@ -45,11 +45,11 @@ export function BusMap({ buses, stops = [], className }: { buses: MapBus[]; stop
       points.push([s.lat, s.lng]);
     }
     for (const b of buses) {
-      if (b.path && b.path.length > 1) L.polyline(b.path as [number, number][], { color: "#4f46e5", weight: 3, opacity: 0.5 }).addTo(layer.current);
+      if (b.path && b.path.length > 1) L.polyline(b.path as [number, number][], { color: "#15233F", weight: 3, opacity: 0.5 }).addTo(layer.current);
       if (b.lat == null || b.lng == null) continue;
       const icon = L.divIcon({
         className: "",
-        html: `<div style="background:${b.stale ? "#f59e0b" : "#4f46e5"};color:#fff;border-radius:9999px;padding:4px 8px;font:600 12px system-ui;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)">🚌 ${b.label.replace(/</g, "&lt;")}</div>`,
+        html: `<div style="background:${b.stale ? "#f59e0b" : "#15233F"};color:#fff;border-radius:9999px;padding:4px 8px;font:600 12px system-ui;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)">🚌 ${b.label.replace(/</g, "&lt;")}</div>`,
         iconAnchor: [20, 14],
       });
       L.marker([b.lat, b.lng], { icon }).addTo(layer.current);

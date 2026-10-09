@@ -32,9 +32,9 @@ import { cn } from "@/lib/utils";
 function Hero({ subtitle, children }: { subtitle: string; children?: React.ReactNode }) {
   const me = useSession();
   return (
-    <div className="aurora relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.3_0.08_264)] via-[oklch(0.4_0.14_258)] to-[oklch(0.5_0.13_220)] p-6 text-white shadow-lg sm:p-8 dark:from-[oklch(0.22_0.05_264)] dark:via-[oklch(0.3_0.1_258)] dark:to-[oklch(0.36_0.1_220)]">
-      <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-[radial-gradient(closest-side,oklch(0.8_0.15_160/0.35),transparent)]" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 size-80 rounded-full bg-[radial-gradient(closest-side,oklch(0.75_0.14_230/0.3),transparent)]" />
+    <div className="aurora relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.23_0.055_264)] via-[oklch(0.28_0.065_263)] to-[oklch(0.34_0.07_258)] p-6 text-white shadow-lg sm:p-8 dark:from-[oklch(0.22_0.05_264)] dark:via-[oklch(0.25_0.06_262)] dark:to-[oklch(0.3_0.065_258)]">
+      <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-[radial-gradient(closest-side,oklch(0.75_0.11_78/0.32),transparent)]" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 size-80 rounded-full bg-[radial-gradient(closest-side,oklch(0.55_0.08_255/0.35),transparent)]" />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm text-white/75">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>

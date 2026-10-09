@@ -108,9 +108,9 @@ export function OrbitGraphic({ className, icons }: { className?: string; icons: 
         })}
       </div>
       <div className="absolute inset-[34%] flex items-center justify-center">
-        <div className="illo-pulse-soft flex size-full items-center justify-center rounded-[28%] bg-white shadow-2xl ring-1 ring-black/5">
+        <div className="illo-pulse-soft flex size-full items-center justify-center rounded-[28%] bg-[#F7F2E8] shadow-2xl ring-1 ring-black/5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/icon-192.png" alt="" className="size-[78%]" />
+          <img src="/brand/crest.svg" alt="" className="h-[70%] w-auto" />
         </div>
       </div>
     </div>
