@@ -5,7 +5,7 @@ import { refreshTokens } from "@/lib/auth/refresh";
 // Marketing site and auth pages: reachable without a session.
 const PUBLIC_PAGES = [
   "/", "/pricing", "/about", "/contact", "/privacy", "/terms", "/signup",
-  "/login", "/forgot-password", "/reset-password",
+  "/login", "/forgot-password", "/reset-password", "/offline",
 ];
 // API calls that are allowed without a session (forwarded through the proxy).
 const PUBLIC_API_PREFIXES = ["/api/proxy/auth/password-reset/", "/api/proxy/public/"];
@@ -53,5 +53,5 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   runtime: "nodejs",
-  matcher: ["/((?!_next/static|_next/image|brand/|marketing/|icon.png|apple-icon.png|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest).*)"],
+  matcher: ["/((?!_next/static|_next/image|brand/|marketing/|icon.png|apple-icon.png|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw.js).*)"],
 };
