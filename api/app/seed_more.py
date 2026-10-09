@@ -315,3 +315,70 @@ async def seed_accounts(db, school: School, today: date) -> None:
         mod.is_enabled = True
     await db.flush()
     print(f"  Accounts: {counter['expense']} expense and {counter['income']} income vouchers; late fee Rs. 200 after 7 days")
+
+
+async def seed_online(db, school: School, today: date) -> None:
+    from decimal import Decimal
+
+    from app.models import CoScholasticArea, CoScholasticGrade, Exam, LiveClass, OnlineTest, Question
+    if await db.scalar(select(Question.id).where(Question.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(113)
+    users = {u.email: u for u in (await db.scalars(select(User).where(User.school_id == school.id))).all()}
+    teacher = users.get("teacher@demo.com")
+    subjects = {s.name: s for s in (await db.scalars(select(Subject).where(Subject.school_id == school.id))).all()}
+    c5 = await db.scalar(select(SchoolClass).where(SchoolClass.school_id == school.id, SchoolClass.name == "Class 5"))
+    if not c5 or "Mathematics" not in subjects:
+        return
+    maths = subjects["Mathematics"]
+    sections = (await db.scalars(select(Section).where(Section.class_id == c5.id))).all()
+    bank = [
+        ("single", "What is 3/4 of 20?", [("a", "12"), ("b", "15"), ("c", "16"), ("d", "18")], ["b"], 1),
+        ("single", "Which fraction is equal to 1/2?", [("a", "2/3"), ("b", "3/6"), ("c", "4/6"), ("d", "1/3")], ["b"], 1),
+        ("multiple", "Select all the even numbers.", [("a", "14"), ("b", "21"), ("c", "36"), ("d", "45")], ["a", "c"], 2),
+        ("true_false", "A square has four lines of symmetry.", [], ["t"], 1),
+        ("single", "The place value of 7 in 47,302 is", [("a", "7"), ("b", "70"), ("c", "700"), ("d", "7,000")], ["d"], 1),
+        ("single", "How many minutes are there in 2 1/2 hours?", [("a", "120"), ("b", "130"), ("c", "150"), ("d", "250")], ["c"], 1),
+        ("true_false", "0.5 is greater than 0.45.", [], ["t"], 1),
+        ("short", "Write 0.75 as a fraction in its lowest terms.", [], ["3/4"], 2),
+        ("single", "Perimeter of a rectangle 8 cm by 5 cm is", [("a", "13 cm"), ("b", "26 cm"), ("c", "40 cm"), ("d", "21 cm")], ["b"], 1),
+        ("short", "Explain in one line why 1/3 is smaller than 1/2.", [], [], 2),
+    ]
+    qs = []
+    for kind, text, options, answer, marks in bank:
+        opts = [{"id": "t", "text": "True"}, {"id": "f", "text": "False"}] if kind == "true_false" else [{"id": i, "text": t} for i, t in options]
+        q = Question(school_id=school.id, class_id=c5.id, subject_id=maths.id, kind=kind, text=text, options=opts, answer=answer,
+                     marks=Decimal(marks), created_by=teacher.id if teacher else None, topic="Revision")
+        db.add(q)
+        qs.append(q)
+    await db.flush()
+    now = datetime.now(UTC)
+    db.add(OnlineTest(school_id=school.id, title="Fractions and numbers quiz", instructions="Answer every question. You have 20 minutes once you start.",
+                      class_id=c5.id, subject_id=maths.id, section_ids=[s.id for s in sections], question_ids=[q.id for q in qs[:8]],
+                      opens_at=now - timedelta(hours=2), closes_at=now + timedelta(days=5), duration_minutes=20, shuffle=True,
+                      show_results="after_submit", published=True, created_by=teacher.id if teacher else None))
+    db.add(OnlineTest(school_id=school.id, title="Measurement check (draft)", class_id=c5.id, subject_id=maths.id,
+                      section_ids=[s.id for s in sections], question_ids=[qs[5].id, qs[8].id, qs[9].id], opens_at=now + timedelta(days=3),
+                      closes_at=now + timedelta(days=4), duration_minutes=15, published=False, created_by=teacher.id if teacher else None))
+
+    # Co-scholastic grades for the published Half-Yearly in Class 5.
+    areas = []
+    for i, n in enumerate(["Work education", "Art education", "Health and physical education", "Discipline"]):
+        areas.append(CoScholasticArea(school_id=school.id, name=n, sort_order=i))
+        db.add(areas[-1])
+    await db.flush()
+    exam = await db.scalar(select(Exam).where(Exam.school_id == school.id, Exam.name == "Half-Yearly"))
+    if exam:
+        for st in (await db.scalars(select(Student).where(Student.class_id == c5.id, Student.status == "active"))).all():
+            for a in areas:
+                db.add(CoScholasticGrade(school_id=school.id, exam_id=exam.id, student_id=st.id, area_id=a.id, grade=rnd.choices("ABC", [5, 4, 1])[0]))
+
+    # Live classes: one tomorrow, one next week.
+    slug = school.slug
+    for days, hour, title in ((1, 16, "Fractions doubt-clearing session"), (6, 17, "Geometry: shapes around us")):
+        start = datetime.combine(today + timedelta(days=days), datetime.min.time(), ZoneInfo(school.timezone)).replace(hour=hour)
+        db.add(LiveClass(school_id=school.id, title=title, section_ids=[s.id for s in sections], subject_id=maths.id, starts_at=start,
+                         duration_minutes=45, meeting_url=f"https://meet.jit.si/eduvia-{slug}-maths{days}{rnd.randint(1000, 9999)}",
+                         notes="Keep your maths notebook ready.", teacher_id=teacher.id if teacher else None))
+    await db.flush()
+    print(f"  Online tests: {len(qs)} questions, 1 open test; co-scholastic grades for Class 5; 2 live classes")

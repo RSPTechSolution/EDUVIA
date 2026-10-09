@@ -171,6 +171,11 @@ def report_card(rc: ReportCard) -> bytes:
         ("Rank in class", f"{res.rank} of {rc.class_size}" if res.rank else "—"),
         ("Attendance this year", f"{rc.attendance_percent:.1f}%" if rc.attendance_percent is not None else "—"),
     ], WIDTH))
+    if rc.co_scholastic:
+        story += [Spacer(1, 10), Paragraph("<b>Co-scholastic areas</b>", BODY), Spacer(1, 4)]
+        co = _grid([["Area", "Grade"]] + [[c["area"], c["grade"]] for c in rc.co_scholastic], [WIDTH * 0.75, WIDTH * 0.25])
+        co.setStyle(TableStyle([("ALIGN", (1, 0), (1, -1), "CENTER")]))
+        story += [co, Paragraph("A: outstanding · B: very good · C: fair", SMALL)]
     story += [Spacer(1, 10), Paragraph("<b>Class teacher's remark</b>", BODY), Paragraph(_esc(res.remark or "—"), BODY), Spacer(1, 36)]
     sig = _signatures(["Class teacher", "Principal", "Parent"])
     story += [sig, Spacer(1, 10), Paragraph("Grades: A1 91–100, A2 81–90, B1 71–80, B2 61–70, C1 51–60, C2 41–50, D 33–40, E below 33.", SMALL)]

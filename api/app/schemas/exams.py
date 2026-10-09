@@ -197,6 +197,7 @@ class ReportCard(BaseModel):
     class_size: int
     attendance_percent: float | None
     published: bool
+    co_scholastic: list[dict] = []  # [{area, grade}]
 
 
 class MyExam(BaseModel):

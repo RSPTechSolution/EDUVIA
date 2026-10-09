@@ -1,5 +1,5 @@
 import {
-  Award, Calculator, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Award, Calculator, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -59,6 +59,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Lesson plans", href: "/lesson-plans", icon: NotebookPen, module: "academics", permission: "syllabus.manage", keywords: ["planner", "teaching plan"] },
       { label: "Syllabus", href: "/my-syllabus", icon: BookMarked, module: "academics", roles: ["parent", "student"], keywords: ["chapters", "progress"] },
       { label: "Substitutions", href: "/substitutions", icon: Repeat2, module: "academics", permission: "substitutions.manage", keywords: ["cover", "absent teacher", "proxy", "arrangement"] },
+      { label: "Online tests", href: "/online-tests", icon: FileQuestion, module: "exams", permission: "tests.manage", keywords: ["quiz", "mcq", "question bank", "cbt"] },
+      { label: "Online tests", href: "/my-tests", icon: FileQuestion, module: "exams", roles: ["parent", "student"], keywords: ["quiz", "test"] },
+      { label: "Live classes", href: "/live-classes", icon: Video, module: "academics", keywords: ["online class", "zoom", "meet", "jitsi"] },
       { label: "Homework", href: "/homework", icon: BookOpenCheck, module: "academics", permission: "homework.manage", keywords: ["assignment", "classwork"] },
       { label: "Homework", href: "/my-homework", icon: BookOpenCheck, module: "academics", roles: ["parent", "student"], keywords: ["assignment"] },
       { label: "Results", href: "/my-results", icon: Award, module: "exams", roles: ["parent", "student"], keywords: ["report card", "marks", "exam"] },

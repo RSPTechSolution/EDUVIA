@@ -94,6 +94,19 @@ export default function ReportCardPage({ params }: { params: Promise<{ id: strin
           <Award className="size-6 shrink-0" aria-hidden />
           <p className="text-sm font-semibold">{r.passed ? "Passed in all subjects." : "Needs to improve in the subjects marked in red."}</p>
         </div>
+        {!!c.co_scholastic?.length && (
+          <section className="mt-5">
+            <h2 className="text-xs font-semibold tracking-widest text-slate-500 uppercase">Co-scholastic areas</h2>
+            <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+              {c.co_scholastic.map((g) => (
+                <div key={g.area} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                  <dt>{g.area}</dt><dd className="font-bold">{g.grade}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-1 text-xs text-slate-500">A: outstanding · B: very good · C: fair</p>
+          </section>
+        )}
         <section className="mt-5">
           <h2 className="text-xs font-semibold tracking-widest text-slate-500 uppercase">Class teacher&apos;s remarks</h2>
           <p className="mt-1 min-h-10 border-b border-dashed border-slate-300 pb-2 text-sm italic">{r.remark ?? ""}</p>

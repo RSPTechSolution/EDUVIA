@@ -11,7 +11,7 @@ from app.core.errors import install_error_handlers
 from app.core.permissions import MODULES
 from app.core.redis import close_redis, get_redis
 from app.core import roles
-from app.routers import academics, academics_extra, accounts, attendance, attendance_extra, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
+from app.routers import academics, academics_extra, accounts, online, attendance, attendance_extra, auth, billing, communication, dashboard, emails, exams, fees, files, notifications, platform, public, schools, timetable, transfer, users
 from app.schemas.common import ok
 
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -65,6 +65,10 @@ app.include_router(accounts.fees, prefix=f"{API}/fees", tags=["Fees"])
 app.include_router(fees.router, prefix=f"{API}/fees", tags=["Fees"])
 app.include_router(accounts.accounts, prefix=f"{API}/accounts", tags=["Accounts"])
 app.include_router(exams.router, prefix=f"{API}/exams", tags=["Exams"])
+app.include_router(online.questions, prefix=f"{API}/questions", tags=["Online tests"])
+app.include_router(online.tests, prefix=f"{API}/online-tests", tags=["Online tests"])
+app.include_router(online.co_scholastic, prefix=f"{API}/co-scholastic", tags=["Exams"])
+app.include_router(online.live, prefix=f"{API}/live-classes", tags=["Live classes"])
 app.include_router(emails.router, prefix=f"{API}/emails", tags=["Email"])
 app.include_router(transfer.router, prefix=f"{API}/transfer", tags=["Import & export"])
 app.include_router(communication.notices, prefix=f"{API}/notices", tags=["Notices"])

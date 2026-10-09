@@ -9,6 +9,7 @@ from app.models.base import Base
 from app.models.billing import Lead, Plan
 from app.models.communication import Homework, HomeworkStatus, Notice, NoticeRead
 from app.models.email import EmailLog
+from app.models.online import CoScholasticArea, CoScholasticGrade, LiveClass, OnlineTest, Question, TestAttempt
 from app.models.platform import DeviceToken, Notification, StoredFile
 from app.models.exams import Exam, ExamMark, ExamPaper, ExamRemark
 from app.models.finance import FeeCategory, FeeInvoice, FeeInvoiceItem, FeePayment, FeeStructure, PaymentOrder
@@ -23,4 +24,5 @@ __all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan
            "StoredFile", "Notification", "DeviceToken",
            "SyllabusTopic", "TopicProgress", "LessonPlan", "Certificate", "Enquiry", "Substitution",
            "CalendarEvent", "LeaveRequest", "BiometricDevice", "BiometricPunch", "PeriodAttendance",
-           "LedgerHead", "AccountEntry"]
+           "LedgerHead", "AccountEntry",
+           "Question", "OnlineTest", "TestAttempt", "CoScholasticArea", "CoScholasticGrade", "LiveClass"]

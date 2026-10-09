@@ -230,6 +230,8 @@ void main() {
     await pump(tester, container(fake));
     await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Results'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Results'));
     await tester.pumpAndSettle();
     expect(find.text('Rank 2 of 8'), findsOneWidget);
@@ -337,5 +339,46 @@ void main() {
     expect(sent['kind'], 'sick');
     expect(find.text('Fever since last night'), findsOneWidget);
     expect(find.text('Pending'), findsOneWidget);
+  });
+
+  testWidgets('student takes an online test and submits', (tester) async {
+    Map<String, dynamic>? submitted;
+    final soon = DateTime.now().toUtc().add(const Duration(minutes: 20)).toIso8601String();
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson(role: 'student')..['modules'] = ['exams'])))
+      ..on('GET /online-tests/my', (_) => (200, FakeApi.ok([{
+            'test_id': 't1', 'title': 'Fractions quiz', 'subject_name': 'Mathematics', 'student_id': 's1', 'student_name': 'Aarav Patel',
+            'opens_at': '2026-10-08T03:00:00Z', 'closes_at': '2099-10-08T03:00:00Z', 'duration_minutes': 20, 'questions': 1, 'max_marks': 2,
+            'state': 'open', 'score': null, 'percent': null, 'released': false}])))
+      ..on('POST /online-tests/t1/start', (_) => (200, FakeApi.ok({
+            'test_id': 't1', 'title': 'Fractions quiz', 'instructions': null, 'subject_name': 'Mathematics', 'deadline': soon, 'submitted': false,
+            'questions': [{'id': 'q1', 'kind': 'single', 'text': 'Half of 8?', 'marks': 2, 'options': [{'id': 'a', 'text': '3'}, {'id': 'b', 'text': '4'}]}],
+            'answers': {}})))
+      ..on('POST /online-tests/t1/submit', (req) {
+        submitted = Map<String, dynamic>.from(req.data as Map);
+        return (200, FakeApi.ok({'test_id': 't1', 'title': 'Fractions quiz', 'student_id': 's1', 'student_name': 'Aarav Patel', 'submitted_at': soon,
+                                 'score': 2, 'max_marks': 2, 'percent': 100.0, 'needs_marking': false, 'released': true, 'questions': []}));
+      });
+    await pump(tester, container(fake));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Online tests'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Online tests'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start test'));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.tap(find.text('4'));
+    await tester.pump();
+    await tester.tap(find.text('Submit'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 200));
+    await tester.tap(find.widgetWithText(FilledButton, 'Submit').last);
+    await tester.pump(const Duration(seconds: 1));
+    expect((submitted!['answers'] as Map)['q1'], ['b']);
+    expect(find.text('Score 2 of 2'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 }

@@ -17,7 +17,7 @@ from app.core.config import settings
 from app.core.database import system_session
 from app.core.permissions import MODULES, Role
 from app.core.security import hash_password
-from app.seed_more import seed_academics_extras, seed_accounts, seed_attendance_extras
+from app.seed_more import seed_academics_extras, seed_accounts, seed_attendance_extras, seed_online
 from app.seed_ops import seed_attendance, seed_exams, seed_fees, seed_notices_homework
 from app.services.family_service import school_today
 from app.models import (
@@ -459,6 +459,7 @@ async def seed(reset: bool = False) -> None:
         await seed_academics_extras(db, school, today)
         await seed_attendance_extras(db, school, today)
         await seed_accounts(db, school, today)
+        await seed_online(db, school, today)
 
     print("Seed complete.")
     print(f"  Super admin : {SUPER_ADMIN[0]} / {SUPER_ADMIN[2]}  (no school ID)")

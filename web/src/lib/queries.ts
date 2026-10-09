@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AppNotification, StoredFile, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
+  AppNotification, StoredFile, AttemptResult, CoSheet, LiveClass, MyTest, OnlineTest, Question, TestResults, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
   Substitution, SubstitutionDay, SyllabusView, BiometricDevice, BunkRow, CalendarEvent, LeaveRequest, PeriodCard, PeriodRoster, Punch,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
   MarksSheetRef, MyHomework, Notice, ReportCard, SectionResults, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
@@ -489,4 +489,43 @@ export function useAccountsSummary(from: string, to: string) {
     placeholderData: keepPreviousData,
     queryFn: async () => (await api<AccountsSummary>("/accounts/summary", { query: { from, to } })).data,
   });
+}
+
+// ---- online tests, co-scholastic, live classes ----------------------------------------------------
+
+export function useQuestions(classId: string | null, subjectId?: string, search?: string) {
+  return useQuery({
+    queryKey: ["questions", classId, subjectId, search],
+    enabled: !!classId,
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await api<Question[]>("/questions", { query: { class_id: classId, subject_id: subjectId, search } })).data,
+  });
+}
+
+export function useOnlineTests() {
+  return useQuery({ queryKey: ["online-tests", "list"], queryFn: async () => (await api<OnlineTest[]>("/online-tests")).data });
+}
+
+export function useTestResults(id: string) {
+  return useQuery({ queryKey: ["online-tests", "results", id], queryFn: async () => (await api<TestResults>(`/online-tests/${id}/results`)).data });
+}
+
+export function useMyTests(enabled = true) {
+  return useQuery({ queryKey: ["online-tests", "my"], enabled, queryFn: async () => (await api<MyTest[]>("/online-tests/my")).data });
+}
+
+export function useAttemptResult(testId: string, studentId: string | null) {
+  return useQuery({
+    queryKey: ["online-tests", "result", testId, studentId],
+    enabled: !!studentId,
+    queryFn: async () => (await api<AttemptResult>(`/online-tests/${testId}/result/${studentId}`)).data,
+  });
+}
+
+export function useCoSheet(examId: string, sectionId: string) {
+  return useQuery({ queryKey: ["co-scholastic", examId, sectionId], queryFn: async () => (await api<CoSheet>(`/co-scholastic/${examId}/${sectionId}`)).data });
+}
+
+export function useLiveClasses() {
+  return useQuery({ queryKey: ["live-classes"], refetchInterval: 60_000, queryFn: async () => (await api<LiveClass[]>("/live-classes")).data });
 }

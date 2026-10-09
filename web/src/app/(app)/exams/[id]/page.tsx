@@ -277,7 +277,8 @@ function ResultsTab({ exam }: { exam: ExamDetail }) {
           <SelectContent className="max-h-72">{sections.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}</SelectContent>
         </Select>
         {r && <p className="text-sm text-muted-foreground">Class average <span className="font-semibold text-foreground tabular">{r.average_percent ?? "—"}%</span> · pass rate <span className="font-semibold text-foreground tabular">{r.pass_rate ?? "—"}%</span></p>}
-        <Button variant="outline" size="sm" className="ml-auto" onClick={csv} disabled={!r}><Download aria-hidden />CSV</Button>
+        {current && <Link href={`/exams/${exam.id}/co-scholastic/${current}`} className={buttonVariants({ variant: "outline", size: "sm", className: "ml-auto" })}>Co-scholastic grades</Link>}
+        <Button variant="outline" size="sm" className={current ? "" : "ml-auto"} onClick={csv} disabled={!r}><Download aria-hidden />CSV</Button>
       </div>
       {!r ? <Skeleton className="h-96 rounded-xl" /> : (
         <FadeIn key={current} className="overflow-x-auto rounded-xl border bg-card">

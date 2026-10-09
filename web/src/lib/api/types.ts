@@ -603,6 +603,7 @@ export interface ReportCard {
   class_size: number;
   attendance_percent: number | null;
   published: boolean;
+  co_scholastic?: { area: string; grade: string }[];
 }
 
 export interface ChildResults {
@@ -949,4 +950,132 @@ export interface AccountsSummary {
   expense_by_head: { name: string; amount: number }[];
   by_month: { month: string; income: number; expense: number }[];
   cash_in_hand: number;
+}
+
+
+// ---- online tests, co-scholastic, live classes ----------------------------------------------------
+
+export type QuestionKind = "single" | "multiple" | "true_false" | "short";
+
+export interface Question {
+  id: string;
+  class_id: string;
+  subject_id: string;
+  subject_name: string;
+  kind: QuestionKind;
+  text: string;
+  options: { id: string; text: string }[];
+  answer: string[];
+  marks: number;
+  explanation: string | null;
+  topic: string | null;
+  difficulty: "easy" | "medium" | "hard";
+  used_in: number;
+  can_edit: boolean;
+}
+
+export interface OnlineTest {
+  id: string;
+  title: string;
+  instructions: string | null;
+  class_id: string;
+  subject_id: string;
+  subject_name: string;
+  section_ids: string[];
+  sections_label: string;
+  question_ids: string[];
+  questions: number;
+  max_marks: number;
+  opens_at: string;
+  closes_at: string;
+  duration_minutes: number;
+  shuffle: boolean;
+  show_results: "after_submit" | "after_close" | "never";
+  published: boolean;
+  status: "draft" | "upcoming" | "open" | "closed";
+  attempts: number;
+  submitted: number;
+  average: number | null;
+  can_edit: boolean;
+}
+
+export interface MyTest {
+  test_id: string;
+  title: string;
+  subject_name: string;
+  student_id: string;
+  student_name: string;
+  opens_at: string;
+  closes_at: string;
+  duration_minutes: number;
+  questions: number;
+  max_marks: number;
+  state: "upcoming" | "open" | "in_progress" | "submitted" | "missed";
+  score: number | null;
+  percent: number | null;
+  released: boolean;
+}
+
+export interface AttemptView {
+  test_id: string;
+  title: string;
+  instructions: string | null;
+  subject_name: string;
+  deadline: string;
+  submitted: boolean;
+  questions: { id: string; kind: QuestionKind; text: string; options: { id: string; text: string }[]; marks: number }[];
+  answers: Record<string, string[] | string>;
+}
+
+export interface AttemptResult {
+  test_id: string;
+  title: string;
+  student_id: string;
+  student_name: string;
+  submitted_at: string | null;
+  score: number | null;
+  max_marks: number;
+  percent: number | null;
+  needs_marking: boolean;
+  released: boolean;
+  questions: {
+    id: string; kind: QuestionKind; text: string; options: { id: string; text: string }[]; marks: number;
+    your_answer: string[] | string | null; correct: string[] | null; awarded: number | null; explanation: string | null;
+  }[];
+}
+
+export interface TestResults {
+  test: OnlineTest;
+  rows: { attempt_id: string | null; student_id: string; name: string; roll_no: number | null; section_label: string;
+          state: "not_started" | "in_progress" | "submitted"; score: number | null; percent: number | null; needs_marking: boolean;
+          submitted_at: string | null }[];
+  questions: { question_id: string; text: string; kind: QuestionKind; correct_percent: number | null; answered: number }[];
+}
+
+export interface CoSheet {
+  exam_id: string;
+  section_id: string;
+  label: string;
+  areas: { id: string; name: string; sort_order: number }[];
+  rows: { student_id: string; name: string; roll_no: number | null; grades: Record<string, string> }[];
+  editable: boolean;
+}
+
+export interface LiveClass {
+  id: string;
+  title: string;
+  section_ids: string[];
+  sections_label: string;
+  subject_name: string | null;
+  subject_color: string | null;
+  starts_at: string;
+  ends_at: string;
+  duration_minutes: number;
+  meeting_url: string;
+  provider: string;
+  notes: string | null;
+  teacher: string | null;
+  cancelled: boolean;
+  state: "upcoming" | "live" | "ended" | "cancelled";
+  can_edit: boolean;
 }

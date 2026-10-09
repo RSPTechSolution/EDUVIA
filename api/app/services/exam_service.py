@@ -17,7 +17,7 @@ from app.schemas.exams import (
     ChildResults, ClassPapers, ClassPapersSet, ExamDetail, ExamIn, ExamOut, ExamUpdate, FromTimetable, MarkRow, MarksSave,
     MarksSheet, MarksSheetRef, MyExam, PaperOut, ReportCard, SectionResults, StudentResult, SubjectResult, SubjectStat,
 )
-from app.services import audit_service, notification_service
+from app.services import audit_service, co_live_service, notification_service
 from app.services.academics_service import field_error, get_section
 from app.services.attendance_service import _counts, academic_year_start
 from app.services.family_service import own_students, school_today, student_label
@@ -409,7 +409,8 @@ async def report_card(db: AsyncSession, user: User, exam_id: uuid.UUID, student_
                       student_name=f"{student.first_name} {student.last_name}", admission_no=student.admission_no,
                       class_section=await student_label(db, student), roll_no=student.roll_no, date_of_birth=student.date_of_birth,
                       class_teacher=teacher, result=mine, class_size=len(classmates), attendance_percent=_counts(statuses).percent(),
-                      published=exam.published_at is not None)
+                      published=exam.published_at is not None,
+                      co_scholastic=await co_live_service.for_report(db, user.school_id, exam.id, student.id))
 
 
 async def my_results(db: AsyncSession, user: User) -> list[ChildResults]:

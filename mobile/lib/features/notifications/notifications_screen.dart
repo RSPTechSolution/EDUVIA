@@ -31,6 +31,8 @@ class AppNotification {
         'results' => Icons.emoji_events_outlined,
         'substitution' => Icons.swap_horiz_rounded,
         'leave' => Icons.event_busy_outlined,
+        'online_test' => Icons.quiz_outlined,
+        'live_class' => Icons.videocam_outlined,
         'fee_reminder' => Icons.notifications_active_outlined,
         'calendar' => Icons.event_note_outlined,
         'enquiry' => Icons.person_add_alt_outlined,
@@ -48,6 +50,8 @@ String? appRouteFor(String? link) => switch (link) {
       '/my-timetable' => '/timetable',
       '/leave' => '/leave',
       '/calendar' => '/calendar',
+      '/my-tests' => '/tests',
+      '/live-classes' => '/live',
       _ => null,
     };
 

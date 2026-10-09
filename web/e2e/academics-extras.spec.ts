@@ -89,6 +89,17 @@ test("admin arranges cover for an absent teacher; promotion preview suggests by 
   const today = new Date().getDay();
   if (today !== 0) {
     const section = page.getByRole("region", { name: /'s periods$/ }).first();
+    await expect(section.or(page.getByText("Everyone is in"))).toBeVisible();
+    if (!(await section.count())) { // nobody away today yet: mark the first teacher with lessons today as away
+      await page.getByLabel("Teacher away").click();
+      const options = page.getByRole("option");
+      for (let i = 0; i < (await options.count()); i++) {
+        await options.nth(i).click();
+        await page.getByRole("button", { name: "Mark away" }).click();
+        if (await page.getByText("Marked away").isVisible({ timeout: 3000 }).catch(() => false)) break;
+        await page.getByLabel("Teacher away").click();
+      }
+    }
     await expect(section).toBeVisible();
     const open = section.getByRole("combobox", { name: /^Cover for/ }).last();
     if (!(await open.textContent())?.includes("Choose a teacher")) { // covered by an earlier run: clear it first
