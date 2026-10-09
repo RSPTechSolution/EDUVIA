@@ -109,9 +109,13 @@ async def unread_total(db: AsyncSession, user: User) -> int:
 
 
 async def _post(db: AsyncSession, user: User, c: Conversation, body: str) -> ChatMessage:
-    m = ChatMessage(school_id=c.school_id, conversation_id=c.id, sender_id=user.id, body=body)
+    # Stamp from one clock and never before the previous message, so the thread keeps its order even if the clock steps back.
+    at = datetime.now(UTC)
+    if c.last_message_at and at <= c.last_message_at:
+        at = c.last_message_at + timedelta(microseconds=1)
+    m = ChatMessage(school_id=c.school_id, conversation_id=c.id, sender_id=user.id, body=body, created_at=at)
     db.add(m)
-    c.last_message_at = datetime.now(UTC)
+    c.last_message_at = at
     await db.flush()
     await db.refresh(m)
     other = c.staff_id if c.family_id == user.id else c.family_id
@@ -144,7 +148,7 @@ async def _conversation(db: AsyncSession, user: User, cid: uuid.UUID) -> Convers
 async def messages(db: AsyncSession, user: User, cid: uuid.UUID) -> list[ChatMessageOut]:
     c = await _conversation(db, user, cid)
     rows = list((await db.scalars(select(ChatMessage).where(ChatMessage.conversation_id == c.id)
-                                  .order_by(ChatMessage.created_at.desc()).limit(200))).all())
+                                  .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc()).limit(200))).all())
     now = datetime.now(UTC)
     for m in rows:
         if m.sender_id != user.id and m.read_at is None:
