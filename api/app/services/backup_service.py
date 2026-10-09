@@ -151,7 +151,9 @@ async def daily_loop() -> None:
         try:
             newest = list_backups()[:1]
             age = (datetime.now(UTC) - datetime.fromisoformat(newest[0]["created_at"])).total_seconds() if newest and newest[0]["created_at"] else None
-            if age is None or age > 86400:
+            # Several API workers each run this loop; a short Redis lock lets only one of them make the backup.
+            from app.core.redis import get_redis
+            if (age is None or age > 86400) and await get_redis().set("lock:daily-backup", "1", nx=True, ex=3300):
                 m = await create_backup("daily")
                 log.info("Daily backup written: %s (%s rows)", m["name"], m["row_total"])
         except Exception:  # never take the app down over a backup

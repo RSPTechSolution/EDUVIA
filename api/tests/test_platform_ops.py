@@ -78,3 +78,12 @@ async def test_school_brand_colour(client, admin_headers):
     assert bad.status_code == 422
     assert (await client.patch(f"{API}/schools/current", headers=admin_headers, json={"settings": {"brand_color": "#0f766e"}})).status_code == 200
     assert (await client.get(f"{API}/auth/me", headers=admin_headers)).json()["data"]["school"]["brand_color"] == "#0f766e"
+
+
+async def test_create_super_admin_command(client, db):
+    from app.create_super_admin import run
+    pw = await run("root@platform.test", "Root Admin", False)
+    res = (await client.post(f"{API}/auth/login", json={"email": "root@platform.test", "password": pw})).json()["data"]
+    assert res["user"]["role"] == "super_admin" and res["user"]["must_change_password"]
+    pw2 = await run("root@platform.test", None, True)
+    assert pw2 != pw and (await client.post(f"{API}/auth/login", json={"email": "root@platform.test", "password": pw2})).status_code == 200

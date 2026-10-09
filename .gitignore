@@ -36,3 +36,6 @@ skills
 # Uploaded files (local storage backend)
 api/storage/
 api/storage-test/
+
+# Production secrets for docker compose
+infra/compose/.env.prod

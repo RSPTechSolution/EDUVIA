@@ -5,7 +5,8 @@ import type { TokenPair } from "@/lib/api/types";
 export const ACCESS_COOKIE = "ev_at";
 export const REFRESH_COOKIE = "ev_rt";
 
-const secure = process.env.NODE_ENV === "production";
+// Secure (HTTPS-only) cookies in production. COOKIE_SECURE=false allows a plain-HTTP trial on a server IP; never use that for real data.
+const secure = process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === "true" : process.env.NODE_ENV === "production";
 // Expire the access cookie a minute early so the middleware refreshes before the API rejects it.
 const EARLY_SECONDS = 60;
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;

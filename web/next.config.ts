@@ -23,6 +23,8 @@ const csp = [
 const nextConfig: NextConfig = {
   // Lets a production build run next to `npm run dev` without sharing `.next`.
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  // Docker images run the self-contained server (see web/Dockerfile).
+  output: process.env.NEXT_STANDALONE ? "standalone" : undefined,
   reactStrictMode: true,
   poweredByHeader: false,
   async headers() {
