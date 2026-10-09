@@ -17,6 +17,7 @@ import '../../features/exams/online_screens.dart';
 import '../../features/fees/fees_screens.dart';
 import '../../features/home/more_screen.dart';
 import '../../features/homework/homework_screens.dart';
+import '../../features/notices/community_screens.dart';
 import '../../features/notices/notices_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/profile/profile_screen.dart';
@@ -76,6 +77,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/syllabus', builder: (_, _) => const MySyllabusScreen()),
       GoRoute(path: '/leave', builder: (_, _) => const LeaveScreen()),
       GoRoute(path: '/tests', builder: (_, _) => const MyTestsScreen()),
+      GoRoute(path: '/messages', builder: (_, _) => const MessagesScreen()),
+      GoRoute(path: '/ptm', builder: (_, _) => const PtmScreen()),
+      GoRoute(path: '/surveys', builder: (_, _) => const SurveysScreen()),
       GoRoute(path: '/live', builder: (_, _) => const LiveClassesScreen()),
       GoRoute(path: '/calendar', builder: (_, _) => const CalendarScreen()),
       GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),

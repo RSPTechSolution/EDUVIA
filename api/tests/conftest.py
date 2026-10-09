@@ -11,6 +11,8 @@ os.environ.update(
     BCRYPT_ROUNDS="4",
     EMAIL_PROVIDER="console",  # tests never send real email
     PUSH_PROVIDER="console",
+    SMS_PROVIDER="console",
+    WHATSAPP_PROVIDER="console",
     STORAGE_DIR="storage-test",
 )
 

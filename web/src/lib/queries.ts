@@ -3,7 +3,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
-  AppNotification, StoredFile, AttemptResult, CoSheet, LiveClass, MyTest, OnlineTest, Question, TestResults, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
+  AppNotification, StoredFile, ChatContact, ChatMessage, Conversation, MessageLogRow, MessagingStatus, PtmChildSlots, PtmEvent,
+  PtmScheduleRow, Survey, SurveyResults, AttemptResult, CoSheet, LiveClass, MyTest, OnlineTest, Question, TestResults, AccountEntry, AccountsSummary, LedgerHead, Certificate, ChildSyllabus, CoverageRow, Enquiry, EnquirySummary, LessonPlan, PromotionPreview,
   Substitution, SubstitutionDay, SyllabusView, BiometricDevice, BunkRow, CalendarEvent, LeaveRequest, PeriodCard, PeriodRoster, Punch,
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
   MarksSheetRef, MyHomework, Notice, ReportCard, SectionResults, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
@@ -528,4 +529,51 @@ export function useCoSheet(examId: string, sectionId: string) {
 
 export function useLiveClasses() {
   return useQuery({ queryKey: ["live-classes"], refetchInterval: 60_000, queryFn: async () => (await api<LiveClass[]>("/live-classes")).data });
+}
+
+// ---- messaging, chat, PTM, surveys --------------------------------------------------------------
+
+export function useMessagingStatus() {
+  return useQuery({ queryKey: ["messaging", "status"], queryFn: async () => (await api<MessagingStatus>("/messaging/status")).data });
+}
+
+export function useMessageLog() {
+  return useQuery({ queryKey: ["messaging", "log"], queryFn: async () => (await api<MessageLogRow[]>("/messaging")).data });
+}
+
+export function useChatContacts(enabled = true) {
+  return useQuery({ queryKey: ["chat", "contacts"], enabled, queryFn: async () => (await api<ChatContact[]>("/chat/contacts")).data });
+}
+
+export function useConversations() {
+  return useQuery({ queryKey: ["chat", "conversations"], refetchInterval: 15_000, queryFn: async () => (await api<Conversation[]>("/chat/conversations")).data });
+}
+
+export function useChatMessages(id: string | null) {
+  return useQuery({
+    queryKey: ["chat", "messages", id],
+    enabled: !!id,
+    refetchInterval: 8_000,
+    queryFn: async () => (await api<ChatMessage[]>(`/chat/conversations/${id}/messages`)).data,
+  });
+}
+
+export function usePtmEvents() {
+  return useQuery({ queryKey: ["ptm", "list"], queryFn: async () => (await api<PtmEvent[]>("/ptm")).data });
+}
+
+export function usePtmSlots(id: string | null) {
+  return useQuery({ queryKey: ["ptm", "slots", id], enabled: !!id, queryFn: async () => (await api<PtmChildSlots[]>(`/ptm/${id}/slots`)).data });
+}
+
+export function usePtmSchedule(id: string | null) {
+  return useQuery({ queryKey: ["ptm", "schedule", id], enabled: !!id, queryFn: async () => (await api<PtmScheduleRow[]>(`/ptm/${id}/schedule`)).data });
+}
+
+export function useSurveys() {
+  return useQuery({ queryKey: ["surveys", "list"], queryFn: async () => (await api<Survey[]>("/surveys")).data });
+}
+
+export function useSurveyResults(id: string | null) {
+  return useQuery({ queryKey: ["surveys", "results", id], enabled: !!id, queryFn: async () => (await api<SurveyResults>(`/surveys/${id}/results`)).data });
 }

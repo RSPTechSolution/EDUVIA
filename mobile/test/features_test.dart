@@ -381,4 +381,42 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   });
+
+  testWidgets('parent reads and replies to a teacher message', (tester) async {
+    final sent = <String>[];
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson()..['modules'] = ['communication'])))
+      ..on('GET /chat/conversations', (_) => (200, FakeApi.ok([{
+            'id': 'c1', 'student_id': 's1', 'student_name': 'Aarav Patel', 'other_id': 't1', 'other_name': 'Priya Verma', 'other_role': 'Teacher',
+            'last_message': 'Please bring the project tomorrow', 'last_message_at': '2026-10-08T10:00:00Z', 'unread': 1}])))
+      ..on('GET /chat/conversations/c1/messages', (_) => (200, FakeApi.ok([
+            {'id': 'm1', 'mine': false, 'sender': 'Priya Verma', 'body': 'Please bring the project tomorrow', 'created_at': '2026-10-08T10:00:00Z', 'read': true},
+            for (final b in sent) {'id': 'x$b', 'mine': true, 'sender': 'Me', 'body': b, 'created_at': '2026-10-08T10:05:00Z', 'read': false},
+          ])))
+      ..on('POST /chat/conversations/c1/messages', (req) {
+        sent.add((req.data as Map)['body'] as String);
+        return (201, FakeApi.ok({}));
+      });
+    await pump(tester, container(fake));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Messages'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Messages'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Priya Verma'));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('Please bring the project tomorrow'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'Sure, thank you!');
+    await tester.tap(find.byTooltip('Send'));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(sent, ['Sure, thank you!']);
+    expect(find.text('Sure, thank you!'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 9));
+  });
 }

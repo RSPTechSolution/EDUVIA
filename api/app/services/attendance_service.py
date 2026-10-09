@@ -13,7 +13,7 @@ from app.schemas.attendance import (
     Counts, DayStatus, MarkRequest, Overview, ReportRow, Roster, RosterEntry, SectionCard, SectionReport,
     StudentAttendance, TrendPoint,
 )
-from app.services import audit_service, notification_service
+from app.services import audit_service, notification_service, sms_service
 from app.services.academics_service import field_error, get_section
 from app.services.attendance_extra_service import closed_reason
 from app.services.family_service import school_today, student_label
@@ -175,6 +175,9 @@ async def mark(db: AsyncSession, user: User, section_id: uuid.UUID, data: MarkRe
                                               kind="absent", title=f"{names.get(sid, 'Your child')} was marked absent today",
                                               body=f"{r.label} · {data.date:%d %b %Y}. Contact the class teacher if this is a mistake.",
                                               link="/my-attendance", data={"student_id": sid})
+            await sms_service.queue(db, school_id=user.school_id, event_name="absent", phones=await sms_service.family_phones(db, [sid]),
+                                    body=f"{names.get(sid, 'Your child')} was marked absent at school today, {data.date:%d %b}. "
+                                         "Please contact the class teacher if this is a mistake.")
     c = _counts(x.status for x in data.records)
     await audit_service.record(db, "attendance.mark", school_id=user.school_id, user_id=user.id, entity_type="section",
                                entity_id=section_id, meta={"date": data.date.isoformat(), "present": c.present + c.late,

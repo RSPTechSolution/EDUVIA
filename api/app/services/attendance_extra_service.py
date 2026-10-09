@@ -16,7 +16,7 @@ from app.models import (
 from app.schemas.attendance_extra import (
     BunkRow, EventIn, EventOut, LeaveDecision, LeaveIn, LeaveOut, PeriodCard, PeriodRoster, PeriodSave, PeriodStudent, ScanOut,
 )
-from app.services import audit_service, notification_service
+from app.services import audit_service, notification_service, sms_service
 from app.services.academics_service import field_error
 from app.services.family_service import own_students, school_today, student_label
 from app.services.timetable_service import _section_labels
@@ -211,6 +211,8 @@ async def decide(db: AsyncSession, user: User, leave_id: uuid.UUID, data: LeaveD
     await notification_service.notify(db, await notification_service.family_of(db, [s.id]), school_id=user.school_id, kind="leave",
                                       title=f"Leave {r.status}: {s.first_name}, {when}", body=data.note or None, link="/leave",
                                       data={"leave_id": r.id})
+    await sms_service.queue(db, school_id=user.school_id, event_name="leave", phones=await sms_service.family_phones(db, [s.id]),
+                            body=f"Leave for {s.first_name} ({when}) was {r.status}." + (f" Note: {data.note}" if data.note else ""))
     return (await _leave_rows(db, user, [r]))[0]
 
 

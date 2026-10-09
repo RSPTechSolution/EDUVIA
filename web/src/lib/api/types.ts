@@ -1079,3 +1079,35 @@ export interface LiveClass {
   state: "upcoming" | "live" | "ended" | "cancelled";
   can_edit: boolean;
 }
+
+
+// ---- messaging, chat, PTM, surveys --------------------------------------------------------------
+
+export interface MessagingStatus { sms_provider: string; whatsapp_provider: string; events: Record<string, string>; chosen: Record<string, string[]>; today: Record<string, number> }
+export interface MessageLogRow { id: string; channel: string; to: string; body: string; kind: string; status: string; error: string | null; created_at: string }
+export interface ChatContact { student_id: string; student_name: string; user_id: string; name: string; role: string }
+export interface Conversation {
+  id: string; student_id: string; student_name: string; other_id: string; other_name: string; other_role: string;
+  last_message: string | null; last_message_at: string | null; unread: number;
+}
+export interface ChatMessage { id: string; mine: boolean; sender: string | null; body: string; created_at: string; read: boolean }
+export interface PtmEvent {
+  id: string; title: string; date: string; start_time: string; end_time: string; slot_minutes: number; sections_label: string;
+  location: string | null; notes: string | null; booked: number; slots: number; past: boolean;
+}
+export interface PtmChildSlots {
+  student_id: string; student_name: string; teacher_id: string | null; teacher_name: string | null; booking: string | null;
+  slots: { time: string; free: boolean; mine: boolean }[];
+}
+export interface PtmScheduleRow { time: string; student_id: string | null; student_name: string | null; parent: string | null; phone: string | null; note: string | null }
+export type SurveyQuestionKind = "choice" | "multi" | "rating" | "text";
+export interface SurveyQuestion { id: string; kind: SurveyQuestionKind; text: string; options: string[]; required: boolean }
+export interface Survey {
+  id: string; title: string; description: string | null; audience: string; audience_label: string; section_ids: string[];
+  questions: SurveyQuestion[]; anonymous: boolean; closes_at: string | null; published: boolean; open: boolean; responses: number;
+  answered: boolean; can_edit: boolean;
+}
+export interface SurveyResults {
+  survey: Survey; responses: number; audience_size: number;
+  questions: { id: string; kind: SurveyQuestionKind; text: string; answers: number; counts: Record<string, number>; average: number | null; texts: { text: string; by: string | null }[] }[];
+}

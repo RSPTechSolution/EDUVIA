@@ -1,6 +1,9 @@
 """Shared building blocks: uploads, notifications, push devices, signed download links and PDFs."""
 from datetime import date, timedelta
 
+import asyncio
+
+from app.services import notification_service
 from app.services.notification_service import CONSOLE_PUSHES
 from tests import factories
 from tests import test_attendance, test_communication, test_exams, test_fees
@@ -115,6 +118,7 @@ async def test_homework_attachments_and_notifications(client, db, school, admin_
     items = await notifications(client, p)
     assert [(n["kind"], n["title"]) for n in items] == [("homework", "New homework: Mathematics")]
     assert items[0]["link"] == "/my-homework" and items[0]["read"] is False
+    await asyncio.gather(*notification_service._running)  # pushes go out after the commit, in the background
     assert any(push["title"] == "New homework: Mathematics" for push in CONSOLE_PUSHES)
     assert (await notifications(client, t)) == []  # not the teacher who set it
 

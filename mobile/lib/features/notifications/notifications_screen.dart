@@ -32,6 +32,9 @@ class AppNotification {
         'substitution' => Icons.swap_horiz_rounded,
         'leave' => Icons.event_busy_outlined,
         'online_test' => Icons.quiz_outlined,
+        'chat' => Icons.forum_outlined,
+        'ptm' => Icons.handshake_outlined,
+        'survey' => Icons.poll_outlined,
         'live_class' => Icons.videocam_outlined,
         'fee_reminder' => Icons.notifications_active_outlined,
         'calendar' => Icons.event_note_outlined,
@@ -41,7 +44,7 @@ class AppNotification {
 }
 
 /// The web paths the API puts in notifications, mapped to screens in this app.
-String? appRouteFor(String? link) => switch (link) {
+String? appRouteFor(String? link) => link != null && link.startsWith('/messages') ? '/messages' : switch (link) {
       '/notices' => '/notices',
       '/my-homework' || '/homework' => '/homework',
       '/my-attendance' || '/attendance' => '/attendance',
@@ -52,6 +55,8 @@ String? appRouteFor(String? link) => switch (link) {
       '/calendar' => '/calendar',
       '/my-tests' => '/tests',
       '/live-classes' => '/live',
+      '/ptm' => '/ptm',
+      '/surveys' => '/surveys',
       _ => null,
     };
 

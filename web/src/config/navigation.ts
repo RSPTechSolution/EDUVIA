@@ -1,5 +1,5 @@
 import {
-  Award, Calculator, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Award, Calculator, ClipboardPen, Handshake, MessagesSquare, Smartphone, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -71,6 +71,9 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Communication",
     items: [
+      { label: "Messages", href: "/messages", icon: MessagesSquare, module: "communication", keywords: ["chat", "message teacher", "parent message", "inbox"] },
+      { label: "Parent-teacher meetings", href: "/ptm", icon: Handshake, module: "communication", keywords: ["ptm", "meeting", "book slot", "appointment"] },
+      { label: "Surveys", href: "/surveys", icon: ClipboardPen, module: "communication", keywords: ["feedback", "poll", "questionnaire"] },
       { label: "Calendar", href: "/calendar", icon: CalendarHeart, keywords: ["holidays", "events", "vacation", "ptm", "academic calendar"] },
       { label: "Notices", href: "/notices", icon: Megaphone, module: "communication", badge: "notices", keywords: ["announcements", "circular", "news"] },
     ],
@@ -90,6 +93,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Plan & billing", href: "/settings/billing", icon: CreditCard, permission: "billing.view", keywords: ["subscription", "upgrade", "pricing", "trial"] },
       { label: "Users & roles", href: "/settings/users", icon: Users, permission: "users.view", keywords: ["staff", "accounts", "permissions"] },
       { label: "Email", href: "/settings/emails", icon: Mail, permission: "emails.view", keywords: ["brevo", "smtp", "sent", "receipts"] },
+      { label: "SMS and WhatsApp", href: "/settings/messaging", icon: Smartphone, permission: "emails.view", keywords: ["sms", "whatsapp", "text message", "twilio", "msg91"] },
       { label: "Attendance machines", href: "/settings/devices", icon: Fingerprint, module: "attendance", permission: "devices.manage", keywords: ["biometric", "fingerprint", "face", "zkteco", "adms"] },
       { label: "Audit log", href: "/settings/audit", icon: ScrollText, permission: "audit.view", keywords: ["history", "activity"] },
     ],

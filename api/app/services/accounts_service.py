@@ -18,7 +18,7 @@ from app.schemas.accounts import (
     ReminderResult,
 )
 from app.schemas.common import PageMeta, PageParams
-from app.services import audit_service, email_service, email_templates, notification_service, storage_service
+from app.services import audit_service, email_service, email_templates, notification_service, sms_service, storage_service
 from app.services.academics_service import field_error
 from app.services.fee_service import _status, academic_year, balance
 from app.services.family_service import school_today
@@ -144,6 +144,9 @@ async def send_reminders(db: AsyncSession, user: User, data: ReminderRequest) ->
                 to=email, name=name, school_name=school.name, student=f"{s.first_name} {s.last_name}", class_section=f"{cname} – {sname}",
                 term=inv.term, due_date=inv.due_date, balance=due, overdue=overdue, late_fee=inv.late_fee), school_id=school.id)
             emails += 1
+        await sms_service.queue(db, school_id=user.school_id, event_name="fee_reminder", phones=await sms_service.family_phones(db, [s.id]),
+                                body=f"{school.name}: Rs. {due:,.0f} school fees for {s.first_name} ({inv.term}) "
+                                     f"{'were due on' if overdue else 'are due by'} {inv.due_date:%d %b}. Please ignore if already paid.")
         inv.last_reminded_at = datetime.now(UTC)
         sent += 1
     await db.flush()

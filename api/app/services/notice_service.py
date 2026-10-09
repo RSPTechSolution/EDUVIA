@@ -11,7 +11,7 @@ from app.core.permissions import STAFF_ROLES, Role, has_permission
 from app.models import Notice, NoticeRead, SchoolClass, Section, Student, StudentGuardian, TimetableEntry, User
 from app.schemas.common import PageMeta, PageParams
 from app.schemas.communication import NoticeIn, NoticeOut
-from app.services import audit_service, notification_service
+from app.services import audit_service, notification_service, sms_service
 from app.services.academics_service import field_error
 from app.services.family_service import own_students
 
@@ -152,6 +152,9 @@ async def create(db: AsyncSession, user: User, data: NoticeIn) -> NoticeOut:
     await notification_service.notify(db, [u for u in await _recipient_ids(db, user.school_id, n) if u != user.id],
                                       school_id=user.school_id, kind="notice", title=n.title, body=n.body[:180],
                                       link="/notices", data={"notice_id": n.id, "priority": n.priority})
+    if n.priority == "urgent":
+        phones = (await db.scalars(select(User.phone).where(User.id.in_(await _recipient_ids(db, user.school_id, n)), User.phone.is_not(None)))).all()
+        await sms_service.queue(db, school_id=user.school_id, event_name="notice", phones=phones, body=f"Urgent from school: {n.title}. {n.body[:300]}")
     await db.refresh(n)
     return await _out(db, user, n, True, user.full_name, await _audience_labeller(db, user.school_id))
 

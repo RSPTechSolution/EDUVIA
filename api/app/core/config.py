@@ -53,6 +53,17 @@ class Settings(BaseSettings):
 
     # Push notifications: "console" logs them; "fcm" sends through Firebase Cloud Messaging using the
     # service-account JSON file at FIREBASE_CREDENTIALS_FILE. In-app notifications work either way.
+    # SMS and WhatsApp. "console" logs them (and records them in Settings > Messages) without sending.
+    SMS_PROVIDER: str = "console"  # console | twilio | msg91
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_FROM: str = ""
+    MSG91_AUTH_KEY: str = ""
+    MSG91_SENDER_ID: str = ""
+    WHATSAPP_PROVIDER: str = "console"  # console | meta (WhatsApp Cloud API)
+    WHATSAPP_TOKEN: str = ""
+    WHATSAPP_PHONE_ID: str = ""
+
     PUSH_PROVIDER: str = "console"
     FIREBASE_CREDENTIALS_FILE: str = ""
 

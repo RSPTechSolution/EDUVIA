@@ -382,3 +382,68 @@ async def seed_online(db, school: School, today: date) -> None:
                          notes="Keep your maths notebook ready.", teacher_id=teacher.id if teacher else None))
     await db.flush()
     print(f"  Online tests: {len(qs)} questions, 1 open test; co-scholastic grades for Class 5; 2 live classes")
+
+
+async def seed_communication(db, school: School, today: date) -> None:
+    from datetime import time as dtime
+
+    from app.models import ChatMessage, Conversation, MessageLog, PtmEvent, StudentGuardian, Survey, SurveyResponse
+    if await db.scalar(select(PtmEvent.id).where(PtmEvent.school_id == school.id).limit(1)):
+        return
+    rnd = random.Random(131)
+    users = {u.email: u for u in (await db.scalars(select(User).where(User.school_id == school.id))).all()}
+    sections = (await db.scalars(select(Section).where(Section.school_id == school.id))).all()
+    admin, teacher, parent = users.get("admin@demo.com"), users.get("teacher@demo.com"), users.get("parent@demo.com")
+    from app.services.attendance_extra_service import closed_days
+    closed = await closed_days(db, school.id, today, today + timedelta(days=60))
+    ptm_day = next(today + timedelta(days=d) for d in range(4, 60) if today + timedelta(days=d) not in closed)
+    db.add(PtmEvent(school_id=school.id, title="Term 1 parent-teacher meeting", date=ptm_day, start_time=dtime(9, 0), end_time=dtime(12, 0),
+                    slot_minutes=10, section_ids=[s.id for s in sections], location="Each class's own room",
+                    notes="Please bring the term 1 report card.", created_by=admin.id if admin else None))
+
+    # A conversation between the Patels and Aarav's class teacher.
+    aarav = await db.scalar(select(Student).where(Student.school_id == school.id, Student.first_name == "Aarav", Student.last_name == "Patel"))
+    if aarav and teacher and parent:
+        c = Conversation(school_id=school.id, student_id=aarav.id, family_id=parent.id, staff_id=teacher.id)
+        db.add(c)
+        await db.flush()
+        start = datetime.now(UTC) - timedelta(days=1, hours=3)
+        for i, (who, body) in enumerate([(parent, "Good morning ma'am. Aarav was unwell yesterday; could you share what was taught in maths?"),
+                                         (teacher, "Hope he is better now. We did fractions on a number line, Exercise 4.2. He can take my notes tomorrow."),
+                                         (parent, "Thank you so much!"),
+                                         (teacher, "Also, please remind him to bring his geometry box on Monday.")]):
+            db.add(ChatMessage(school_id=school.id, conversation_id=c.id, sender_id=who.id, body=body, created_at=start + timedelta(minutes=40 * i),
+                               read_at=start + timedelta(minutes=40 * i + 5) if i < 3 else None))
+        c.last_message_at = start + timedelta(minutes=120)
+
+    # A published survey with some answers.
+    s = Survey(school_id=school.id, title="School canteen feedback", description="Help us improve the food at school. It takes a minute.",
+               audience="families", published=True, created_by=admin.id if admin else None, closes_at=datetime.now(UTC) + timedelta(days=14),
+               questions=[{"id": "q1", "kind": "rating", "text": "How would you rate the canteen food?", "options": [], "required": True},
+                          {"id": "q2", "kind": "choice", "text": "How often does your child eat at the canteen?",
+                           "options": ["Every day", "A few times a week", "Rarely", "Never"], "required": True},
+                          {"id": "q3", "kind": "multi", "text": "What would you like added?", "options": ["Fresh fruit", "Millet snacks", "Salads", "Juices"],
+                           "required": False},
+                          {"id": "q4", "kind": "text", "text": "Any other suggestions?", "options": [], "required": False}])
+    db.add(s)
+    await db.flush()
+    families = (await db.scalars(select(User).join(StudentGuardian, StudentGuardian.user_id == User.id)
+                                 .where(User.school_id == school.id, User.role == "parent").distinct().limit(40))).all()
+    notes = ["More fruit please", "Food is good but portions are small", "Add some South Indian options", "Keep it less oily", ""]
+    for u in families:
+        if parent and u.id == parent.id:
+            continue  # leave it for the demo parent to answer
+        db.add(SurveyResponse(school_id=school.id, survey_id=s.id, user_id=u.id, answers={
+            "q1": rnd.choice([3, 4, 4, 5, 2]), "q2": rnd.choice(s.questions[1]["options"]),
+            "q3": rnd.sample(s.questions[2]["options"], rnd.randint(0, 2)), "q4": rnd.choice(notes)}))
+
+    # Absence alerts by SMS, as a school would set it up.
+    settings = dict(school.settings or {})
+    settings.setdefault("messaging", {"absent": ["sms"], "fee_reminder": ["sms", "whatsapp"]})
+    school.settings = settings
+    for i in range(6):
+        db.add(MessageLog(school_id=school.id, channel="sms", to=f"+9198140{20000 + i:05d}", kind="absent", status="logged",
+                          body="Your child was marked absent at school today. Please contact the class teacher if this is a mistake.",
+                          created_at=datetime.now(UTC) - timedelta(days=i % 3, hours=i)))
+    await db.flush()
+    print(f"  Communication: PTM on {ptm_day:%d %b}, 1 chat, 1 survey with {len(families)} answers, SMS for absences")
