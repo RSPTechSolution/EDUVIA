@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 /** Lets people install the web app on a phone or computer. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "EDUVIA",
-    short_name: "EDUVIA",
+    name: "Vidyanexa",
+    short_name: "Vidyanexa",
     description: "School management: attendance, fees, exams, messages and more.",
     start_url: "/dashboard",
     scope: "/",

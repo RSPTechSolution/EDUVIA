@@ -9,11 +9,11 @@ import 'core/theme/theme_mode.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(retry: apiRetry, child: EduviaApp()));
+  runApp(const ProviderScope(retry: apiRetry, child: VidyanexaApp()));
 }
 
-class EduviaApp extends ConsumerWidget {
-  const EduviaApp({super.key});
+class VidyanexaApp extends ConsumerWidget {
+  const VidyanexaApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

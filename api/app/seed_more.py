@@ -378,7 +378,7 @@ async def seed_online(db, school: School, today: date) -> None:
     for days, hour, title in ((1, 16, "Fractions doubt-clearing session"), (6, 17, "Geometry: shapes around us")):
         start = datetime.combine(today + timedelta(days=days), datetime.min.time(), ZoneInfo(school.timezone)).replace(hour=hour)
         db.add(LiveClass(school_id=school.id, title=title, section_ids=[s.id for s in sections], subject_id=maths.id, starts_at=start,
-                         duration_minutes=45, meeting_url=f"https://meet.jit.si/eduvia-{slug}-maths{days}{rnd.randint(1000, 9999)}",
+                         duration_minutes=45, meeting_url=f"https://meet.jit.si/vidyanexa-{slug}-maths{days}{rnd.randint(1000, 9999)}",
                          notes="Keep your maths notebook ready.", teacher_id=teacher.id if teacher else None))
     await db.flush()
     print(f"  Online tests: {len(qs)} questions, 1 open test; co-scholastic grades for Class 5; 2 live classes")

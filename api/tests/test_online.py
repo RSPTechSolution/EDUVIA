@@ -148,7 +148,7 @@ async def test_live_classes(client, db, school, admin_headers):
                                                                       "meeting_url": "http://insecure.example"})).status_code == 422
     lc = (await client.post(f"{API}/live-classes", headers=t, json={"title": "Fractions revision", "section_ids": [str(a.id)],
                                                                      "subject_id": maths["id"], "starts_at": start, "duration_minutes": 45})).json()["data"]
-    assert lc["meeting_url"].startswith("https://meet.jit.si/eduvia-") and lc["provider"] == "Jitsi" and lc["state"] == "upcoming"
+    assert lc["meeting_url"].startswith("https://meet.jit.si/vidyanexa-") and lc["provider"] == "Jitsi" and lc["state"] == "upcoming"
     zoom = (await client.post(f"{API}/live-classes", headers=t, json={"title": "Doubts", "section_ids": [str(a.id)], "starts_at": start,
                                                                        "meeting_url": "https://us02web.zoom.us/j/123"})).json()["data"]
     assert zoom["provider"] == "Zoom"

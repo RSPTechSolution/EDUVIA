@@ -13,7 +13,7 @@ import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: { absolute: "EDUVIA — School management software for Indian schools" },
+  title: { absolute: "Vidyanexa — School management software for Indian schools" },
   description:
     "Admissions, attendance, fees, exams, transport, HR and parent communication in one secure platform, with apps for parents, staff and drivers. Start a 14-day free trial.",
 };
@@ -127,8 +127,8 @@ export default async function HomePage() {
               <div className="flex h-9 items-center gap-1.5 border-b bg-muted/60 px-4" aria-hidden>
                 <span className="size-2.5 rounded-full bg-[#ff5f57]" /><span className="size-2.5 rounded-full bg-[#febc2e]" /><span className="size-2.5 rounded-full bg-[#28c840]" />
               </div>
-              <Image src="/marketing/dashboard-light.png" alt="The EDUVIA school dashboard showing sign-in activity, people by role and plan usage" width={1440} height={900} priority className="block w-full dark:hidden" />
-              <Image src="/marketing/dashboard-dark.png" alt="The EDUVIA school dashboard in dark mode" width={1440} height={900} priority className="hidden w-full dark:block" />
+              <Image src="/marketing/dashboard-light.png" alt="The Vidyanexa school dashboard showing sign-in activity, people by role and plan usage" width={1440} height={900} priority className="block w-full dark:hidden" />
+              <Image src="/marketing/dashboard-dark.png" alt="The Vidyanexa school dashboard in dark mode" width={1440} height={900} priority className="hidden w-full dark:block" />
             </div>
           </div>
         </div>
@@ -178,9 +178,9 @@ export default async function HomePage() {
             />
             <ul className="mt-8 space-y-3">
               {[
-                ["EDUVIA", "for parents and students"],
-                ["EDUVIA Staff", "for teachers and office staff"],
-                ["EDUVIA Driver", "for school bus drivers"],
+                ["Vidyanexa", "for parents and students"],
+                ["Vidyanexa Staff", "for teachers and office staff"],
+                ["Vidyanexa Driver", "for school bus drivers"],
               ].map(([name, who]) => (
                 <li key={name} className="flex items-center gap-3">
                   <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Smartphone className="size-4.5" aria-hidden /></span>
@@ -193,7 +193,7 @@ export default async function HomePage() {
             <OrbitGraphic className="absolute top-1/2 left-1/2 -z-10 w-[150%] max-w-none -translate-x-1/2 -translate-y-1/2"
               icons={[<CalendarCheck key="a" />, <Wallet key="b" />, <Bus key="c" />, <MessageSquare key="d" />, <GraduationCap key="e" />, <BellRing key="f" />]} />
             <div className="overflow-hidden rounded-[2.5rem] border-8 border-foreground/90 bg-card shadow-2xl">
-              <Image src="/marketing/app-parent.png" alt="The EDUVIA parent app home screen" width={412} height={860} className="block w-full" />
+              <Image src="/marketing/app-parent.png" alt="The Vidyanexa parent app home screen" width={412} height={860} className="block w-full" />
             </div>
           </div>
         </div>
@@ -266,7 +266,7 @@ export default async function HomePage() {
       <section className="px-5 pb-24 sm:px-8">
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-gradient-to-br from-[oklch(0.45_0.17_260)] via-primary to-[oklch(0.6_0.13_195)] px-8 py-16 text-center text-white shadow-xl sm:px-16">
           <LayoutGrid className="absolute -top-10 -right-10 size-64 text-white/5" aria-hidden />
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Ready to bring your school onto EDUVIA?</h2>
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Ready to bring your school onto Vidyanexa?</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-white/85">Start free for 14 days. Set up takes a minute; no card needed.</p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/signup" className="inline-flex h-12 items-center justify-center rounded-lg bg-white px-7 text-base font-semibold text-[oklch(0.4_0.16_260)] shadow-sm transition hover:bg-white/90 outline-none focus-visible:ring-3 focus-visible:ring-white/60">Start free trial</Link>

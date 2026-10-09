@@ -9,7 +9,7 @@ export default function LoginPage() {
     <>
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Welcome back</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">Sign in to your school&apos;s EDUVIA workspace.</p>
+        <p className="mt-1.5 text-sm text-muted-foreground">Sign in to your school&apos;s Vidyanexa workspace.</p>
       </div>
       <Suspense>
         <SignIn />

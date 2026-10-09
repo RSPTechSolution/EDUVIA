@@ -35,7 +35,7 @@ void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
   Future<void> pump(WidgetTester tester, ProviderContainer c) async {
-    await tester.pumpWidget(UncontrolledProviderScope(container: c, child: const EduviaApp()));
+    await tester.pumpWidget(UncontrolledProviderScope(container: c, child: const VidyanexaApp()));
     await tester.pumpAndSettle();
   }
 

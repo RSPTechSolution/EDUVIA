@@ -1,11 +1,11 @@
 {
-    "name": "EDUVIA",
-    "short_name": "EDUVIA",
+    "name": "Vidyanexa",
+    "short_name": "Vidyanexa",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#1565D7",
-    "description": "EDUVIA \u2014 school app for parents, staff and drivers",
+    "description": "Vidyanexa \u2014 school app for parents, staff and drivers",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

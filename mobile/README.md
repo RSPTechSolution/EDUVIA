@@ -1,6 +1,6 @@
 # eduvia
 
-EDUVIA school apps
+Vidyanexa school apps
 
 ## Getting Started
 

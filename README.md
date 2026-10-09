@@ -1,4 +1,4 @@
-# EDUVIA
+# Vidyanexa
 
 Multi-school management platform: a FastAPI backend, a Next.js web dashboard, and Flutter apps for parents, staff and drivers.
 
@@ -136,9 +136,9 @@ What each app shows (tabs appear only when the school has the module and the acc
 
 | App | Tabs |
 |---|---|
-| **EDUVIA** (parents, students) | Home (each child's attendance today, fees due, homework to do, today's lessons, notice bell) · Attendance · Homework (tick it off) · Fees (pay online, receipts) · More: Results & report cards, Timetable, Notices, Profile |
-| **EDUVIA Staff** | Home (classes left to mark, today's classes, notice bell) · Attendance (mark P/A/L/½/Leave) · Homework (teachers: set it, check it) · Fees (office: search, collect, receipts) · More: Marks entry, Timetable, Notices, Profile |
-| **EDUVIA Driver** | Home · More: Notices, Profile (trips and boarding come with the transport module) |
+| **Vidyanexa** (parents, students) | Home (each child's attendance today, fees due, homework to do, today's lessons, notice bell) · Attendance · Homework (tick it off) · Fees (pay online, receipts) · More: Results & report cards, Timetable, Notices, Profile |
+| **Vidyanexa Staff** | Home (classes left to mark, today's classes, notice bell) · Attendance (mark P/A/L/½/Leave) · Homework (teachers: set it, check it) · Fees (office: search, collect, receipts) · More: Marks entry, Timetable, Notices, Profile |
+| **Vidyanexa Driver** | Home · More: Notices, Profile (trips and boarding come with the transport module) |
 
 ### Stopping and starting again
 

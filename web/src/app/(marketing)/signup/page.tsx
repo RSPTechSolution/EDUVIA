@@ -5,7 +5,7 @@ import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = {
   title: "Start your free trial",
-  description: "Create your school on EDUVIA in a minute. 14-day free trial, no card needed.",
+  description: "Create your school on Vidyanexa in a minute. 14-day free trial, no card needed.",
 };
 
 export default function SignupPage() {

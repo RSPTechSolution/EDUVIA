@@ -6,7 +6,7 @@ import { PricingView } from "./pricing-view";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "EDUVIA plans in INR: Basic, Pro and Max, or build a custom plan with only the modules you need. 14-day free trial on every plan.",
+  description: "Vidyanexa plans in INR: Basic, Pro and Max, or build a custom plan with only the modules you need. 14-day free trial on every plan.",
 };
 
 export default async function PricingPage() {

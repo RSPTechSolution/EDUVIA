@@ -85,7 +85,7 @@ function AccountPage() {
         <Alert className="mb-6 border-warning/40 bg-warning/5">
           <ShieldAlert className="text-warning" aria-hidden />
           <AlertTitle>Set your own password to continue</AlertTitle>
-          <AlertDescription>You signed in with a temporary password. Choose a new one before using EDUVIA.</AlertDescription>
+          <AlertDescription>You signed in with a temporary password. Choose a new one before using Vidyanexa.</AlertDescription>
         </Alert>
       )}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">

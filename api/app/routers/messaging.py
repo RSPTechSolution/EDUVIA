@@ -48,7 +48,7 @@ async def log(db: DB, current: CurrentUser = require_permission("emails.view")):
 async def test(body: TestMessage, db: DB, current: CurrentUser = require_permission("emails.manage")):
     school = await db.get(School, current.require_school())
     n = await sms_service.queue(db, school_id=school.id, event_name="test", phones=[body.phone], force=[body.channel],
-                                body=f"Test message from {school.name} on EDUVIA.")
+                                body=f"Test message from {school.name} on Vidyanexa.")
     if not n:
         from app.services.academics_service import field_error
         raise field_error("phone", "Enter a valid mobile number")

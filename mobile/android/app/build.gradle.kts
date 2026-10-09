@@ -38,17 +38,17 @@ android {
         create("parent") {
             dimension = "app"
             applicationId = "com.eduvia.app"
-            resValue("string", "app_name", "EDUVIA")
+            resValue("string", "app_name", "Vidyanexa")
         }
         create("staff") {
             dimension = "app"
             applicationId = "com.eduvia.staff"
-            resValue("string", "app_name", "EDUVIA Staff")
+            resValue("string", "app_name", "Vidyanexa Staff")
         }
         create("driver") {
             dimension = "app"
             applicationId = "com.eduvia.driver"
-            resValue("string", "app_name", "EDUVIA Driver")
+            resValue("string", "app_name", "Vidyanexa Driver")
         }
     }
 

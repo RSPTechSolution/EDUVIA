@@ -176,7 +176,7 @@ async def create_live(db: AsyncSession, user: User, data: LiveIn) -> LiveOut:
     url = data.meeting_url
     if not url:  # a free Jitsi room nobody can guess
         slug = await db.scalar(select(School.slug).where(School.id == user.school_id))
-        url = f"https://meet.jit.si/eduvia-{slug}-{secrets.token_urlsafe(9).replace('_', '').replace('-', '')}"
+        url = f"https://meet.jit.si/vidyanexa-{slug}-{secrets.token_urlsafe(9).replace('_', '').replace('-', '')}"
     lc = LiveClass(school_id=user.school_id, teacher_id=user.id, **{**data.model_dump(), "meeting_url": url})
     db.add(lc)
     await db.flush()

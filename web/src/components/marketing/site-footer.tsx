@@ -12,7 +12,7 @@ export function SiteFooter() {
     <footer className="border-t bg-muted/30">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div className="max-w-xs">
-          <Link href="/" className="inline-flex items-center gap-2.5" aria-label="EDUVIA home">
+          <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Vidyanexa home">
             <BrandMark size={32} />
             <Wordmark />
           </Link>
@@ -35,7 +35,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-6 text-xs text-muted-foreground sm:flex-row sm:px-8">
-          <p>© {new Date().getFullYear()} EDUVIA. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Vidyanexa. All rights reserved.</p>
           <p>Prices in INR, exclusive of GST.</p>
         </div>
       </div>

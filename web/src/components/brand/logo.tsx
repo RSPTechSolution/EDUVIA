@@ -17,9 +17,8 @@ export function BrandMark({ className, size = 36 }: { className?: string; size?:
 export function Wordmark({ className, tagline = false }: { className?: string; tagline?: boolean }) {
   return (
     <span className={cn("flex flex-col leading-none", className)}>
-      <span className="font-heading text-lg font-extrabold tracking-tight">
-        EDU<span className="brand-gradient-text">VIA</span>
-      </span>
+      {/* One word in one colour: never set "nexa" apart (keeps clear of other brands). */}
+      <span className="font-heading text-lg font-extrabold tracking-tight">Vidyanexa</span>
       {tagline && <span className="mt-1 text-[11px] font-medium tracking-wide opacity-70">Intelligent Education Management</span>}
     </span>
   );
@@ -27,5 +26,5 @@ export function Wordmark({ className, tagline = false }: { className?: string; t
 
 /** Full-colour logo image, for light surfaces only. */
 export function FullLogo({ className }: { className?: string }) {
-  return <Image src="/brand/logo.png" alt="EDUVIA" width={1463} height={396} className={cn("h-auto w-48", className)} priority />;
+  return <Image src="/brand/logo.png" alt="Vidyanexa" width={1426} height={396} className={cn("h-auto w-48", className)} priority />;
 }

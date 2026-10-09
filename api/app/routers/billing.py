@@ -28,7 +28,7 @@ async def get_subscription(db: DB, current: CurrentUser = require_permission("bi
 @router.post("/change", response_model=ApiResponse[ChangePlanOut])
 async def change_plan(body: ChangePlanRequest, db: DB, current: CurrentUser = require_permission("billing.manage")):
     """During the free trial the change applies immediately. Afterwards it is sent
-    to the EDUVIA team as a request (online payment is not connected yet)."""
+    to the Vidyanexa team as a request (online payment is not connected yet)."""
     school_id = current.require_school()
     school = await school_service.get_school(db, school_id)
     view = billing_service.subscription_view(school, await billing_service.usage(db, school_id))
@@ -49,7 +49,7 @@ async def change_plan(body: ChangePlanRequest, db: DB, current: CurrentUser = re
             modules=custom_quote.modules if custom_quote else [],
             quoted_monthly=custom_quote.monthly if custom_quote else None,
         )
-        return ok(ChangePlanOut(changed=False, message="Request sent. The EDUVIA team will contact you to complete the change."))
+        return ok(ChangePlanOut(changed=False, message="Request sent. The Vidyanexa team will contact you to complete the change."))
 
     if custom_quote:
         plan = await billing_service.create_custom_plan(db, custom_quote, school.slug)

@@ -167,7 +167,7 @@ class ChangePlanRequest(BaseModel):
 
 
 class ChangePlanOut(BaseModel):
-    changed: bool  # True: applied now (trial). False: sent to the EDUVIA team as a request.
+    changed: bool  # True: applied now (trial). False: sent to the Vidyanexa team as a request.
     message: str
     subscription: SubscriptionOut | None = None
 

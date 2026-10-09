@@ -191,7 +191,7 @@ function BillingPage() {
         description={
           s.can_self_change
             ? `Your school moves to ${target?.name} now (${inr(target?.monthly ?? 0)}/month after the trial, + GST). Modules not in the new plan will be switched off.`
-            : `We'll send your request to the EDUVIA team, who will contact you to complete the change.`
+            : `We'll send your request to the Vidyanexa team, who will contact you to complete the change.`
         }
         confirmLabel={s.can_self_change ? "Switch plan" : "Send request"}
         onConfirm={() => target && change.mutate(target)}

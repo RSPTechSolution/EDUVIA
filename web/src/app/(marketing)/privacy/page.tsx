@@ -4,7 +4,7 @@ import { LegalPage } from "@/components/marketing/legal-page";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
-  description: "How EDUVIA collects, uses and protects personal data, including children's data, under India's DPDP Act 2023.",
+  description: "How Vidyanexa collects, uses and protects personal data, including children's data, under India's DPDP Act 2023.",
 };
 
 const contact = <Link href="/contact" className="font-medium text-primary hover:underline">contact page</Link>;
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
       updated="3 October 2026"
       intro={
         <p>
-          This policy explains how EDUVIA handles personal data when schools use our platform and when you visit our
+          This policy explains how Vidyanexa handles personal data when schools use our platform and when you visit our
           website. It is written to meet India&apos;s Digital Personal Data Protection Act, 2023 (the &ldquo;DPDP Act&rdquo;).
         </p>
       }
@@ -27,13 +27,13 @@ export default function PrivacyPage() {
           body: (
             <>
               <p>
-                <strong>Data a school puts into EDUVIA</strong> (about its students, parents and staff) belongs to that
-                school. The school is the <em>Data Fiduciary</em> and decides why and how the data is used. EDUVIA acts as
+                <strong>Data a school puts into Vidyanexa</strong> (about its students, parents and staff) belongs to that
+                school. The school is the <em>Data Fiduciary</em> and decides why and how the data is used. Vidyanexa acts as
                 the school&apos;s <em>Data Processor</em> and handles the data only on the school&apos;s instructions.
               </p>
               <p>
                 <strong>Data you give us directly</strong> &mdash; for example when you sign up for a trial, fill in our contact
-                form or create an admin account &mdash; is handled by EDUVIA as Data Fiduciary.
+                form or create an admin account &mdash; is handled by Vidyanexa as Data Fiduciary.
               </p>
             </>
           ),
@@ -56,9 +56,9 @@ export default function PrivacyPage() {
           body: (
             <>
               <p>
-                Schools use EDUVIA to manage records about students, many of whom are under 18. Under the DPDP Act, the
+                Schools use Vidyanexa to manage records about students, many of whom are under 18. Under the DPDP Act, the
                 school is responsible for obtaining verifiable consent from a parent or guardian before processing a
-                child&apos;s data. EDUVIA processes children&apos;s data only to provide the school&apos;s services.
+                child&apos;s data. Vidyanexa processes children&apos;s data only to provide the school&apos;s services.
               </p>
               <p>
                 We do not use children&apos;s data for advertising, do not track children&apos;s behaviour for profiling, and
@@ -96,7 +96,7 @@ export default function PrivacyPage() {
           title: "Who we share data with",
           body: (
             <>
-              <p>We share personal data only with service providers that help us run EDUVIA, under contracts that require them to protect it:</p>
+              <p>We share personal data only with service providers that help us run Vidyanexa, under contracts that require them to protect it:</p>
               <ul>
                 <li>Cloud hosting and backup providers.</li>
                 <li>SMS, email, WhatsApp and payment providers, only when a school switches those features on.</li>
@@ -120,7 +120,7 @@ export default function PrivacyPage() {
           title: "How long we keep data",
           body: (
             <p>
-              School records are kept for as long as the school uses EDUVIA. When a school leaves, we provide an export on
+              School records are kept for as long as the school uses Vidyanexa. When a school leaves, we provide an export on
               request and then delete its data within 90 days, except where the law requires us to keep it longer.
               Enquiries are kept for up to two years.
             </p>

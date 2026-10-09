@@ -20,7 +20,7 @@ class Banner(BaseModel):
 
 
 class PlatformSettings(BaseModel):
-    product_name: str = Field("EDUVIA", min_length=2, max_length=60)
+    product_name: str = Field("Vidyanexa", min_length=2, max_length=60)
     support_email: EmailStr | None = None
     support_phone: str | None = Field(None, max_length=20)
     banner: Banner = Banner()

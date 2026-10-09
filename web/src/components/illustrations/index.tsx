@@ -83,7 +83,7 @@ export function FamilyIllustration({ className }: { className?: string }) {
   );
 }
 
-/** Marketing hero graphic: the EDUVIA mark orbited by module icons. */
+/** Marketing hero graphic: the Vidyanexa mark orbited by module icons. */
 export function OrbitGraphic({ className, icons }: { className?: string; icons: React.ReactNode[] }) {
   const n = icons.length;
   return (

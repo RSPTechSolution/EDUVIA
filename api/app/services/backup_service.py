@@ -138,7 +138,7 @@ async def export_school(school_id: uuid.UUID) -> bytes:
                     else:
                         continue
                     z.writestr(f"{t.name}.csv", await _copy_out(conn, query))
-                z.writestr("README.txt", "Your school's data from EDUVIA, one CSV file per table. Uploaded files are not included; "
+                z.writestr("README.txt", "Your school's data from Vidyanexa, one CSV file per table. Uploaded files are not included; "
                                          "download them from the app. Passwords are never exported.\n")
     finally:
         await eng.dispose()

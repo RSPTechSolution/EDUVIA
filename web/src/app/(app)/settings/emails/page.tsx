@@ -57,7 +57,7 @@ function EmailsPage() {
 
   return (
     <>
-      <PageHeader title="Email" description="Welcome emails, password resets and fee receipts sent by EDUVIA." />
+      <PageHeader title="Email" description="Welcome emails, password resets and fee receipts sent by Vidyanexa." />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>

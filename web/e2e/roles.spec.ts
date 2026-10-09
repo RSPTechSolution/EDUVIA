@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "./fixtures";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { DEMO, login } from "./helpers";
 
 // Every demo role signs in and opens every page in its own menu. Each page must render a heading, without the error

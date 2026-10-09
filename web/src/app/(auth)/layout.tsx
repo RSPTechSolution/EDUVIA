@@ -43,7 +43,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             ))}
           </ul>
         </div>
-        <p className="relative text-xs text-sidebar-muted">© {new Date().getFullYear()} EDUVIA</p>
+        <p className="relative text-xs text-sidebar-muted">© {new Date().getFullYear()} Vidyanexa</p>
       </section>
       <main className="flex items-center justify-center bg-background px-5 py-12 sm:px-10">
         <div className="w-full max-w-sm">

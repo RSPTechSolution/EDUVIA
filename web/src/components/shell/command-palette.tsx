@@ -33,7 +33,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange} title="Search EDUVIA" description="Jump to a page or run an action">
+    <CommandDialog open={open} onOpenChange={onOpenChange} title="Search Vidyanexa" description="Jump to a page or run an action">
       <Command filter={matchScore}>
       <CommandInput placeholder="Search pages and actions…" />
       <CommandList>

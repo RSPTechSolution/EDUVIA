@@ -62,7 +62,7 @@ async def test_school_exports_only_its_own_data(client, db, school, other_school
 
 async def test_platform_settings_and_banner(client, admin_headers, super_headers):
     assert (await client.put(f"{API}/platform/settings", headers=admin_headers, json={})).status_code == 403
-    body = {"product_name": "EDUVIA", "support_email": "help@eduvia.in", "support_phone": "+91 98140 00000",
+    body = {"product_name": "Vidyanexa", "support_email": "help@eduvia.in", "support_phone": "+91 98140 00000",
             "banner": {"text": "Scheduled maintenance on Sunday 2–3 am", "tone": "warning"}}
     assert (await client.put(f"{API}/platform/settings", headers=super_headers, json=body)).status_code == 200
     pub = (await client.get(f"{API}/public/platform")).json()["data"]

@@ -6,11 +6,11 @@ import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "EDUVIA helps schools spend less time on paperwork and more time on teaching.",
+  description: "Vidyanexa helps schools spend less time on paperwork and more time on teaching.",
 };
 
 const VALUES = [
-  { icon: Users, title: "Built for everyone at school", text: "Principals, teachers, office staff, parents and drivers all use EDUVIA — so every screen has to be simple enough for a busy morning." },
+  { icon: Users, title: "Built for everyone at school", text: "Principals, teachers, office staff, parents and drivers all use Vidyanexa — so every screen has to be simple enough for a busy morning." },
   { icon: Lock, title: "Privacy is not optional", text: "Schools hold children's data. We isolate every school's records in the database, keep a full audit trail and collect only what is needed." },
   { icon: HeartHandshake, title: "Fair, transparent pricing", text: "Prices are public, in rupees, and you pay only for the modules you use. No surprise fees." },
   { icon: Sparkles, title: "Useful, not flashy", text: "We add features when they save schools real time — like fee reminders that send themselves and attendance that takes seconds." },
@@ -22,12 +22,12 @@ export default function AboutPage() {
       <section className="relative isolate overflow-hidden px-5 py-20 sm:px-8 lg:py-28">
         <GlowBackdrop />
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">About EDUVIA</p>
+          <p className="text-sm font-semibold tracking-wide text-primary uppercase">About Vidyanexa</p>
           <h1 className="mt-3 font-heading text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
             Less paperwork. More teaching.
           </h1>
           <p className="mt-6 text-lg text-pretty text-muted-foreground">
-            Schools juggle registers, fee ledgers, WhatsApp groups and spreadsheets that never quite agree. EDUVIA brings
+            Schools juggle registers, fee ledgers, WhatsApp groups and spreadsheets that never quite agree. Vidyanexa brings
             all of it into one platform, so the office runs smoothly, teachers get time back and parents always know
             what&apos;s happening.
           </p>

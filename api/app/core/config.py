@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    APP_NAME: str = "EDUVIA"
+    APP_NAME: str = "Vidyanexa"
     ENVIRONMENT: str = "development"  # development | test | production
     DEBUG: bool = False
 
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     BREVO_SMTP_HOST: str = "smtp-relay.brevo.com"
     BREVO_SMTP_PORT: int = 587
     EMAIL_FROM: str = "no-reply@eduvia.local"
-    EMAIL_FROM_NAME: str = "EDUVIA"
+    EMAIL_FROM_NAME: str = "Vidyanexa"
     EMAIL_DAILY_LIMIT: int = 300  # Brevo's free plan
     # Never send to these domains: the demo data and tests use them, and demo.com is someone else's.
     EMAIL_SKIP_DOMAINS: Annotated[list[str], NoDecode] = ["demo.com", "students.demo.com", "example.com", "t.com", "eduvia.local"]

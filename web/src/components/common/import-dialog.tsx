@@ -28,7 +28,7 @@ const KINDS = {
   students: {
     title: "Import students",
     noun: "students",
-    help: "One row per student. Add the father's, mother's or guardian's name, phone and email to create their parent accounts; a parent already in EDUVIA (same email) is linked, so brothers and sisters share one account.",
+    help: "One row per student. Add the father's, mother's or guardian's name, phone and email to create their parent accounts; a parent already in Vidyanexa (same email) is linked, so brothers and sisters share one account.",
     invalidate: ["students", "classes"],
   },
   staff: {

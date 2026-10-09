@@ -8,9 +8,9 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: "EDUVIA", template: "%s · EDUVIA" },
-  description: "EDUVIA — intelligent education management platform for schools.",
-  applicationName: "EDUVIA",
+  title: { default: "Vidyanexa", template: "%s · Vidyanexa" },
+  description: "Vidyanexa — intelligent education management platform for schools.",
+  applicationName: "Vidyanexa",
   // The app is private: nothing behind sign-in should be indexed.
   robots: { index: false, follow: false },
 };

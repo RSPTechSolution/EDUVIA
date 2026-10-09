@@ -54,7 +54,7 @@ async def login_code(db: AsyncSession, user: User, code: str, *, by_sms: bool) -
     if by_sms and user.phone and user.school_id:
         from app.services import sms_service
         await sms_service.queue(db, school_id=user.school_id, event_name="login", phones=[user.phone], force=["sms"],
-                                body=f"{code} is your EDUVIA sign-in code. It expires in {settings.OTP_EXPIRE_MINUTES} minutes. Don't share it.")
+                                body=f"{code} is your Vidyanexa sign-in code. It expires in {settings.OTP_EXPIRE_MINUTES} minutes. Don't share it.")
 
 
 async def fee_paid(db: AsyncSession, payment: FeePayment, invoice: FeeInvoice) -> None:

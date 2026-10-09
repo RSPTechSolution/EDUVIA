@@ -211,7 +211,7 @@ function BrandCard({ current, editable }: { current: string | null; editable: bo
     <Card className="mt-6">
       <CardHeader>
         <CardTitle>School colour</CardTitle>
-        <CardDescription>Used for buttons, links and highlights in EDUVIA for everyone at your school.</CardDescription>
+        <CardDescription>Used for buttons, links and highlights in Vidyanexa for everyone at your school.</CardDescription>
       </CardHeader>
       <CardContent>
         <div role="radiogroup" aria-label="School colour" className="flex flex-wrap gap-3">

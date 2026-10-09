@@ -65,13 +65,13 @@ void main() {
       );
       expect(tokens.refresh, isNull);
       expect(fake.calls, contains('POST /auth/logout'));
-      expect((c.read(authControllerProvider).value as SignedOut).notice, contains('EDUVIA Staff'));
+      expect((c.read(authControllerProvider).value as SignedOut).notice, contains('Vidyanexa Staff'));
     });
   });
 
   group('Screens', () {
     Future<void> pumpApp(WidgetTester tester, FakeApi fake, MemoryTokenStore tokens) async {
-      await tester.pumpWidget(UncontrolledProviderScope(container: makeContainer(fake, tokens), child: const EduviaApp()));
+      await tester.pumpWidget(UncontrolledProviderScope(container: makeContainer(fake, tokens), child: const VidyanexaApp()));
       await tester.pumpAndSettle();
     }
 

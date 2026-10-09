@@ -7,11 +7,11 @@ import { ContactForm } from "./contact-form";
 
 export const metadata: Metadata = {
   title: "Contact us",
-  description: "Talk to the EDUVIA team about a demo, a custom plan or moving your school onto EDUVIA.",
+  description: "Talk to the Vidyanexa team about a demo, a custom plan or moving your school onto Vidyanexa.",
 };
 
 const POINTS = [
-  { icon: MessageSquare, title: "Demos and questions", text: "See EDUVIA with your own school's workflow in mind." },
+  { icon: MessageSquare, title: "Demos and questions", text: "See Vidyanexa with your own school's workflow in mind." },
   { icon: Rocket, title: "Custom plans and groups", text: "More than 10,000 students, or several schools? We'll put together a plan." },
   { icon: Clock, title: "Fast replies", text: "We answer every message within one business day." },
 ];

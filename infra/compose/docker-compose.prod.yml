@@ -1,4 +1,4 @@
-# EDUVIA on one server:  cp .env.prod.example .env.prod  (fill it in), then
+# Vidyanexa on one server:  cp .env.prod.example .env.prod  (fill it in), then
 #   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 # Open http://<server address>/ . See docs/DEPLOYMENT.md.
 name: eduvia-prod

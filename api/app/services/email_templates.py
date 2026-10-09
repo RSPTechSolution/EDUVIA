@@ -1,4 +1,4 @@
-"""The emails EDUVIA sends. Each returns an Email with matching HTML and plain-text bodies.
+"""The emails Vidyanexa sends. Each returns an Email with matching HTML and plain-text bodies.
 
 HTML uses inline styles and tables only, which is what email clients reliably render.
 """
@@ -38,7 +38,7 @@ def _layout(*, title: str, school: str | None, intro: list[str], rows: list[tupl
 {"".join(p(x) for x in intro)}{table}{btn}{"".join(p(x) for x in (outro or []))}
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f8fafc;color:#6b7280;font-size:12px;line-height:1.5">
-This email was sent by EDUVIA on behalf of {escape(school or "your school")}. If you weren't expecting it, you can ignore it.
+This email was sent by Vidyanexa on behalf of {escape(school or "your school")}. If you weren't expecting it, you can ignore it.
 </td></tr></table></td></tr></table></body></html>"""
 
 
@@ -70,10 +70,10 @@ def welcome(*, to: str, name: str, role_label: str, school_name: str, school_slu
     first = escape(name.split()[0])
     return _build(
         to=to, to_name=name, kind="welcome", school=school_name,
-        subject=f"Your {school_name} account on EDUVIA",
+        subject=f"Your {school_name} account on Vidyanexa",
         title=f"Welcome, {name.split()[0]}",
-        intro=[f"Hello {first}, an EDUVIA account has been created for you at <b>{escape(school_name)}</b> as <b>{escape(role_label)}</b>.",
-               "Use these details to sign in on the website or in the EDUVIA app:"],
+        intro=[f"Hello {first}, an Vidyanexa account has been created for you at <b>{escape(school_name)}</b> as <b>{escape(role_label)}</b>.",
+               "Use these details to sign in on the website or in the Vidyanexa app:"],
         rows=[("School ID", school_slug), ("Email", to), ("Temporary password", password)],
         button=("Sign in", f"{settings.APP_URL}/login"),
         outro=["You'll be asked to choose your own password the first time you sign in. Please don't share these details."])
@@ -81,7 +81,7 @@ def welcome(*, to: str, name: str, role_label: str, school_name: str, school_slu
 
 def password_set_by_school(*, to: str, name: str, school_name: str, school_slug: str, password: str) -> Email:
     return _build(
-        to=to, to_name=name, kind="password_set", school=school_name, subject="Your EDUVIA password was reset",
+        to=to, to_name=name, kind="password_set", school=school_name, subject="Your Vidyanexa password was reset",
         title="Your password was reset",
         intro=[f"Hello {escape(name.split()[0])}, the school office has set a new temporary password for your account."],
         rows=[("School ID", school_slug), ("Email", to), ("Temporary password", password)],
@@ -92,7 +92,7 @@ def password_set_by_school(*, to: str, name: str, school_name: str, school_slug:
 def password_reset(*, to: str, name: str, school_name: str | None, token: str, minutes: int) -> Email:
     link = f"{settings.APP_URL}/reset-password?token={token}"
     return _build(
-        to=to, to_name=name, kind="password_reset", school=school_name, subject="Reset your EDUVIA password",
+        to=to, to_name=name, kind="password_reset", school=school_name, subject="Reset your Vidyanexa password",
         title="Reset your password",
         intro=[f"Hello {escape(name.split()[0])}, we received a request to reset your password.",
                f"The link works once and expires in {minutes} minutes."],
@@ -102,7 +102,7 @@ def password_reset(*, to: str, name: str, school_name: str | None, token: str, m
 
 def login_code(*, to: str, name: str, school_name: str | None, code: str, minutes: int) -> Email:
     return _build(
-        to=to, to_name=name, kind="login_code", school=school_name, subject=f"{code} is your EDUVIA sign-in code",
+        to=to, to_name=name, kind="login_code", school=school_name, subject=f"{code} is your Vidyanexa sign-in code",
         title="Your sign-in code",
         intro=[f"Hello {escape(name.split()[0])}, use this code to sign in:", f"<b style='font-size:28px;letter-spacing:6px'>{code}</b>",
                f"It works once and expires in {minutes} minutes."],
@@ -120,7 +120,7 @@ def fee_receipt(*, to: str, name: str, school_name: str, student: str, class_sec
               ("Amount", inr(amount)), ("Paid by", method), ("Date", paid_at.strftime("%d %b %Y, %I:%M %p")),
               ("Balance on this invoice", inr(balance))],
         button=("View receipt", f"{settings.APP_URL}/fees/receipts/{payment_id}"),
-        outro=["Keep this email for your records. The receipt can also be printed from the EDUVIA app or website."])
+        outro=["Keep this email for your records. The receipt can also be printed from the Vidyanexa app or website."])
 
 
 def fee_reminder(*, to: str, name: str, school_name: str, student: str, class_section: str, term: str, due_date: date,
@@ -141,7 +141,7 @@ def fee_reminder(*, to: str, name: str, school_name: str, student: str, class_se
 
 def test_email(*, to: str, school_name: str | None, sender: str) -> Email:
     return _build(
-        to=to, to_name=None, kind="test", school=school_name, subject="EDUVIA test email",
+        to=to, to_name=None, kind="test", school=school_name, subject="Vidyanexa test email",
         title="Email is working 🎉",
-        intro=[f"This is a test email sent by {escape(sender)} from EDUVIA settings.",
+        intro=[f"This is a test email sent by {escape(sender)} from Vidyanexa settings.",
                "If you can read this, the school's emails (welcome messages, password resets and fee receipts) will be delivered."])

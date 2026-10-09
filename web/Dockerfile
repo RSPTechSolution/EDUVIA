@@ -1,4 +1,4 @@
-# EDUVIA web: Next.js standalone server.
+# Vidyanexa web: Next.js standalone server.
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./

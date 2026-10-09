@@ -1,6 +1,6 @@
-# Deploying EDUVIA
+# Deploying Vidyanexa
 
-EDUVIA runs on one Linux server with Docker. Five containers:
+Vidyanexa runs on one Linux server with Docker. Five containers:
 
 | Container | What it does |
 |---|---|
@@ -63,7 +63,7 @@ For a demo server (with `ENVIRONMENT=staging`, not `production`) you can load th
 
 ## HTTPS
 
-Schools should only use EDUVIA over https.
+Schools should only use Vidyanexa over https.
 
 - **If your cloud gives you a hostname with a certificate** (a load balancer, or a platform such as Render or Railway): point it at port 80 of this server, and set `PUBLIC_URL` to the https address.
 - **On a plain server**: put a TLS-terminating proxy in front of nginx. For example, Caddy obtains certificates automatically for any hostname that resolves to the server.

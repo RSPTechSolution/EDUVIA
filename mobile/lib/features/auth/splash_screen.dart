@@ -23,7 +23,7 @@ class SplashScreen extends ConsumerWidget {
             if (auth.hasError) ...[
               Icon(Icons.cloud_off_rounded, size: 40, color: Theme.of(context).colorScheme.onSurfaceVariant),
               const SizedBox(height: 12),
-              Text("Can't reach EDUVIA", style: Theme.of(context).textTheme.titleMedium),
+              Text("Can't reach Vidyanexa", style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
               Text('Check your internet connection and try again.',
                   textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),

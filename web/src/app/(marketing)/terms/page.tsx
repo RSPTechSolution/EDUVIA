@@ -4,7 +4,7 @@ import { LegalPage } from "@/components/marketing/legal-page";
 
 export const metadata: Metadata = {
   title: "Terms of service",
-  description: "The terms that apply when a school uses EDUVIA.",
+  description: "The terms that apply when a school uses Vidyanexa.",
 };
 
 export default function TermsPage() {
@@ -12,12 +12,12 @@ export default function TermsPage() {
     <LegalPage
       title="Terms of service"
       updated="3 October 2026"
-      intro={<p>These terms apply when a school (&ldquo;you&rdquo;) uses EDUVIA. By creating an account you agree to them on behalf of your school.</p>}
+      intro={<p>These terms apply when a school (&ldquo;you&rdquo;) uses Vidyanexa. By creating an account you agree to them on behalf of your school.</p>}
       sections={[
         {
           id: "service",
           title: "The service",
-          body: <p>EDUVIA provides school management software on the web and in mobile apps. The modules and limits available to you depend on your plan.</p>,
+          body: <p>Vidyanexa provides school management software on the web and in mobile apps. The modules and limits available to you depend on your plan.</p>,
         },
         {
           id: "accounts",
@@ -59,7 +59,7 @@ export default function TermsPage() {
           title: "Acceptable use",
           body: (
             <ul>
-              <li>Don&apos;t use EDUVIA to send spam or unlawful content.</li>
+              <li>Don&apos;t use Vidyanexa to send spam or unlawful content.</li>
               <li>Don&apos;t try to access another school&apos;s data or interfere with the service.</li>
               <li>Don&apos;t resell the service without our written permission.</li>
             </ul>
@@ -68,7 +68,7 @@ export default function TermsPage() {
         {
           id: "availability",
           title: "Availability and support",
-          body: <p>We work to keep EDUVIA available at all times and back up data daily. Planned maintenance is announced in advance where possible. Support response times depend on your plan.</p>,
+          body: <p>We work to keep Vidyanexa available at all times and back up data daily. Planned maintenance is announced in advance where possible. Support response times depend on your plan.</p>,
         },
         {
           id: "liability",
@@ -83,7 +83,7 @@ export default function TermsPage() {
         {
           id: "law",
           title: "Governing law",
-          body: <p>These terms are governed by the laws of India. Disputes are subject to the jurisdiction of the courts where EDUVIA is registered.</p>,
+          body: <p>These terms are governed by the laws of India. Disputes are subject to the jurisdiction of the courts where Vidyanexa is registered.</p>,
         },
       ]}
     />

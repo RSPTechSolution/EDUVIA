@@ -1,4 +1,4 @@
-"""Restore a database backup made by EDUVIA.
+"""Restore a database backup made by Vidyanexa.
 
     python -m app.restore storage/backups/eduvia-20261009-020000.zip --yes
 

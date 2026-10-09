@@ -87,4 +87,4 @@ async def export_current(db: DB, current: CurrentUser = require_permission("scho
     data = await backup_service.export_school(current.user.school_id)
     await audit_service.record(db, "school.export", school_id=current.user.school_id, user_id=current.user.id, meta={"bytes": len(data)})
     return Response(data, media_type="application/zip",
-                    headers={"Content-Disposition": f'attachment; filename="eduvia-school-data-{date.today():%Y%m%d}.zip"'})
+                    headers={"Content-Disposition": f'attachment; filename="vidyanexa-school-data-{date.today():%Y%m%d}.zip"'})

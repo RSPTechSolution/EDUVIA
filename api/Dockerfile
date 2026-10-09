@@ -1,4 +1,4 @@
-# EDUVIA API: FastAPI on uvicorn. Migrations run on start (set RUN_MIGRATIONS=0 to skip).
+# Vidyanexa API: FastAPI on uvicorn. Migrations run on start (set RUN_MIGRATIONS=0 to skip).
 FROM python:3.14-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \

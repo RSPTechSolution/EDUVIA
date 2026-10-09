@@ -1,4 +1,4 @@
-// EDUVIA service worker: makes the web app installable and shows a friendly page when offline.
+// Vidyanexa service worker: makes the web app installable and shows a friendly page when offline.
 // It never caches API responses or signed-in pages, so nothing private is stored on the device.
 const CACHE = "eduvia-shell-v1";
 const OFFLINE = "/offline";

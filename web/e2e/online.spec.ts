@@ -65,7 +65,7 @@ test("teacher schedules a live class; the parent sees Join", async ({ page, brow
   await expect(parent).toHaveURL(/\/dashboard/);
   await parent.goto("/live-classes");
   const card = parent.getByRole("listitem").filter({ hasText: title });
-  await expect(card.getByRole("link", { name: "Join" })).toHaveAttribute("href", /^https:\/\/meet\.jit\.si\/eduvia-demo-/);
+  await expect(card.getByRole("link", { name: "Join" })).toHaveAttribute("href", /^https:\/\/meet\.jit\.si\/vidyanexa-demo-/);
   await parent.close();
 
   await page.getByRole("listitem").filter({ hasText: title }).getByRole("button", { name: "Cancel" }).click();

@@ -7,22 +7,22 @@ import 'package:flutter/services.dart' show appFlavor;
 /// desktop builds use `--dart-define=FLAVOR=...`.
 enum AppFlavor {
   parent(
-    title: 'EDUVIA',
+    title: 'Vidyanexa',
     tagline: 'For parents and students',
     allowedRoles: {'parent', 'student'},
-    otherAppHint: 'Staff should use the EDUVIA Staff app.',
+    otherAppHint: 'Staff should use the Vidyanexa Staff app.',
   ),
   staff(
-    title: 'EDUVIA Staff',
+    title: 'Vidyanexa Staff',
     tagline: 'For teachers and school staff',
     allowedRoles: {
       'school_admin', 'principal', 'teacher', 'accountant', 'receptionist', 'librarian',
       'hr_manager', 'transport_manager', 'security_guard', 'staff',
     },
-    otherAppHint: 'Parents and students should use the EDUVIA app.',
+    otherAppHint: 'Parents and students should use the Vidyanexa app.',
   ),
   driver(
-    title: 'EDUVIA Driver',
+    title: 'Vidyanexa Driver',
     tagline: 'For school bus drivers',
     allowedRoles: {'driver'},
     otherAppHint: 'This app is only for school bus drivers.',

@@ -13,7 +13,7 @@ test("parent asks for an early pickup, the office approves, and the guard lets t
     await dialog.getByLabel("Child").click();
     await page.getByRole("option", { name: /Aarav Patel/ }).click();
   }
-  await dialog.getByLabel("Leaving at").fill(format(new Date(Date.now() + 10 * 60_000), "yyyy-MM-dd'T'HH:mm"));
+  await dialog.getByLabel("Leaving at").fill(format(new Date(Date.now() + 60_000), "yyyy-MM-dd'T'HH:mm"));
   await dialog.getByLabel("Reason").fill(reason);
   await dialog.getByLabel("Collected by").fill("Suresh Patel");
   await dialog.getByLabel("Relation").fill("Father");

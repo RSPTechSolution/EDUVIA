@@ -73,7 +73,7 @@ async def test_visitor_log(client, db, school, admin_headers):
 async def test_gate_pass_flow(client, db, school, admin_headers):
     s = await _setup(client, db, school, admin_headers, "security", "communication")
     guard, ct, parent = s["guard"], s["ct"], s["parent"]
-    soon = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
+    soon = datetime.now(UTC).isoformat()  # now, not later: a pass for after midnight would belong to tomorrow
     body = {"student_id": s["ids"][0], "reason": "Dentist appointment", "pickup_name": "Mum Zero", "pickup_relation": "Mother", "leave_at": soon}
     assert (await client.post(f"{API}/gate/passes", headers=parent, json={**body, "student_id": s["ids"][1]})).status_code == 404  # not their child
     assert (await client.post(f"{API}/gate/passes", headers=parent, json={**body, "leave_at": (datetime.now(UTC) - timedelta(hours=3)).isoformat()})).status_code == 422

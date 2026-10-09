@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 
 import '../auth/token_store.dart';
 
-/// An error returned by the EDUVIA API (or a network failure).
+/// An error returned by the Vidyanexa API (or a network failure).
 class ApiException implements Exception {
   ApiException(this.message, {this.code = 'HTTP_ERROR', this.status = 0, this.details});
 

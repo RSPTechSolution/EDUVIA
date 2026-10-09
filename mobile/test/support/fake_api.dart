@@ -6,7 +6,7 @@ import 'package:dio/dio.dart';
 
 typedef Handler = FutureOr<(int, Map<String, dynamic>)> Function(RequestOptions req);
 
-/// A scripted EDUVIA API for tests. Routes are matched on "METHOD /path".
+/// A scripted Vidyanexa API for tests. Routes are matched on "METHOD /path".
 class FakeApi implements HttpClientAdapter {
   final Map<String, Handler> routes = {};
   final List<String> calls = [];

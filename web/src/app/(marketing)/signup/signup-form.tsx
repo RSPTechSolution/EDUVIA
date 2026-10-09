@@ -232,7 +232,7 @@ export function SignupForm() {
           Create my school
         </Button>
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          Already using EDUVIA? <Link href="/login" className="font-medium text-primary hover:underline">Sign in</Link>
+          Already using Vidyanexa? <Link href="/login" className="font-medium text-primary hover:underline">Sign in</Link>
         </p>
       </form>
     </div>
