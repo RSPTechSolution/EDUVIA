@@ -59,6 +59,17 @@ class SchoolUpdate(BaseModel):
     language: str | None = Field(None, max_length=10)
     settings: dict | None = None
 
+    @field_validator("settings")
+    @classmethod
+    def _brand(cls, v):
+        if v and "brand_color" in v and v["brand_color"] is not None and v["brand_color"] not in BRAND_COLORS:
+            raise ValueError("Pick one of the offered colours")
+        return v
+
+
+
+# Colours the web app can take as a school's own (all keep white text readable).
+BRAND_COLORS = ["#4f46e5", "#2563eb", "#0f766e", "#15803d", "#b45309", "#be123c", "#7e22ce", "#334155"]
 
 
 class SchoolAdminUpdate(SchoolUpdate):

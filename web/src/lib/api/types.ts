@@ -34,6 +34,7 @@ export interface SchoolBrief {
   plan: PlanBrief;
   subscription_status: string;
   trial_ends_at: string | null;
+  brand_color?: string | null;
 }
 
 export interface Me {

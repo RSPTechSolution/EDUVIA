@@ -73,3 +73,18 @@ async def admin_toggle_module(school_id: uuid.UUID, module: str, body: ModuleTog
                               current: CurrentUser = require_super_admin()):
     await school_service.get_school(db, school_id)
     return ok(await school_service.set_module(db, school_id, module, body.is_enabled, actor_id=current.id))
+
+
+@router.get("/current/export")
+async def export_current(db: DB, current: CurrentUser = require_permission("school.export")):
+    """Everything the school has entered, as a zip of CSV files (one per table)."""
+    from datetime import date
+
+    from fastapi.responses import Response
+
+    from app.services import audit_service, backup_service
+    current.require_school()
+    data = await backup_service.export_school(current.user.school_id)
+    await audit_service.record(db, "school.export", school_id=current.user.school_id, user_id=current.user.id, meta={"bytes": len(data)})
+    return Response(data, media_type="application/zip",
+                    headers={"Content-Disposition": f'attachment; filename="eduvia-school-data-{date.today():%Y%m%d}.zip"'})

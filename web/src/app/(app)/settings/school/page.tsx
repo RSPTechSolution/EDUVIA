@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { FileDown } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
@@ -20,7 +21,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, api } from "@/lib/api/client";
 import type { School } from "@/lib/api/types";
+import { downloadFile } from "@/lib/download";
 import { qk, useCurrentSchool } from "@/lib/queries";
+import { cn } from "@/lib/utils";
 import { timeZoneOptions, tzLabel } from "@/lib/timezones";
 
 const optional = (max: number) => z.string().trim().max(max);
@@ -175,7 +178,53 @@ function SchoolProfilePage() {
           <p className="text-sm text-muted-foreground">{editable ? "Click the square to upload a new logo." : "Only school admins can change the logo."}</p>
         </CardContent>
       </Card>
+      <BrandCard current={(school.data?.settings as { brand_color?: string } | undefined)?.brand_color ?? null} editable={editable} />
+      {can("school.export") && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Your data</CardTitle>
+            <CardDescription>Download everything your school has entered: students, staff, attendance, fees, exams and the rest, one CSV file per table. Passwords are never included.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => downloadFile("/schools/current/export", "school-data.zip").catch((e) => toast.error(e.message))}><FileDown aria-hidden />Download all school data</Button>
+          </CardContent>
+        </Card>
+      )}
     </>
+  );
+}
+
+const BRAND_COLORS = [
+  ["#4f46e5", "Indigo"], ["#2563eb", "Blue"], ["#0f766e", "Teal"], ["#15803d", "Green"],
+  ["#b45309", "Amber"], ["#be123c", "Rose"], ["#7e22ce", "Purple"], ["#334155", "Slate"],
+] as const;
+
+function BrandCard({ current, editable }: { current: string | null; editable: boolean }) {
+  const qc = useQueryClient();
+  const save = useMutation({
+    mutationFn: (color: string) => api("/schools/current", { method: "PATCH", body: { settings: { brand_color: color } } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: qk.school }); toast.success("Colour saved. Reloading…"); setTimeout(() => window.location.reload(), 600); },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : "Could not save"),
+  });
+  const active = current ?? "#4f46e5";
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>School colour</CardTitle>
+        <CardDescription>Used for buttons, links and highlights in EDUVIA for everyone at your school.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div role="radiogroup" aria-label="School colour" className="flex flex-wrap gap-3">
+          {BRAND_COLORS.map(([hex, name]) => (
+            <button key={hex} type="button" role="radio" aria-checked={active === hex} aria-label={name} disabled={!editable || save.isPending}
+              onClick={() => hex !== active && save.mutate(hex)}
+              className={cn("size-10 rounded-full ring-offset-2 ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed",
+                active === hex && "ring-2 ring-foreground")}
+              style={{ background: hex }} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

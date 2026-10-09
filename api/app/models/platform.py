@@ -55,3 +55,12 @@ class DeviceToken(Base):
     app: Mapped[str] = mapped_column(String(20), default="parent")  # parent | staff | driver
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PlatformSetting(Base):
+    """Platform-wide settings kept by the super admin (support contacts, the announcement banner). One row per key."""
+    __tablename__ = "platform_settings"
+
+    key: Mapped[str] = mapped_column(String(60), primary_key=True)
+    value: Mapped[dict] = mapped_column(JSONB, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

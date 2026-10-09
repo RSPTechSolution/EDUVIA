@@ -31,6 +31,7 @@ async def build_me(db: AsyncSession, user: User) -> MeOut:
     if user.school_id:
         school = await db.get(School, user.school_id)
         me.school = SchoolBrief.model_validate(school)
+        me.school.brand_color = (school.settings or {}).get("brand_color")
         me.modules = await enabled_modules(db, user.school_id)
     me.permissions = sorted(p for p in PERMISSIONS if has_permission(user.role, p))
     return me

@@ -6,6 +6,7 @@ import { PageTransition } from "@/components/motion/primitives";
 import { SessionProvider } from "@/components/session-provider";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { Header } from "@/components/shell/header";
+import { PlatformBanner } from "@/components/shell/platform-banner";
 import { Sidebar, SidebarBrand, SidebarNav } from "@/components/shell/sidebar";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import type { Me } from "@/lib/api/types";
@@ -26,6 +27,15 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
       /* storage unavailable */
     }
   }, []);
+
+  // The school's own colour, on the whole document so dialogs and menus (rendered in portals) match.
+  const brand = me.school?.brand_color;
+  useEffect(() => {
+    if (!brand) return;
+    const root = document.documentElement.style;
+    for (const v of ["--primary", "--ring", "--sidebar-primary"]) root.setProperty(v, brand);
+    return () => { for (const v of ["--primary", "--ring", "--sidebar-primary"]) root.removeProperty(v); };
+  }, [brand]);
 
   // Accounts created with a temporary password must set their own first.
   useEffect(() => {
@@ -57,6 +67,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
           </SheetContent>
         </Sheet>
         <div className="flex min-w-0 flex-1 flex-col">
+          <PlatformBanner />
           <Header onOpenMobileNav={() => setMobileOpen(true)} onOpenSearch={() => setSearchOpen(true)} />
           <main id="main" tabIndex={-1} className="flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8 print:p-0">
             <div className="mx-auto w-full max-w-7xl">

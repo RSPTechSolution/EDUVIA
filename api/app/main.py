@@ -1,4 +1,5 @@
 import logging
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -20,7 +21,14 @@ logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    import asyncio
+
+    from app.services.backup_service import daily_loop
+    task = asyncio.create_task(daily_loop()) if settings.BACKUP_DAILY and not settings.is_test else None
+    app.state.started_at = time.time()
     yield
+    if task:
+        task.cancel()
     await close_redis()
     await engine.dispose()
 

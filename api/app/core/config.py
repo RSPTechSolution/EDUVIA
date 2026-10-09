@@ -57,6 +57,9 @@ class Settings(BaseSettings):
 
     # Uploaded files are kept on disk under STORAGE_DIR (one folder per school).
     STORAGE_DIR: str = "storage"
+    # Backups: a zip of every table under STORAGE_DIR/backups. BACKUP_DAILY makes one a day in the background.
+    BACKUP_DAILY: bool = False
+    BACKUP_KEEP: int = 14
     MAX_UPLOAD_MB: int = 10
 
     # Push notifications: "console" logs them; "fcm" sends through Firebase Cloud Messaging using the

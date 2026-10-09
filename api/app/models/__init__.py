@@ -14,7 +14,7 @@ from app.models.email import EmailLog
 from app.models.hr import LeaveType, PayrollRun, Payslip, StaffAttendance, StaffLeave, StaffProfile
 from app.models.messaging import ChatMessage, Conversation, MessageLog, PtmBooking, PtmEvent, Survey, SurveyResponse
 from app.models.online import CoScholasticArea, CoScholasticGrade, LiveClass, OnlineTest, Question, TestAttempt
-from app.models.platform import DeviceToken, Notification, StoredFile
+from app.models.platform import DeviceToken, Notification, StoredFile, PlatformSetting
 from app.models.exams import Exam, ExamMark, ExamPaper, ExamRemark
 from app.models.finance import FeeCategory, FeeInvoice, FeeInvoiceItem, FeePayment, FeeStructure, PaymentOrder
 from app.models.school import School, SchoolModule
@@ -35,4 +35,4 @@ __all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan
            "Vehicle", "Route", "Stop", "TransportAssignment", "Trip", "TripPing", "Boarding", "SosAlert",
            "StaffProfile", "StaffAttendance", "LeaveType", "StaffLeave", "PayrollRun", "Payslip",
            "Book", "BookCopy", "BookIssue", "Hostel", "HostelRoom", "HostelAllocation", "StockItem", "StockMove", "Asset",
-           "Visitor", "GatePass", "Worker", "WorkerLog", "ComplianceDoc", "Camera", "CctvConsent", "CctvView"]
+           "PlatformSetting", "Visitor", "GatePass", "Worker", "WorkerLog", "ComplianceDoc", "Camera", "CctvConsent", "CctvView"]

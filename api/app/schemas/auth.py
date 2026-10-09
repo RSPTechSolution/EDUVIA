@@ -73,6 +73,7 @@ class SchoolBrief(Schema):
     plan: PlanSummary
     subscription_status: str
     trial_ends_at: datetime | None
+    brand_color: str | None = None  # from school settings; one of BRAND_COLORS
 
 
 class MeOut(Schema):

@@ -105,3 +105,10 @@ async def school_card(slug: str, db: DB):
                                     .order_by(SchoolClass.sort_order, SchoolClass.name))).all()
     return ok({"name": school.name, "city": school.city, "phone": school.phone, "email": school.email,
                "logo_url": school.logo_url, "classes": list(classes)})
+
+
+@router.get("/platform", response_model=ApiResponse[dict])
+async def platform(db: DB):
+    """Product name, support contacts, and the current announcement banner (shown on every page)."""
+    from app.services import platform_ops_service
+    return ok(await platform_ops_service.public_settings(db))

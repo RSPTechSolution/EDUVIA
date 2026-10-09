@@ -1,7 +1,7 @@
 """Platform administration: plans, leads, and assigning plans to schools. Super admin only."""
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import select
 
 from app.core import pricing
@@ -13,6 +13,7 @@ from app.schemas.billing import AssignPlanRequest, LeadOut, LeadUpdate, PlanOut,
 from app.schemas.common import ApiResponse, PageMeta, PageParams, ok
 from app.schemas.school import SchoolOut
 from app.services import audit_service, billing_service, school_service
+from app.services.platform_ops_service import PlatformSettings
 
 router = APIRouter()
 
@@ -78,3 +79,63 @@ async def assign_plan(school_id: uuid.UUID, body: AssignPlanRequest, db: DB, cur
         plan = await billing_service.plan_by_code(db, body.plan_code, public_only=False)
     await billing_service.apply_plan(db, school, plan, cycle=body.billing_cycle, status=body.status, actor_id=current.id)
     return ok(SchoolOut.model_validate(school))
+
+
+# ---- operations: health, backups, platform settings -------------------------------------------
+
+@router.get("/health", response_model=ApiResponse[dict])
+async def system_health(request: Request, db: DB, _: CurrentUser = require_super_admin()):
+    from app.services import platform_ops_service
+    return ok(await platform_ops_service.health(db, getattr(request.app.state, "started_at", None)))
+
+
+@router.get("/backups", response_model=ApiResponse[list[dict]])
+async def backups(_: CurrentUser = require_super_admin()):
+    from app.services import backup_service
+    return ok(backup_service.list_backups())
+
+
+@router.post("/backups", response_model=ApiResponse[dict], status_code=201)
+async def make_backup(db: DB, current: CurrentUser = require_super_admin()):
+    from app.services import backup_service
+    m = await backup_service.create_backup("manual")
+    await audit_service.record(db, "platform.backup", school_id=None, user_id=current.user.id, meta={"name": m["name"], "rows": m["row_total"]})
+    return ok(m)
+
+
+@router.get("/backups/{name}")
+async def download_backup(name: str, db: DB, current: CurrentUser = require_super_admin()):
+    from fastapi.responses import FileResponse
+
+    from app.services import backup_service
+    p = backup_service.path_of(name)
+    if not p:
+        raise NotFound("Backup not found")
+    await audit_service.record(db, "platform.backup_download", school_id=None, user_id=current.user.id, meta={"name": name})
+    return FileResponse(p, media_type="application/zip", filename=name)
+
+
+@router.delete("/backups/{name}", response_model=ApiResponse[dict])
+async def delete_backup(name: str, db: DB, current: CurrentUser = require_super_admin()):
+    from app.services import backup_service
+    p = backup_service.path_of(name)
+    if not p:
+        raise NotFound("Backup not found")
+    p.unlink()
+    await audit_service.record(db, "platform.backup_delete", school_id=None, user_id=current.user.id, meta={"name": name})
+    return ok({"message": "Backup deleted"})
+
+
+@router.get("/settings", response_model=ApiResponse[dict])
+async def platform_settings(db: DB, _: CurrentUser = require_super_admin()):
+    from app.services import platform_ops_service
+    return ok((await platform_ops_service.get_settings(db)).model_dump(mode="json"))
+
+
+@router.put("/settings", response_model=ApiResponse[dict])
+async def save_platform_settings(body: PlatformSettings, db: DB, current: CurrentUser = require_super_admin()):
+    from app.services import platform_ops_service
+    saved = await platform_ops_service.save_settings(db, body)
+    await audit_service.record(db, "platform.settings", school_id=None, user_id=current.user.id, meta={"banner": bool(body.banner.text)})
+    return ok(saved.model_dump(mode="json"))
+

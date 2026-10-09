@@ -31,6 +31,7 @@ PERMISSIONS: dict[str, list[Role]] = {
     "school.view": SCHOOL_ROLES,
     "school.manage": [Role.SCHOOL_ADMIN],
     "modules.manage": [Role.SCHOOL_ADMIN],
+    "school.export": [Role.SCHOOL_ADMIN],  # download all of the school's data
     "users.view": ADMINS + [Role.HR_MANAGER],
     "users.manage": [Role.SCHOOL_ADMIN],
     "audit.view": ADMINS,
