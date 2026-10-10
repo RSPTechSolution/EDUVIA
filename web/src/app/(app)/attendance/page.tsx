@@ -89,7 +89,7 @@ function TakeTab({ canMark }: { canMark: boolean }) {
       </div>
       {!sections.data ? <Skeleton className="h-60 rounded-xl" /> : sections.data.length === 0 ? (
         <EmptyState className="rounded-2xl border bg-card" illustration={<ClassesIllustration />} title="No classes to mark"
-          description="You'll see classes here once you're a class teacher or have lessons in the timetable." />
+          description="Only the class teacher (incharge) of a class takes its daily attendance. Ask your school admin to make you the class teacher of a section." />
       ) : (
         <Stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sections.data.map((s) => <StaggerItem key={s.section_id}><SectionTile s={s} date={date} canMark={canMark} /></StaggerItem>)}

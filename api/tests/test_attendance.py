@@ -61,7 +61,7 @@ async def test_class_teacher_marks_and_others_cannot(client, db, school, admin_h
     o = await factories.login_headers(client, "other@t.com", PASSWORD, school.slug)
     assert (await client.get(f"{API}/attendance/sections", headers=o)).json()["data"] == []
     denied = await client.put(f"{API}/attendance/sections/{section.id}", headers=o, json=body)
-    assert denied.status_code == 403 and denied.json()["error"]["code"] == "ATTENDANCE_LOCKED"
+    assert denied.status_code == 403 and denied.json()["error"]["code"] == "NOT_YOUR_SECTION"
 
 
 async def test_date_rules(client, db, school, admin_headers):

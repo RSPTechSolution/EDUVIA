@@ -1243,3 +1243,49 @@ export interface AnalyticsReport {
 export interface AiTemplate { id: string; title: string; example: string }
 export interface AiStatus { mode: "rules" | "ai"; templates: AiTemplate[]; left_today: number }
 export interface AiAnswer { template: string | null; mode: "rules" | "ai"; text: string; columns: string[]; rows: (string | number | null)[][]; link: string | null; suggestions: string[] }
+
+export interface MyClass {
+  section_id: string;
+  label: string;
+  is_class_teacher: boolean;
+  students: number;
+  attendance_marked: boolean;
+  present: number;
+  absent: number;
+  on_leave: number;
+  pending_leave: number;
+  pending_gate_passes: number;
+  fees_enabled: boolean;
+  students_overdue: number;
+  overdue_amount: number;
+}
+
+export interface ClassStudent {
+  student_id: string;
+  name: string;
+  roll_no: number | null;
+  admission_no: string;
+  photo_file_id: string | null;
+  today: AttendanceStatus | null;
+  attendance_percent: number | null;
+  days_absent: number;
+  fee_due: number;
+  fee_overdue: boolean;
+  guardians: string[];
+}
+
+export interface MyClassDetail {
+  section_id: string;
+  label: string;
+  class_teacher: string | null;
+  fees_enabled: boolean;
+  month_start: string;
+  students: ClassStudent[];
+}
+
+export interface ReminderResult {
+  invoices: number;
+  families: number;
+  emails: number;
+  skipped_recent: number;
+}

@@ -245,6 +245,10 @@ async def scan(db: AsyncSession, user: User, code: str) -> ScanOut:
                                               or_(Student.admission_no.ilike(raw), Student.biometric_id == raw)))
     if not s:
         raise NotFound("No active student has this card")
+    if user.role == "teacher":  # in class, the incharge marks their own class; the gate (guards, office) marks anyone arriving
+        from app.services.academics_service import class_teacher_sections
+        if s.section_id not in await class_teacher_sections(db, user):
+            raise Forbidden(f"{s.first_name} isn't in your class. Only their class teacher can mark them.", code="NOT_YOUR_SECTION")
     school = await db.get(School, user.school_id)
     now = datetime.now(ZoneInfo(school.timezone or "Asia/Kolkata"))
     today = now.date()

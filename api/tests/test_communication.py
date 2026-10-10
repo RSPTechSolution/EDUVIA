@@ -1,5 +1,8 @@
 from datetime import date, timedelta
 
+from sqlalchemy import select
+
+from app.models import User
 from tests import factories
 from tests.factories import API, PASSWORD, student_body
 
@@ -31,6 +34,11 @@ async def test_notice_audiences_and_reads(client, db, school, admin_headers):
     assert wide.status_code == 422
     other = await client.post(f"{API}/notices", headers=t, json={"title": "Test on Monday", "body": "x", "audience": "sections", "section_ids": [str(b.id)]})
     assert other.status_code == 422
+    # Teaching a subject in a class isn't enough: only the class teacher (incharge) posts to the class.
+    taught = await client.post(f"{API}/notices", headers=t, json={"title": "Maths test", "body": "x", "audience": "sections", "section_ids": [str(a.id)]})
+    assert taught.status_code == 422 and "class teacher" in taught.text
+    t7 = await db.scalar(select(User.id).where(User.email == "t7@t.com"))
+    await client.patch(f"{API}/classes/sections/{a.id}", headers=admin_headers, json={"class_teacher_id": str(t7)})
     mine = await client.post(f"{API}/notices", headers=t, json={"title": "Maths test on Monday", "body": "Chapters 3-4", "audience": "sections", "section_ids": [str(a.id)]})
     assert mine.status_code == 201, mine.text
     assert mine.json()["data"]["audience_label"] == "Class 7"  # the whole class (it has one section) and mine.json()["data"]["recipients"] == 1

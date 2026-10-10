@@ -104,8 +104,10 @@ function SectionDialog({ target, onClose }: { target: { cls: ClassItem; section:
   const [capacity, setCapacity] = useState("");
   const [teacher, setTeacher] = useState("none");
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   useEffect(() => {
     if (!target) return;
+    setConfirming(false);
     setName(target.section?.name ?? "");
     setCapacity(target.section?.capacity ? String(target.section.capacity) : "");
     setTeacher(target.section?.class_teacher_id ?? "none");
@@ -125,6 +127,15 @@ function SectionDialog({ target, onClose }: { target: { cls: ClassItem; section:
       toast.success(target?.section ? "Section updated" : `Section ${name.toUpperCase()} added`);
     },
     onError: (e) => setError(errorText(e)),
+  });
+  const remove = useMutation({
+    mutationFn: () => api(`/classes/sections/${target!.section!.id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      invalidate();
+      onClose();
+      toast.success(`Section ${target?.section?.name} deleted`);
+    },
+    onError: (e) => { setConfirming(false); setError(errorText(e)); },
   });
   const teacherName = teachers.data?.data.find((t) => t.id === teacher)?.full_name;
 
@@ -155,7 +166,20 @@ function SectionDialog({ target, onClose }: { target: { cls: ClassItem; section:
           </Field>
           {error && <p className="text-sm font-medium text-destructive sm:col-span-2" role="alert">{error}</p>}
         </form>
+        {confirming && target?.section && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm" role="alert">
+            <p className="font-medium">Delete section {target.section.name} of {target.cls.name}?</p>
+            <p className="mt-0.5 text-muted-foreground">Only a section with no students can be deleted, and a class keeps at least one section.</p>
+            <div className="mt-3 flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => setConfirming(false)}>Keep it</Button>
+              <Button size="sm" variant="destructive" onClick={() => remove.mutate()} loading={remove.isPending} loadingText="Deleting…">Yes, delete</Button>
+            </div>
+          </div>
+        )}
         <DialogFooter>
+          {target?.section && !confirming && (
+            <Button variant="ghost" className="mr-auto text-destructive hover:text-destructive" onClick={() => { setError(null); setConfirming(true); }}><Trash2 aria-hidden />Delete section</Button>
+          )}
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button type="submit" form="section-form" disabled={!name.trim()} loading={save.isPending} loadingText="Saving…">Save section</Button>
         </DialogFooter>

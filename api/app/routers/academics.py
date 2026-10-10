@@ -9,7 +9,9 @@ from app.schemas.academics import (
     StudentCreate, StudentCreated, StudentDetail, StudentOption, StudentOut, StudentUpdate,
 )
 from app.schemas.common import ApiResponse, Message, PageParams, ok
-from app.services import academics_service, student_service
+from app.schemas.accounts import ReminderResult
+from app.schemas.class_teacher import ClassReminderIn, MyClass, MyClassDetail
+from app.services import academics_service, class_teacher_service, student_service
 
 classes = APIRouter(dependencies=[require_module("students")])
 students = APIRouter(dependencies=[require_module("students")])
@@ -20,6 +22,26 @@ students = APIRouter(dependencies=[require_module("students")])
 @classes.get("", response_model=ApiResponse[list[ClassOut]])
 async def list_classes(db: DB, current: CurrentUser = require_permission("students.view")):
     return ok(await academics_service.list_classes(db, current.require_school()))
+
+
+@classes.get("/my", response_model=ApiResponse[list[MyClass]])
+async def my_classes(db: DB, current: CurrentUser = require_permission("attendance.mark")):
+    """The classes this teacher is incharge of (admins: every class), with today's attendance, pending requests and overdue fees."""
+    current.require_school()
+    return ok(await class_teacher_service.my_classes(db, current.user))
+
+
+@classes.get("/my/{section_id}", response_model=ApiResponse[MyClassDetail])
+async def my_class(section_id: uuid.UUID, db: DB, current: CurrentUser = require_permission("attendance.mark")):
+    current.require_school()
+    return ok(await class_teacher_service.class_detail(db, current.user, section_id))
+
+
+@classes.post("/my/{section_id}/fee-reminders", response_model=ApiResponse[ReminderResult])
+async def my_class_fee_reminders(section_id: uuid.UUID, body: ClassReminderIn, db: DB, current: CurrentUser = require_permission("attendance.mark")):
+    """The incharge reminds their own class's parents about fees due."""
+    current.require_school()
+    return ok(await class_teacher_service.remind_fees(db, current.user, section_id, body.overdue_only))
 
 
 @classes.post("", response_model=ApiResponse[ClassOut], status_code=201)

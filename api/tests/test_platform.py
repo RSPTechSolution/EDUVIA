@@ -3,6 +3,9 @@ from datetime import date, timedelta
 
 import asyncio
 
+from sqlalchemy import select
+
+from app.models import User
 from app.services import notification_service
 from app.services.notification_service import CONSOLE_PUSHES
 from tests import factories
@@ -122,7 +125,9 @@ async def test_homework_attachments_and_notifications(client, db, school, admin_
     assert any(push["title"] == "New homework: Mathematics" for push in CONSOLE_PUSHES)
     assert (await notifications(client, t)) == []  # not the teacher who set it
 
-    # A notice to the class reaches the parent; read state works per user.
+    # A notice to the class (from its class teacher) reaches the parent; read state works per user.
+    t7 = await db.scalar(select(User.id).where(User.email == "t7@t.com"))
+    await client.patch(f"{API}/classes/sections/{a.id}", headers=admin_headers, json={"class_teacher_id": str(t7)})
     await client.post(f"{API}/notices", headers=t, json={"title": "Test on Friday", "body": "Ch 3", "audience": "sections",
                                                          "section_ids": [str(a.id)]})
     assert (await client.get(f"{API}/notifications/unread-count", headers=p)).json()["data"]["count"] == 2

@@ -54,18 +54,17 @@ async def _labels(db: AsyncSession, school_id: uuid.UUID) -> list[tuple[Section,
 
 async def markable_section_ids(db: AsyncSession, user: User) -> set[uuid.UUID] | None:
     """Sections listed for this user. None means every section: admins, and view-only office staff
-    (who can look but never mark). Teachers: their class-teacher sections and sections they teach."""
+    (who can look but never mark). Teachers: only the sections they are class teacher (incharge) of."""
     if has_permission(user.role, "attendance.manage") or not has_permission(user.role, "attendance.mark"):
         return None
-    own = set((await db.scalars(select(Section.id).where(Section.class_teacher_id == user.id))).all())
-    taught = set((await db.scalars(select(TimetableEntry.section_id).where(TimetableEntry.teacher_id == user.id).distinct())).all())
-    return own | taught
+    from app.services.academics_service import class_teacher_sections
+    return await class_teacher_sections(db, user)
 
 
 async def _check_can_mark(db: AsyncSession, user: User, section_id: uuid.UUID) -> None:
     allowed = await markable_section_ids(db, user)
     if allowed is not None and section_id not in allowed:
-        raise Forbidden("You can only take attendance for classes you teach", code="NOT_YOUR_SECTION")
+        raise Forbidden("Only the class teacher (incharge) of this class can take its attendance", code="NOT_YOUR_SECTION")
 
 
 async def _active_students(db: AsyncSession, section_id: uuid.UUID) -> list[Student]:
@@ -111,7 +110,7 @@ async def roster(db: AsyncSession, user: User, section_id: uuid.UUID, day: date)
             can_mark = False
     locked = None
     if not can_mark:
-        locked = "You can view this class but not mark it."
+        locked = "Only the class teacher (incharge) can take this class's attendance."
     elif not has_permission(user.role, "attendance.manage") and (today - day).days > TEACHER_EDIT_DAYS:
         locked = f"Attendance older than {TEACHER_EDIT_DAYS} days can only be changed by the office."
     elif closed := await closed_reason(db, user.school_id, day):
@@ -144,6 +143,7 @@ async def _section_label(db: AsyncSession, section: Section) -> str:
 
 
 async def mark(db: AsyncSession, user: User, section_id: uuid.UUID, data: MarkRequest) -> Roster:
+    await _check_can_mark(db, user, (await get_section(db, user.school_id, section_id)).id)  # only the incharge (or the office)
     r = await roster(db, user, section_id, data.date)
     if not r.editable:
         raise AppError(r.locked_reason or "Attendance can't be changed", code="ATTENDANCE_LOCKED", status_code=403)

@@ -9,7 +9,7 @@ import type {
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
   MarksSheetRef, MyHomework, Notice, ReportCard, SectionResults, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
   SectionCard, SectionReport, StructureMatrix, StudentAttendance, ClassItem, DashboardSummary, ModuleState, Period, RoleRules, School, Student, StudentDetail, StudentOption, Subject,
-  Subscription, TeacherInfo, TimetableView, User, UserDetail,
+  Subscription, TeacherInfo, TimetableView, User, UserDetail, MyClass, MyClassDetail,
 } from "@/lib/api/types";
 
 export const qk = {
@@ -746,4 +746,12 @@ export function useAnalytics(from?: string, to?: string) {
 
 export function useAiStatus() {
   return useQuery({ queryKey: ["ai"], queryFn: async () => (await api<AiStatus>("/ai")).data });
+}
+
+export function useMyClasses() {
+  return useQuery({ queryKey: ["classes", "my"], queryFn: async () => (await api<MyClass[]>("/classes/my")).data });
+}
+
+export function useMyClass(sectionId: string | null) {
+  return useQuery({ queryKey: ["classes", "my", sectionId], enabled: Boolean(sectionId), queryFn: async () => (await api<MyClassDetail>(`/classes/my/${sectionId}`)).data });
 }

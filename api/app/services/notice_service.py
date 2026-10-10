@@ -132,10 +132,11 @@ async def _check_audience(db: AsyncSession, user: User, data: NoticeIn) -> None:
     if has_permission(user.role, "notices.manage"):
         return
     if data.audience != "sections":
-        raise field_error("audience", "Teachers can post to the classes they teach. Ask the office to send school-wide notices.")
-    mine = await _teacher_sections(db, user)
+        raise field_error("audience", "Class teachers can post to their own class. Ask the office to send school-wide notices.")
+    from app.services.academics_service import class_teacher_sections
+    mine = await class_teacher_sections(db, user)
     if not set(data.section_ids) <= mine:
-        raise field_error("section_ids", "You can only post to classes you teach")
+        raise field_error("section_ids", "Only the class teacher (incharge) can post to a class")
     if data.pinned:
         raise field_error("pinned", "Only the office can pin notices")
 
@@ -200,7 +201,8 @@ async def read(db: AsyncSession, user: User, notice_id: uuid.UUID) -> None:
 
 async def postable_sections(db: AsyncSession, user: User) -> list[dict]:
     labels = await _section_labels(db, user.school_id)
-    allowed = set(labels) if has_permission(user.role, "notices.manage") else await _teacher_sections(db, user)
+    from app.services.academics_service import class_teacher_sections
+    allowed = set(labels) if has_permission(user.role, "notices.manage") else await class_teacher_sections(db, user)
     order = {sid: i for i, sid in enumerate((await db.scalars(select(Section.id).join(SchoolClass, SchoolClass.id == Section.class_id)
                                                                .where(Section.school_id == user.school_id).order_by(SchoolClass.sort_order, Section.name))).all())}
     return [{"id": str(s), "label": labels[s]} for s in sorted(allowed, key=lambda x: order.get(x, 0))]

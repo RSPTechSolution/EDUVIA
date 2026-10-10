@@ -1,5 +1,5 @@
 import {
-  Server, Sparkles, ChartNoAxesCombined, Cctv, DoorOpen, FileCheck2, Ticket, UserCheck, Hotel, Library, Package, BookOpen, Award, Briefcase, BriefcaseBusiness, Bus, Calculator, ClipboardPen, Handshake, MessagesSquare, Smartphone, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
+  Server, UsersRound, Sparkles, ChartNoAxesCombined, Cctv, DoorOpen, FileCheck2, Ticket, UserCheck, Hotel, Library, Package, BookOpen, Award, Briefcase, BriefcaseBusiness, Bus, Calculator, ClipboardPen, Handshake, MessagesSquare, Smartphone, FileQuestion, Video, CalendarHeart, CalendarOff, Fingerprint, ListChecks, QrCode, BookMarked, BookOpenCheck, FileBadge2, NotebookPen, Repeat2, TrendingUp, UserPlus, Mail, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, Megaphone, Wallet, CalendarRange, CreditCard, GraduationCap, Inbox, KeyRound, LayoutDashboard, Layers, School, ScrollText, Settings2, ToggleRight, Users, type LucideIcon,
 } from "lucide-react";
 import type { Me } from "@/lib/api/types";
 
@@ -52,6 +52,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Promotion", href: "/promotion", icon: TrendingUp, module: "students", permission: "students.promote", keywords: ["next class", "new session", "year end", "graduate", "alumni"] },
       { label: "Classes & sections", href: "/academics/classes", icon: School, module: "students", permission: "students.view", keywords: ["grades", "sections", "class teacher"] },
       { label: "Timetable", href: "/timetable", icon: CalendarRange, module: "academics", permission: "timetable.view", keywords: ["schedule", "periods", "free teacher", "substitute"] },
+      { label: "My class", href: "/my-class", icon: UsersRound, module: "attendance", permission: "attendance.mark", roles: ["teacher"], keywords: ["class teacher", "incharge", "my students", "fee reminder"] },
       { label: "Attendance", href: "/attendance", icon: ClipboardCheck, module: "attendance", permission: "attendance.view", keywords: ["absent", "present", "roll call", "register"] },
       { label: "Scan ID cards", href: "/attendance/scan", icon: QrCode, module: "attendance", permission: "attendance.scan", keywords: ["qr", "gate", "check in", "barcode"] },
       { label: "Period attendance", href: "/attendance/periods", icon: ListChecks, module: "attendance", permission: "attendance.mark", keywords: ["bunk", "subject attendance", "period-wise"] },

@@ -119,6 +119,8 @@ async def send_reminders(db: AsyncSession, user: User, data: ReminderRequest) ->
         q = q.where(FeeInvoice.due_date < today)
     if data.class_id:
         q = q.where(Student.class_id == data.class_id)
+    if data.section_id:
+        q = q.where(Student.section_id == data.section_id)
     if data.term:
         q = q.where(FeeInvoice.term == data.term)
     rows = (await db.execute(q)).all()

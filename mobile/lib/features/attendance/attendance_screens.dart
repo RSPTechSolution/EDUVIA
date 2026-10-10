@@ -307,7 +307,7 @@ class _SectionsViewState extends ConsumerState<SectionsView> {
                   return const EmptyPanel(
                     icon: Icons.fact_check_outlined,
                     title: 'No classes to mark',
-                    message: "You'll see classes here once you're a class teacher or have lessons in the timetable.",
+                    message: 'Only the class teacher (incharge) of a class takes its daily attendance. Ask your school admin to make you the class teacher of a section.',
                   );
                 }
                 final pending = list.where((s) => !s.done).length;

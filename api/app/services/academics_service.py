@@ -115,17 +115,35 @@ async def update_class(db: AsyncSession, school_id: uuid.UUID, class_id: uuid.UU
     return c
 
 
-async def _students_in(db: AsyncSession, **where) -> int:
+async def _students_in(db: AsyncSession, *, active: bool | None = None, **where) -> int:
     stmt = select(func.count()).select_from(Student)
     for k, v in where.items():
         stmt = stmt.where(getattr(Student, k) == v)
+    if active is True:
+        stmt = stmt.where(Student.status == "active")
+    elif active is False:
+        stmt = stmt.where(Student.status != "active")
     return await db.scalar(stmt) or 0
+
+
+async def class_teacher_sections(db: AsyncSession, user: User) -> set[uuid.UUID]:
+    """Sections this user is the class teacher (incharge) of. The incharge runs the class: daily attendance,
+    class notices, fee reminders, leave requests, gate passes and parent-teacher meetings."""
+    return set((await db.scalars(select(Section.id).where(Section.class_teacher_id == user.id, Section.school_id == user.school_id))).all())
+
+
+def _in_use(what: str, current: int, past: int, move: str, code: str) -> Conflict:
+    if current:
+        return Conflict(f"{what} has {current} current student{'s' if current != 1 else ''}. {move}", code=code)
+    return Conflict(f"{what} has records of {past} former student{'s' if past != 1 else ''} (left or passed out), which must be kept. "
+                    "It can't be deleted.", code="HAS_HISTORY")
 
 
 async def delete_class(db: AsyncSession, school_id: uuid.UUID, class_id: uuid.UUID, *, actor_id: uuid.UUID) -> None:
     c = await get_class(db, school_id, class_id)
-    if await _students_in(db, class_id=c.id):
-        raise Conflict(f"{c.name} still has students. Move them to another class first.", code="CLASS_IN_USE")
+    current, past = await _students_in(db, class_id=c.id, active=True), await _students_in(db, class_id=c.id, active=False)
+    if current or past:
+        raise _in_use(c.name, current, past, "Move them to another class first (Students → edit, or Promotion).", "CLASS_IN_USE")
     await db.delete(c)
     await audit_service.record(db, "class.delete", school_id=school_id, user_id=actor_id, entity_type="class",
                                entity_id=c.id, meta={"name": c.name})
@@ -167,8 +185,9 @@ async def update_section(db: AsyncSession, school_id: uuid.UUID, section_id: uui
 
 async def delete_section(db: AsyncSession, school_id: uuid.UUID, section_id: uuid.UUID, *, actor_id: uuid.UUID) -> None:
     s = await get_section(db, school_id, section_id)
-    if await _students_in(db, section_id=s.id):
-        raise Conflict(f"Section {s.name} still has students. Move them first.", code="SECTION_IN_USE")
+    current, past = await _students_in(db, section_id=s.id, active=True), await _students_in(db, section_id=s.id, active=False)
+    if current or past:
+        raise _in_use(f"Section {s.name}", current, past, "Move them to another section first.", "SECTION_IN_USE")
     if await db.scalar(select(func.count()).select_from(Section).where(Section.class_id == s.class_id)) <= 1:
         raise Conflict("A class needs at least one section. Delete the class instead.", code="LAST_SECTION")
     await db.delete(s)

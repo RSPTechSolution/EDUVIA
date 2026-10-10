@@ -33,6 +33,7 @@ class LateFeeResult(BaseModel):
 class ReminderRequest(BaseModel):
     overdue_only: bool = True
     class_id: uuid.UUID | None = None
+    section_id: uuid.UUID | None = None
     term: Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)] | None = None
 
 
