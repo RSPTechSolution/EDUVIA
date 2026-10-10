@@ -76,7 +76,10 @@ function applyServerErrors(e: unknown, setError: (f: never, v: { message: string
   return false;
 }
 
-export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; onOpenChange: (o: boolean) => void; user?: User | null }) {
+/** Add or edit a user. With `forStudent`, it creates that student's own login (from the student's profile). */
+export function UserFormDialog({ open, onOpenChange, user, forStudent, onCreated }: {
+  open: boolean; onOpenChange: (o: boolean) => void; user?: User | null; forStudent?: StudentOption; onCreated?: (user: User) => void;
+}) {
   const editing = Boolean(user);
   const queryClient = useQueryClient();
   const rules = useRoleRules();
@@ -95,11 +98,11 @@ export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; on
     const extras = { employee_id: user?.employee_id ?? "", designation: user?.designation ?? "", license_no: user?.license_no ?? "" };
     reset(user
       ? { full_name: user.full_name, phone: user.phone ?? "", role: user.role, email: user.email, password: "", ...extras }
-      : { full_name: "", phone: "", role: "teacher", email: "", password: generatePassword(), ...extras });
+      : { full_name: forStudent?.name ?? "", phone: "", role: forStudent ? "student" : "teacher", email: "", password: generatePassword(), ...extras });
     setChildren([]);
-    setStudent(null);
+    setStudent(forStudent ?? null);
     setLinkError(null);
-  }, [open, user, reset]);
+  }, [open, user, forStudent, reset]);
 
   const role = watch("role");
   const rule = rules.data?.roles[role] ?? { required: [], optional: [] };
@@ -107,7 +110,7 @@ export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; on
   const isRequired = (f: string) => rule.required.includes(f);
   const label = (f: string) => rules.data?.labels[f] ?? f;
   const linked = rules.data?.linked_roles ?? ["parent", "student"];
-  const roleLocked = editing && linked.includes(user!.role);
+  const roleLocked = (editing && linked.includes(user!.role)) || Boolean(forStudent);
 
   const save = useMutation({
     mutationFn: (v: CreateValues) => {
@@ -127,6 +130,7 @@ export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; on
       queryClient.invalidateQueries({ queryKey: ["user", data.id] });
       if (v.role === "parent" || v.role === "student") queryClient.invalidateQueries({ queryKey: ["students"] });
       onOpenChange(false);
+      if (!editing) onCreated?.(data);
       toast.success(editing ? "User updated" : `Account created for ${data.full_name}`, {
         description: editing ? undefined : `Share the temporary password ${v.password} — they'll be asked to change it.`,
         duration: editing ? 4000 : 15000,
@@ -165,14 +169,14 @@ export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; on
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit user" : "Add user"}</DialogTitle>
+          <DialogTitle>{editing ? "Edit user" : forStudent ? `Create a login for ${forStudent.name}` : "Add user"}</DialogTitle>
           <DialogDescription>
             {editing ? "Role changes take effect the next time they sign in." : "They'll sign in with your school ID, this email and the temporary password."}
           </DialogDescription>
         </DialogHeader>
         <form id="user-form" onSubmit={handleSubmit(submit)} noValidate className="grid gap-4 sm:grid-cols-2">
           <Field label="Role" error={errors.role?.message} required className="sm:col-span-2"
-            hint={roleLocked ? "Parent and student accounts are tied to student records, so their role can't change." : undefined}>
+            hint={forStudent ? "A student login shows their own timetable, homework, results and fees." : roleLocked ? "Parent and student accounts are tied to student records, so their role can't change." : undefined}>
             {(a) => (
               <Controller control={control} name="role" render={({ field }) => (
                 <RoleSelect id={a.id} value={field.value} disabled={roleLocked} exclude={editing ? linked : []}
@@ -185,7 +189,7 @@ export function UserFormDialog({ open, onOpenChange, user }: { open: boolean; on
             <div className="space-y-2 sm:col-span-2">
               <p className="text-sm font-medium">Student record <span className="text-destructive">*</span></p>
               {student ? (
-                <Chip label={student.name} onRemove={() => setStudent(null)}>
+                <Chip label={student.name} onRemove={forStudent ? undefined : () => setStudent(null)}>
                   <GraduationCap className="size-4 text-primary" aria-hidden />{student.name} · {student.class_section}
                 </Chip>
               ) : (

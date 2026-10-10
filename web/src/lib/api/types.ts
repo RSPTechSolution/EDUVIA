@@ -278,9 +278,29 @@ export interface UserDetail {
   designation: string | null;
   license_no: string | null;
   is_active: boolean;
-  children: { student_id: string; name: string; class_section: string; relationship: string }[];
+  children: LinkedChild[];
   student_id: string | null;
   student_name: string | null;
+  student: LinkedChild | null;
+  class_teacher_of: { section_id: string; label: string }[];
+  teaching: string[];
+  activity: { action: string; entity_type: string | null; entity_id: string | null; meta: Record<string, unknown>; created_at: string }[];
+  // From UserOut
+  must_change_password?: boolean;
+  last_login_at?: string | null;
+  created_at?: string;
+  photo_file_id?: string | null;
+}
+
+export interface LinkedChild {
+  student_id: string;
+  name: string;
+  class_section: string;
+  relationship: string;
+  admission_no: string | null;
+  attendance_percent: number | null;
+  fee_due: number | null;
+  fee_overdue: boolean;
 }
 
 // ---- timetable -------------------------------------------------------------------------------

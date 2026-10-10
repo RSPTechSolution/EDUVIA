@@ -2,6 +2,7 @@
 
 import { flexRender, tableFeatures, useTable, type ColumnDef, type RowData } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PageMeta } from "@/lib/api/types";
@@ -25,9 +26,15 @@ interface DataTableProps<T extends RowData> {
   empty?: React.ReactNode;
   caption: string;
   getRowId?: (row: T) => string;
+  /** Makes the whole row open this page. Keep a real link in the row too (e.g. on the name) for keyboards and screen readers. */
+  rowHref?: (row: T) => string;
 }
 
-export function DataTable<T extends RowData>({ columns, data, meta, onPageChange, loading, refreshing, empty, caption, getRowId }: DataTableProps<T>) {
+// Clicks on these inside a clickable row do their own thing instead of opening the row.
+const INTERACTIVE = "a, button, input, select, textarea, label, [role=menuitem], [role=checkbox], [data-no-row-click]";
+
+export function DataTable<T extends RowData>({ columns, data, meta, onPageChange, loading, refreshing, empty, caption, getRowId, rowHref }: DataTableProps<T>) {
+  const router = useRouter();
   const table = useTable<typeof features, T>({
     features,
     data,
@@ -76,7 +83,16 @@ export function DataTable<T extends RowData>({ columns, data, meta, onPageChange
               </tr>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b transition-colors last:border-0 hover:bg-muted/30">
+                <tr
+                  key={row.id}
+                  className={cn("border-b transition-colors last:border-0 hover:bg-muted/30", rowHref && "cursor-pointer")}
+                  onClick={rowHref ? (e) => {
+                    if ((e.target as HTMLElement).closest(INTERACTIVE) || window.getSelection()?.toString()) return;
+                    const href = rowHref(row.original);
+                    if (e.metaKey || e.ctrlKey) window.open(href, "_blank");
+                    else router.push(href);
+                  } : undefined}
+                >
                   {row.getAllCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3 align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

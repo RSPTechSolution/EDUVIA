@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Download, KeyRound, MoreHorizontal, Pencil, Plus, Power, Search, Trash2, Upload, UserX } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -24,7 +25,7 @@ import type { User } from "@/lib/api/types";
 import { SCHOOL_ROLES, formatDateTime, initials, roleLabel, timeAgo } from "@/lib/format";
 import { useDebounced } from "@/lib/hooks";
 import { useUsers } from "@/lib/queries";
-import { SetPasswordDialog, UserFormDialog } from "./user-dialogs";
+import { SetPasswordDialog, UserFormDialog } from "@/components/users/user-dialogs";
 
 type Pending = { kind: "delete" | "deactivate" | "activate"; user: User } | null;
 
@@ -76,7 +77,10 @@ function UsersPage() {
         <div className="flex items-center gap-3">
           <Avatar><AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">{initials(u.full_name)}</AvatarFallback></Avatar>
           <div className="min-w-0">
-            <p className="truncate font-medium">{u.full_name}{u.id === me.id && <span className="ml-1.5 text-xs text-muted-foreground">(you)</span>}</p>
+            <p className="truncate font-medium">
+              <Link href={`/settings/users/${u.id}`} className="rounded outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{u.full_name}</Link>
+              {u.id === me.id && <span className="ml-1.5 text-xs text-muted-foreground">(you)</span>}
+            </p>
             <p className="truncate text-xs text-muted-foreground">{u.email}</p>
           </div>
         </div>
@@ -170,6 +174,7 @@ function UsersPage() {
         refreshing={users.isFetching && !users.isLoading}
         onPageChange={setPage}
         getRowId={(u) => u.id}
+        rowHref={(u) => `/settings/users/${u.id}`}
         empty={
           <EmptyState
             icon={UserX}

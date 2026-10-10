@@ -3,9 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { differenceInYears, parseISO } from "date-fns";
-import { ArrowLeft, Cake, Droplet, Hash, KeyRound, MapPin, Pencil, Phone, Plus, Star, Unlink, UserPlus, UsersRound } from "lucide-react";
+import { ArrowLeft, Cake, ChevronRight, Droplet, Hash, KeyRound, MapPin, Pencil, Phone, Plus, Star, Unlink, UserPlus, UsersRound } from "lucide-react";
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ParentPicker } from "@/components/academics/pickers";
@@ -20,7 +20,7 @@ import { FamilyIllustration } from "@/components/illustrations";
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion/primitives";
 import { useCan } from "@/components/session-provider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, api } from "@/lib/api/client";
-import type { StudentDetail } from "@/lib/api/types";
+import { UserFormDialog } from "@/components/users/user-dialogs";
+import type { StudentDetail, StudentOption } from "@/lib/api/types";
 import { formatDate, initials } from "@/lib/format";
 import { useClasses, useStudent } from "@/lib/queries";
 
@@ -177,7 +178,14 @@ function AddGuardianDialog({ student, open, onOpenChange }: { student: StudentDe
 function StudentProfile({ id }: { id: string }) {
   const can = useCan();
   const manage = can("students.manage");
+  const seeUsers = can("users.view");
   const student = useStudent(id);
+  const [creatingLogin, setCreatingLogin] = useState(false);
+  // The student as the "create login" dialog expects it; kept stable so the dialog doesn't reset while it's open.
+  const d = student.data;
+  const [sid, sname, sadm, sclass] = [d?.id, d ? `${d.first_name} ${d.last_name}` : "", d?.admission_no ?? "", d ? `${d.class_name} – ${d.section_name}` : ""];
+  const asOption = useMemo<StudentOption | undefined>(
+    () => (sid ? { id: sid, name: sname, admission_no: sadm, class_section: sclass, has_login: false } : undefined), [sid, sname, sadm, sclass]);
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -237,7 +245,23 @@ function StudentProfile({ id }: { id: string }) {
               <StaggerItem><Info icon={Star} label="Admitted on" value={formatDate(s.admission_date)} /></StaggerItem>
               <StaggerItem><Info icon={Droplet} label="Blood group" value={s.blood_group ?? "Not recorded"} /></StaggerItem>
               <StaggerItem className="sm:col-span-2"><Info icon={MapPin} label="Address" value={s.address ?? "Not recorded"} /></StaggerItem>
-              <StaggerItem className="sm:col-span-2"><Info icon={KeyRound} label="App login" value={s.login_email ?? "No login yet"} /></StaggerItem>
+              <StaggerItem className="sm:col-span-2">
+                <div className="flex items-center gap-3 rounded-xl border p-3.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><KeyRound className="size-4" aria-hidden /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">App login</p>
+                    {s.user_id && seeUsers
+                      ? <Link href={`/settings/users/${s.user_id}`} className="block truncate font-medium hover:underline">{s.login_email}</Link>
+                      : <p className="truncate font-medium">{s.login_email ?? "No login yet"}</p>}
+                  </div>
+                  {!s.user_id && can("users.manage") && (
+                    <Button size="sm" variant="outline" onClick={() => setCreatingLogin(true)}><UserPlus aria-hidden />Create login</Button>
+                  )}
+                  {s.user_id && seeUsers && (
+                    <Link href={`/settings/users/${s.user_id}`} className={buttonVariants({ size: "sm", variant: "ghost" })}>View account<ChevronRight aria-hidden /></Link>
+                  )}
+                </div>
+              </StaggerItem>
             </Stagger>
           </CardContent>
         </Card>
@@ -266,7 +290,9 @@ function StudentProfile({ id }: { id: string }) {
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">{initials(g.full_name)}</span>
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-2 font-medium">
-                        {g.full_name}
+                        {seeUsers
+                          ? <Link href={`/settings/users/${g.user_id}`} className="rounded outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{g.full_name}</Link>
+                          : g.full_name}
                         {g.is_primary && <span className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">Primary</span>}
                       </p>
                       <p className="text-xs text-muted-foreground capitalize">{g.relationship}</p>
@@ -274,6 +300,10 @@ function StudentProfile({ id }: { id: string }) {
                     </div>
                     {manage && (
                       <Button variant="ghost" size="icon" aria-label={`Unlink ${g.full_name}`} onClick={() => setUnlinking(g)}><Unlink aria-hidden /></Button>
+                    )}
+                    {seeUsers && (
+                      <Link href={`/settings/users/${g.user_id}`} aria-label={`Open ${g.full_name}'s details`}
+                        className={buttonVariants({ variant: "ghost", size: "icon" })}><ChevronRight aria-hidden /></Link>
                     )}
                   </li>
                 ))}
@@ -297,6 +327,10 @@ function StudentProfile({ id }: { id: string }) {
 
       {manage && <EditSheet student={s} open={editing} onOpenChange={setEditing} />}
       {manage && <AddGuardianDialog student={s} open={adding} onOpenChange={setAdding} />}
+      {can("users.manage") && !s.user_id && (
+        <UserFormDialog open={creatingLogin} onOpenChange={setCreatingLogin} forStudent={asOption}
+          onCreated={() => qc.invalidateQueries({ queryKey: ["student", s.id] })} />
+      )}
       <ConfirmDialog
         open={Boolean(unlinking)}
         onOpenChange={(o) => !o && setUnlinking(null)}

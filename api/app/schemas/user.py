@@ -88,12 +88,33 @@ class LinkedChild(BaseModel):
     name: str
     class_section: str
     relationship: str
+    admission_no: str | None = None
+    attendance_percent: float | None = None  # this month
+    fee_due: float | None = None  # None when fees are off
+    fee_overdue: bool = False
+
+
+class SectionRef(BaseModel):
+    section_id: uuid.UUID
+    label: str
+
+
+class ActivityItem(BaseModel):
+    action: str
+    entity_type: str | None
+    entity_id: str | None
+    meta: dict
+    created_at: datetime
 
 
 class UserDetail(UserOut):
     children: list[LinkedChild] = []  # parents
     student_id: uuid.UUID | None = None  # students
     student_name: str | None = None
+    student: LinkedChild | None = None  # students: their own record, with attendance and fees
+    class_teacher_of: list[SectionRef] = []  # staff
+    teaching: list[str] = []  # staff: "Mathematics · Class 5 – A"
+    activity: list[ActivityItem] = []  # recent sign-ins and changes, for those who may see the audit log
 
 
 class AdminSetPassword(BaseModel):

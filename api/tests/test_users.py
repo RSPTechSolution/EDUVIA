@@ -69,3 +69,48 @@ async def test_audit_log_records_actions(client, admin_headers):
     actions = [r["action"] for r in rows]
     assert "user.create" in actions and "auth.login" in actions
     assert rows[0]["user_name"] == "Admin"
+
+
+async def test_user_detail_shows_what_each_person_is_connected_to(client, db, school, admin_headers):
+    """A parent's children (with attendance and fees), a student's own record, a teacher's classes, and recent activity."""
+    from datetime import timedelta
+    from decimal import Decimal
+    from sqlalchemy import select
+    from app.models import FeeInvoice, Student, User
+    from app.services.fee_service import academic_year
+    from tests import test_communication
+    from tests.test_attendance import today
+
+    a, _, _, _, kiran, parent_pw = await test_communication.setup(client, db, school, admin_headers)
+    db.add(FeeInvoice(school_id=school.id, invoice_no="INV-UD-1", student_id=kiran, term="Q1", academic_year=academic_year(today()),
+                      issue_date=today() - timedelta(days=30), due_date=today() - timedelta(days=5), total=Decimal(5000), paid=Decimal(2000), status="partial"))
+    await db.commit()
+    t7 = await db.scalar(select(User.id).where(User.email == "t7@t.com"))
+    await client.patch(f"{API}/classes/sections/{a.id}", headers=admin_headers, json={"class_teacher_id": str(t7)})
+    await factories.login_headers(client, "kdad@t.com", parent_pw, school.slug)  # leaves a sign-in in the audit log
+
+    # A login for Kiran, created from the student's profile.
+    made = await client.post(f"{API}/users", headers=admin_headers, json={
+        "email": "kiran@t.com", "full_name": "Kiran Kumar", "role": "student", "password": "Study1234", "student_id": kiran})
+    assert made.status_code == 201, made.text
+    st = (await client.get(f"{API}/students/{kiran}", headers=admin_headers)).json()["data"]
+    assert st["login_email"] == "kiran@t.com" and st["user_id"] == made.json()["data"]["id"]
+
+    get = lambda uid: client.get(f"{API}/users/{uid}", headers=admin_headers)  # noqa: E731
+    dad = await db.scalar(select(User.id).where(User.email == "kdad@t.com"))
+    parent = (await get(dad)).json()["data"]
+    child = parent["children"][0]
+    assert child["student_id"] == kiran and child["admission_no"] == "C1" and child["fee_due"] == 3000.0 and child["fee_overdue"] is True
+    assert any(x["action"] == "auth.login" for x in parent["activity"])
+
+    student = (await get(st["user_id"])).json()["data"]
+    assert student["student"]["student_id"] == kiran and student["student"]["fee_due"] == 3000.0 and student["children"] == []
+
+    teacher = (await get(t7)).json()["data"]
+    assert [s["label"] for s in teacher["class_teacher_of"]] == ["Class 7 – A"]
+    assert any(t.startswith("Mathematics · Class 7 – A") for t in teacher["teaching"])
+
+    # Only those who manage users see these pages; a teacher can't.
+    th = await factories.login_headers(client, "t7@t.com", PASSWORD, school.slug)
+    assert (await client.get(f"{API}/users/{dad}", headers=th)).status_code == 403
+    assert await db.scalar(select(Student.user_id).where(Student.id == kiran))

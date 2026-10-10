@@ -8,9 +8,11 @@ from app.core.errors import AppError, BadRequest, Conflict, NotFound
 from app.core.permissions import Role
 from app.core.security import hash_password
 from app.core import roles
-from app.models import AuditLog, School, SchoolClass, Section, Student, StudentGuardian, User
+from app.models import (
+    AttendanceRecord, AuditLog, FeeInvoice, School, SchoolClass, Section, Student, StudentGuardian, Subject, TimetableEntry, User,
+)
 from app.schemas.common import PageMeta, PageParams
-from app.schemas.user import LinkedChild, UserCreate, UserDetail, UserUpdate
+from app.schemas.user import ActivityItem, LinkedChild, SectionRef, UserCreate, UserDetail, UserUpdate
 from app.services.academics_service import field_error
 from app.services import audit_service, billing_service, notify
 from app.services.auth_service import revoke_user_sessions
@@ -39,22 +41,71 @@ async def get_user(db: AsyncSession, school_id: uuid.UUID, user_id: uuid.UUID) -
     return user
 
 
-async def user_detail(db: AsyncSession, school_id: uuid.UUID, user_id: uuid.UUID) -> UserDetail:
+async def _child_summaries(db: AsyncSession, school_id: uuid.UUID, rows: list[tuple[Student, str, str, str]]) -> list[LinkedChild]:
+    """Each child with this month's attendance and what's unpaid (only for modules the school uses)."""
+    from app.core.deps import enabled_modules
+    from app.services.family_service import school_today
+    ids = [s.id for s, *_ in rows]
+    modules = await enabled_modules(db, school_id) if ids else []
+    today = await school_today(db, school_id) if ids else None
+    marks: dict[uuid.UUID, dict[str, int]] = {i: {} for i in ids}
+    if "attendance" in modules:
+        for sid, status, n in (await db.execute(
+                select(AttendanceRecord.student_id, AttendanceRecord.status, func.count())
+                .where(AttendanceRecord.student_id.in_(ids), AttendanceRecord.date.between(today.replace(day=1), today))
+                .group_by(AttendanceRecord.student_id, AttendanceRecord.status))).all():
+            marks[sid][status] = n
+    dues: dict[uuid.UUID, tuple[float, bool]] = {}
+    if "fees" in modules:
+        for sid, due, first in (await db.execute(
+                select(FeeInvoice.student_id, func.sum(FeeInvoice.total - FeeInvoice.discount - FeeInvoice.paid), func.min(FeeInvoice.due_date))
+                .where(FeeInvoice.student_id.in_(ids), FeeInvoice.status.in_(("unpaid", "partial"))).group_by(FeeInvoice.student_id))).all():
+            dues[sid] = (float(due), first < today)
+
+    def pct(c: dict[str, int]) -> float | None:
+        days = sum(c.values()) - c.get("leave", 0)
+        return round(100 * (c.get("present", 0) + c.get("late", 0) + 0.5 * c.get("half_day", 0)) / days, 1) if days else None
+
+    return [LinkedChild(
+        student_id=s.id, name=f"{s.first_name} {s.last_name}", class_section=f"{c} – {sec}", relationship=rel, admission_no=s.admission_no,
+        attendance_percent=pct(marks[s.id]) if "attendance" in modules else None,
+        fee_due=dues.get(s.id, (0.0, False))[0] if "fees" in modules else None, fee_overdue=dues.get(s.id, (0.0, False))[1],
+    ) for s, rel, c, sec in rows]
+
+
+async def user_detail(db: AsyncSession, school_id: uuid.UUID, user_id: uuid.UUID, *, with_activity: bool = False) -> UserDetail:
+    """A user and what they're connected to: a parent's children, a student's own record, the classes a teacher
+    runs and teaches, and (for those allowed to see the audit log) their recent activity."""
     user = await get_user(db, school_id, user_id)
     out = UserDetail.model_validate(user)
+    students = (select(Student, SchoolClass.name, Section.name)
+                .join(SchoolClass, SchoolClass.id == Student.class_id).join(Section, Section.id == Student.section_id))
     if user.role == Role.PARENT:
         rows = (await db.execute(
-            select(Student, StudentGuardian.relationship, SchoolClass.name, Section.name)
-            .join(StudentGuardian, StudentGuardian.student_id == Student.id)
-            .join(SchoolClass, SchoolClass.id == Student.class_id).join(Section, Section.id == Student.section_id)
-            .where(StudentGuardian.user_id == user.id).order_by(Student.first_name)
-        )).all()
-        out.children = [LinkedChild(student_id=s.id, name=f"{s.first_name} {s.last_name}", class_section=f"{c} – {sec}",
-                                    relationship=rel) for s, rel, c, sec in rows]
+            students.add_columns(StudentGuardian.relationship).join(StudentGuardian, StudentGuardian.student_id == Student.id)
+            .where(StudentGuardian.user_id == user.id).order_by(Student.first_name))).all()
+        out.children = await _child_summaries(db, school_id, [(s, rel, c, sec) for s, c, sec, rel in rows])
     if user.role == Role.STUDENT:
-        st = await db.scalar(select(Student).where(Student.user_id == user.id))
-        if st:
+        row = (await db.execute(students.where(Student.user_id == user.id))).first()
+        if row:
+            st, c, sec = row
             out.student_id, out.student_name = st.id, f"{st.first_name} {st.last_name}"
+            out.student = (await _child_summaries(db, school_id, [(st, "self", c, sec)]))[0]
+    if user.role not in (Role.PARENT, Role.STUDENT):
+        out.class_teacher_of = [SectionRef(section_id=sid, label=f"{c} – {n}") for sid, c, n in (await db.execute(
+            select(Section.id, SchoolClass.name, Section.name).join(SchoolClass, SchoolClass.id == Section.class_id)
+            .where(Section.school_id == school_id, Section.class_teacher_id == user.id)
+            .order_by(SchoolClass.sort_order, Section.name))).all()]
+        out.teaching = [f"{subj} · {c} – {n}" for subj, c, n in (await db.execute(
+            select(Subject.name, SchoolClass.name, Section.name).distinct()
+            .select_from(TimetableEntry).join(Subject, Subject.id == TimetableEntry.subject_id)
+            .join(Section, Section.id == TimetableEntry.section_id).join(SchoolClass, SchoolClass.id == Section.class_id)
+            .where(TimetableEntry.school_id == school_id, TimetableEntry.teacher_id == user.id)
+            .order_by(Subject.name, SchoolClass.name, Section.name))).all()]
+    if with_activity:
+        out.activity = [ActivityItem(action=a.action, entity_type=a.entity_type, entity_id=a.entity_id, meta=a.meta or {}, created_at=a.created_at)
+                        for a in (await db.scalars(select(AuditLog).where(AuditLog.school_id == school_id, AuditLog.user_id == user.id)
+                                                   .order_by(AuditLog.created_at.desc()).limit(10))).all()]
     return out
 
 

@@ -3,6 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import DB, CurrentUser, require_permission
+from app.core.permissions import has_permission
 from app.schemas.common import ApiResponse, Message, PageParams, ok
 from app.schemas.user import AdminSetPassword, AuditLogOut, UserCreate, UserDetail, UserOut, UserUpdate
 from app.services import user_service
@@ -35,7 +36,8 @@ async def audit_log(db: DB, page: PageParams = Depends(), action: str | None = Q
 
 @router.get("/{user_id}", response_model=ApiResponse[UserDetail])
 async def get_user(user_id: uuid.UUID, db: DB, current: CurrentUser = require_permission("users.view")):
-    return ok(await user_service.user_detail(db, current.require_school(), user_id))
+    return ok(await user_service.user_detail(db, current.require_school(), user_id,
+                                             with_activity=has_permission(current.role, "audit.view")))
 
 
 @router.patch("/{user_id}", response_model=ApiResponse[UserOut])
