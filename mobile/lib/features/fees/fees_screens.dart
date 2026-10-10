@@ -60,6 +60,7 @@ class _FamilyFeesViewState extends ConsumerState<FamilyFeesView> {
         onRefresh: () => ref.refresh(myFeesProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonSummary(),
           onRetry: () => ref.invalidate(myFeesProvider),
           builder: (data) {
             if (data.children.isEmpty) {
@@ -309,7 +310,18 @@ class _PaySheetState extends ConsumerState<PaySheet> {
         ]),
       ]);
     } else if (order == null) {
-      body = const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()));
+      // Shaped like the pay sheet below, while the payment order is created.
+      body = const Shimmer(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          Bone(width: 120, height: 22, radius: 8),
+          SizedBox(height: 16),
+          Bone(height: 64, radius: 14),
+          SizedBox(height: 12),
+          Bone(height: 64, radius: 14),
+          SizedBox(height: 20),
+          Bone(height: 48, radius: 12),
+        ]),
+      );
     } else {
       final o = order!;
       body = Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
@@ -424,6 +436,7 @@ class _StaffFeesViewState extends ConsumerState<StaffFeesView> {
           ),
           AsyncView(
             value: invoices,
+            loading: const SkeletonList(padding: EdgeInsets.zero),
             onRetry: () => ref.invalidate(invoiceSearchProvider((query, status))),
             builder: (list) => list.isEmpty
                 ? const EmptyPanel(icon: Icons.search_off_rounded, title: 'No invoices match')
@@ -484,6 +497,7 @@ class InvoiceScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Invoice')),
       body: AsyncView(
         value: async,
+        loading: const SkeletonDetail(rows: 7),
         onRetry: () => ref.invalidate(invoiceProvider(id)),
         builder: (inv) => ListView(padding: const EdgeInsets.all(16), children: [
           Text(inv.studentName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
@@ -639,6 +653,7 @@ class ReceiptScreen extends ConsumerWidget {
       ]),
       body: AsyncView(
         value: async,
+        loading: const SkeletonDetail(rows: 6),
         onRetry: () => ref.invalidate(receiptProvider(id)),
         builder: (r) => ListView(padding: const EdgeInsets.all(16), children: [
           Card(

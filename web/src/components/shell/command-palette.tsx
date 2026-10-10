@@ -3,29 +3,18 @@
 import { useRouter } from "next/navigation";
 import { LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect } from "react";
 import { useSession } from "@/components/session-provider";
 import {
   Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
 } from "@/components/ui/command";
 import { startNavigationProgress } from "@/components/navigation-progress";
 import { visibleGroups } from "@/config/navigation";
+import { signOut } from "@/lib/auth/sign-out";
 
 export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const router = useRouter();
   const me = useSession();
   const { setTheme } = useTheme();
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        onOpenChange(!open);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onOpenChange]);
 
   const run = (fn: () => void) => {
     onOpenChange(false);
@@ -82,7 +71,3 @@ function matchScore(value: string, search: string) {
   return score / words.length / 1.5;
 }
 
-export async function signOut() {
-  await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
-  window.location.assign("/login");
-}

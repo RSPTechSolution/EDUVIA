@@ -4,7 +4,7 @@ import { AttachmentChips } from "@/components/common/files";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { BookOpen, Check, CheckCircle2, Circle, MessageSquareText, XCircle } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion } from "@/components/motion/motion";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";

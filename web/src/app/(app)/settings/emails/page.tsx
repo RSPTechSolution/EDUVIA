@@ -70,6 +70,13 @@ function EmailsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {!s && (
+              <div aria-busy="true">
+                <Skeleton className="mb-1 h-5" />
+                <Skeleton className="h-2 rounded-full" />
+                <Skeleton className="mt-1 h-4 w-2/3" />
+              </div>
+            )}
             {s && (
               <div>
                 <div className="mb-1 flex justify-between text-sm"><span className="text-muted-foreground">Sent today</span><span className="font-semibold tabular">{s.sent_today} / {s.daily_limit}</span></div>

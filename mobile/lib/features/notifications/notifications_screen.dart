@@ -149,6 +149,7 @@ class NotificationsScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(notificationsProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(count: 8),
           onRetry: () => _refresh(ref),
           builder: (list) => list.isEmpty
               ? ListView(children: const [

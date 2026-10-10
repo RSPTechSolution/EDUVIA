@@ -132,3 +132,22 @@ When the site is live:
 5. Optional: set `GA_ID` for Google Analytics on the public website.
 
 To add a feature page, add an entry to `web/src/content/features.ts`. Then run `node scripts/og-images.mjs` in `web/` to create its share image.
+
+## Speed and layout stability
+
+Pages are built so they don't jump while loading (Cumulative Layout Shift, CLS) and show their main content fast (Largest Contentful Paint, LCP). To check a running site, from `web/`:
+
+```sh
+node scripts/vitals.mjs --public                          # the public website
+node scripts/vitals.mjs --roles admin,teacher,parent      # every page in each role's menu
+node scripts/vitals.mjs --roles admin --mobile --why      # phone size, and which elements moved
+```
+
+It loads each page like a mid-range phone on a slow connection. Pages over Google's limits (CLS 0.1, LCP 2.5 s) are marked ✗. `npx playwright test e2e/stability.spec.ts` fails if a key page jumps.
+
+Rules that keep it that way when changing pages:
+- While data loads, show a skeleton the same size as what replaces it. Keep a section's space even if it may end up empty.
+- Anything that decides the layout (sidebar width, banners, the school colour) comes from the server, not from local storage after the page loads.
+- Don't hide server-rendered content until JavaScript runs. The entrance animations in `components/motion/primitives.tsx` already skip the first paint.
+- Charts load lazily through `components/dashboard/lazy-charts.tsx`, with placeholders of the same height.
+- Use `@/components/motion/motion` (not `motion/react`) only where an interaction needs it, so the animation library stays out of most pages.

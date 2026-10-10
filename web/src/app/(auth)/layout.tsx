@@ -12,9 +12,11 @@ const POINTS = [
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      {/* Laid out top-down, with the footer pinned to the bottom: on a slow connection the browser draws the page while
+          its HTML is still arriving, and spacing items evenly would move what is already drawn as each piece lands. */}
       <section
         aria-hidden
-        className="relative hidden overflow-hidden bg-sidebar p-12 text-sidebar-foreground lg:flex lg:flex-col lg:justify-between"
+        className="relative hidden overflow-hidden bg-sidebar p-12 text-sidebar-foreground lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col"
       >
         <div className="grid-fade pointer-events-none absolute inset-0 text-white" />
         <div className="blob -top-40 -right-40 size-[520px] bg-[radial-gradient(circle,oklch(0.7_0.11_78/0.28),transparent_65%)]" />
@@ -24,7 +26,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <BrandMark size={44} tone="dark" />
           <Wordmark tagline className="text-sidebar-foreground [&_span:first-child]:text-2xl" />
         </div>
-        <div className="relative max-w-md">
+        <div className="relative mt-16 max-w-md">
           <OrbitGraphic
             className="mb-10 w-56 xl:w-64 [&_.border-primary\/15]:border-white/15 [&_.border-primary\/25]:border-white/25"
             icons={[<GraduationCap key="a" className="size-5" />, <CalendarCheck key="b" className="size-5" />, <Wallet key="c" className="size-5" />, <ShieldCheck key="d" className="size-5" />, <Bus key="e" className="size-5" />]}
@@ -43,7 +45,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             ))}
           </ul>
         </div>
-        <p className="relative text-xs text-sidebar-muted">© {new Date().getFullYear()} Vidyanexa</p>
+        <p className="absolute bottom-12 left-12 text-xs text-sidebar-muted">© {new Date().getFullYear()} Vidyanexa</p>
       </section>
       <main className="flex items-center justify-center bg-background px-5 py-12 sm:px-10">
         <div className="w-full max-w-sm">

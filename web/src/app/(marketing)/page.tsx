@@ -146,8 +146,8 @@ export default async function HomePage() {
               <div className="flex h-9 items-center gap-1.5 border-b bg-muted/60 px-4" aria-hidden>
                 <span className="size-2.5 rounded-full bg-[#ff5f57]" /><span className="size-2.5 rounded-full bg-[#febc2e]" /><span className="size-2.5 rounded-full bg-[#28c840]" />
               </div>
-              <Image src="/marketing/dashboard-light.png" alt="The Vidyanexa school dashboard showing sign-in activity, people by role and plan usage" width={1440} height={900} priority className="block w-full dark:hidden" />
-              <Image src="/marketing/dashboard-dark.png" alt="The Vidyanexa school dashboard in dark mode" width={1440} height={900} priority className="hidden w-full dark:block" />
+              <Image src="/marketing/dashboard-light.png" alt="The Vidyanexa school dashboard showing sign-in activity, people by role and plan usage" width={1440} height={900} priority sizes="(min-width: 1200px) 1152px, calc(100vw - 40px)" className="block w-full dark:hidden" />
+              <Image src="/marketing/dashboard-dark.png" alt="The Vidyanexa school dashboard in dark mode" width={1440} height={900} loading="lazy" sizes="(min-width: 1200px) 1152px, calc(100vw - 40px)" className="hidden w-full dark:block" />
             </div>
           </div>
         </div>
@@ -212,7 +212,7 @@ export default async function HomePage() {
             <OrbitGraphic className="absolute top-1/2 left-1/2 -z-10 w-[150%] max-w-none -translate-x-1/2 -translate-y-1/2"
               icons={[<CalendarCheck key="a" />, <Wallet key="b" />, <Bus key="c" />, <MessageSquare key="d" />, <GraduationCap key="e" />, <BellRing key="f" />]} />
             <div className="overflow-hidden rounded-[2.5rem] border-8 border-foreground/90 bg-card shadow-2xl">
-              <Image src="/marketing/app-parent.png" alt="The Vidyanexa parent app home screen" width={412} height={860} className="block w-full" />
+              <Image src="/marketing/app-parent.png" alt="The Vidyanexa parent app home screen" width={412} height={860} sizes="384px" className="block w-full" />
             </div>
           </div>
         </div>

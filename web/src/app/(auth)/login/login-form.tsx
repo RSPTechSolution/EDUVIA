@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -28,7 +27,6 @@ function safeNext(next: string | null) {
 }
 
 export function LoginForm() {
-  const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const hydrated = useHydrated();
   const [showPassword, setShowPassword] = useState(false);
@@ -62,7 +60,7 @@ export function LoginForm() {
       }
       // Full navigation so server components render with the new session cookie.
       setRedirecting(true);
-      window.location.assign(safeNext(params.get("next")));
+      window.location.assign(safeNext(new URLSearchParams(window.location.search).get("next")));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not reach the server. Check your connection and try again.");
     }

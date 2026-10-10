@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertTriangle, Ban, Coffee, Plus } from "lucide-react";
-import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import type { Period, TimetableEntry, TimetableView } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -112,13 +111,7 @@ export function TimetableGrid({
                   ? `${DAY_NAMES[i]}, ${p.name}: ${e.subject_name}${teacherView ? `, ${e.section_label}` : e.teacher_name ? ` with ${e.teacher_name}` : ", no teacher"}`
                   : `${DAY_NAMES[i]}, ${p.name}: ${isBlocked ? "unavailable" : "free"}`;
                 const content = e ? (
-                  <motion.div
-                    layout
-                    initial={{ opacity: 0, scale: 0.94 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.2 }}
-                    className={cn("relative flex h-full min-h-14 flex-col rounded-lg border px-2.5 py-1.5 text-left", colorOf(e.subject_color).cell, live && "ring-2 ring-primary ring-offset-1 ring-offset-card")}
-                  >
+                  <div className={cn("enter-fade relative flex h-full min-h-14 flex-col rounded-lg border px-2.5 py-1.5 text-left", colorOf(e.subject_color).cell, live && "ring-2 ring-primary ring-offset-1 ring-offset-card")}>
                     <span className="truncate text-[13px] leading-tight font-semibold">{e.subject_name}</span>
                     <span className="mt-0.5 truncate text-[11px] opacity-80">
                       {teacherView ? e.section_label : e.teacher_name ?? (
@@ -127,7 +120,7 @@ export function TimetableGrid({
                     </span>
                     {e.room && <span className="truncate text-[10px] opacity-60">{e.room}</span>}
                     {live && <span className="absolute top-1 right-1.5 text-[9px] font-bold tracking-wide text-primary uppercase">Now</span>}
-                  </motion.div>
+                  </div>
                 ) : isBlocked ? (
                   <div className="flex h-full min-h-14 items-center justify-center rounded-lg border border-dashed bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,var(--muted)_5px,var(--muted)_7px)] text-[11px] text-muted-foreground">
                     <Ban className="mr-1 size-3" aria-hidden />Unavailable

@@ -247,12 +247,13 @@ function EditTab({ classId, subjectId, setClassId, setSubjectId }: {
         </Field>
       </div>
       {classId && (
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Subject">
-          {subjects.isLoading && <Skeleton className="h-8 w-64" />}
+        // One scrolling row on phones (wrapping from tablet width), so the page doesn't move as subjects load.
+        <div className="flex min-h-[30px] max-w-full gap-1.5 overflow-x-auto sm:flex-wrap" role="group" aria-label="Subject">
+          {subjects.isLoading && <Skeleton className="h-[30px] w-64 rounded-full" />}
           {subjects.data?.length === 0 && <p className="text-sm text-muted-foreground">You don&apos;t teach any subject in this class.</p>}
           {subjects.data?.map((s) => (
             <button key={s.id} type="button" aria-pressed={subjectId === s.id} onClick={() => setSubjectId(s.id)}
-              className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition", subjectId === s.id ? colorOf(s.color).cell : "text-muted-foreground hover:bg-muted")}>
+              className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-sm whitespace-nowrap transition", subjectId === s.id ? colorOf(s.color).cell : "text-muted-foreground hover:bg-muted")}>
               <span className={cn("size-2 rounded-full", colorOf(s.color).dot)} />{s.name}
               <span className="text-xs opacity-70">{s.topics}</span>
             </button>

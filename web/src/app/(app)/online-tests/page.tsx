@@ -300,7 +300,7 @@ function OnlineTestsPage() {
   return (
     <>
       <PageHeader title="Online tests" description="Quizzes students take on the app or website, marked automatically."
-        actions={current && subjectId && <Button onClick={() => setCreating(true)}><Plus aria-hidden />New test</Button>} />
+        actions={<Button disabled={!(current && subjectId)} onClick={() => setCreating(true)}><Plus aria-hidden />New test</Button>} />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <Field label="Class" className="w-48">
           {(a) => (
@@ -310,10 +310,13 @@ function OnlineTestsPage() {
             </Select>
           )}
         </Field>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Subject">
+        {/* One scrolling row on phones (wrapping only from tablet width), and a placeholder while loading, so the
+            page below doesn't move when the subjects arrive. */}
+        <div className="flex min-h-[30px] max-w-full min-w-0 basis-full gap-1.5 overflow-x-auto sm:basis-auto sm:flex-wrap" role="group" aria-label="Subject">
+          {!current && <Skeleton className="h-[30px] w-48 rounded-full" />}
           {current && [...current.subjects.values()].map((s) => (
             <button key={s.id} type="button" aria-pressed={subjectId === s.id} onClick={() => setSubjectId(s.id)}
-              className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm", subjectId === s.id ? colorOf(s.color).cell : "text-muted-foreground hover:bg-muted")}>{s.name}</button>
+              className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-sm whitespace-nowrap", subjectId === s.id ? colorOf(s.color).cell : "text-muted-foreground hover:bg-muted")}>{s.name}</button>
           ))}
         </div>
       </div>

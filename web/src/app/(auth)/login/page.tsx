@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
-import { Suspense } from "react";
 import { SignIn } from "./sign-in";
 
 export const metadata: Metadata = pageMetadata({
@@ -17,9 +16,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">Sign in to your school&apos;s Vidyanexa workspace.</p>
       </div>
-      <Suspense>
-        <SignIn />
-      </Suspense>
+      <SignIn />
     </>
   );
 }

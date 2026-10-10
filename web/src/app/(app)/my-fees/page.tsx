@@ -2,7 +2,7 @@
 
 import { format, parseISO } from "date-fns";
 import { CalendarClock, CheckCircle2, ChevronDown, ReceiptText, ShieldCheck, Wallet } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion } from "@/components/motion/motion";
 import Link from "next/link";
 import { useState } from "react";
 import { EmptyState } from "@/components/common/empty-state";

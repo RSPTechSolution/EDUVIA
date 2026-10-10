@@ -142,6 +142,7 @@ class _FamilyHomeworkViewState extends ConsumerState<FamilyHomeworkView> {
         onRefresh: () => ref.refresh(myHomeworkProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(lines: 3),
           onRetry: () => ref.invalidate(myHomeworkProvider),
           builder: (all) {
             final kids = {for (final h in all) h.studentId!: h.studentName!}.entries.toList()..sort((a, b) => a.value.compareTo(b.value));
@@ -249,6 +250,7 @@ class TeacherHomeworkView extends ConsumerWidget {
         onRefresh: () => ref.refresh(teacherHomeworkProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(lines: 3),
           onRetry: () => ref.invalidate(teacherHomeworkProvider),
           builder: (list) => list.isEmpty
               ? ListView(children: const [EmptyPanel(icon: Icons.menu_book_outlined, title: 'No homework yet')])
@@ -332,7 +334,7 @@ class _SetHomeworkSheetState extends ConsumerState<SetHomeworkSheet> {
       child: Padding(
         padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
         child: targets.when(
-          loading: () => const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator())),
+          loading: () => const SkeletonList(count: 4, lines: 1, padding: EdgeInsets.symmetric(vertical: 12)),
           error: (e, _) => ErrorPanel(message: e.toString()),
           data: (list) {
             if (list.isEmpty) return const EmptyPanel(icon: Icons.class_outlined, title: "You don't teach any classes yet");
@@ -428,6 +430,7 @@ class _HomeworkCheckScreenState extends ConsumerState<HomeworkCheckScreen> {
             ),
       body: AsyncView(
         value: async,
+        loading: const SkeletonDetail(rows: 5),
         onRetry: () => ref.invalidate(homeworkDetailProvider(widget.id)),
         builder: (h) => ListView(padding: const EdgeInsets.all(12), children: [
           Card(

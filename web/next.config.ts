@@ -27,6 +27,8 @@ const nextConfig: NextConfig = {
   output: process.env.NEXT_STANDALONE ? "standalone" : undefined,
   reactStrictMode: true,
   poweredByHeader: false,
+  // AVIF is about a fifth smaller than WebP for the screenshots on the public site.
+  images: { formats: ["image/avif", "image/webp"] },
   async headers() {
     return [
       {

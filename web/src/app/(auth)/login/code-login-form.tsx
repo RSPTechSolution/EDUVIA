@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Field } from "@/components/common/field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,7 +15,6 @@ function safeNext(next: string | null) {
 
 /** Sign in with a 6-digit code sent by email, or by SMS when a mobile number is entered. */
 export function CodeLoginForm() {
-  const params = useSearchParams();
   const [slug, setSlug] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [code, setCode] = useState("");
@@ -73,7 +71,7 @@ export function CodeLoginForm() {
         /* ignore */
       }
       setRedirecting(true);
-      window.location.assign(safeNext(params.get("next")));
+      window.location.assign(safeNext(new URLSearchParams(window.location.search).get("next")));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not reach the server. Check your connection and try again.");
       setBusy(false);

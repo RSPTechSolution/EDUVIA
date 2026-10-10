@@ -29,6 +29,7 @@ class MyLibraryScreen extends ConsumerWidget {
         onRefresh: () async => ref.invalidate(myBooksProvider),
         child: AsyncView(
           value: books,
+          loading: const SkeletonList(count: 4),
           onRetry: () => ref.invalidate(myBooksProvider),
           builder: (rows) {
             if (rows.isEmpty) {
@@ -82,6 +83,7 @@ class MyHostelScreen extends ConsumerWidget {
         onRefresh: () async => ref.invalidate(myHostelProvider),
         child: AsyncView(
           value: hostel,
+          loading: const SkeletonDetail(rows: 5),
           onRetry: () => ref.invalidate(myHostelProvider),
           builder: (rows) => rows.isEmpty
               ? ListView(children: const [EmptyPanel(icon: Icons.hotel_outlined, title: 'Not staying in a hostel')])

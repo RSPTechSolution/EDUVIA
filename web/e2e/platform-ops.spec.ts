@@ -39,7 +39,8 @@ test("school admin picks a school colour and downloads the school's data", async
   await page.goto("/settings/school");
   await page.getByRole("radio", { name: "Teal" }).click();
   await expect(page.getByText(/Colour saved/)).toBeVisible();
-  await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--primary"))).toBe("#0f766e");
+  // The page reloads, and the server sends the school's colour with it.
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--primary").trim())).toBe("#0f766e");
 
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download all school data" }).click();

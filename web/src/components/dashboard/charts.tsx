@@ -1,8 +1,9 @@
 "use client";
 
+// Charts drawn with recharts. Pages import them from lazy-charts.tsx, so the chart library loads after the page.
+
 import { format, parseISO } from "date-fns";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { roleLabel } from "@/lib/format";
 
 const tooltipClass = "rounded-lg border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md";
 
@@ -54,44 +55,22 @@ export function SigninsChart({ data }: { data: { date: string; count: number }[]
 }
 
 const SLICE = ["fill-chart-1", "fill-chart-2", "fill-chart-3", "fill-chart-4", "fill-chart-5", "fill-chart-6"];
-const DOT = ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4", "bg-chart-5", "bg-chart-6"];
 
-/** People by role: top five roles, the rest grouped. */
-export function RolesDonut({ data }: { data: { role: string; count: number }[] }) {
-  const top = data.slice(0, 5);
-  const rest = data.slice(5).reduce((n, r) => n + r.count, 0);
-  const slices = [...top.map((r) => ({ name: roleLabel(r.role), value: r.count })), ...(rest ? [{ name: "Other", value: rest }] : [])];
-  const total = slices.reduce((n, s) => n + s.value, 0);
+/** The pie of the people-by-role donut; RolesDonut in lazy-charts.tsx draws it with its legend. */
+export function RolesPie({ slices }: { slices: { name: string; value: number }[] }) {
   return (
-    <div className="flex flex-col items-center gap-5 sm:flex-row lg:flex-col xl:flex-row">
-      <div className="relative size-44 shrink-0" role="img" aria-label={`${total} people by role`}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={slices} dataKey="value" nameKey="name" innerRadius="64%" outerRadius="100%" paddingAngle={2} stroke="none" isAnimationActive>
-              {slices.map((s, i) => <Cell key={s.name} className={SLICE[i % SLICE.length]} />)}
-            </Pie>
-            <Tooltip
-              content={({ active, payload }) =>
-                active && payload?.length ? <div className={tooltipClass}><span className="font-semibold">{payload[0].value}</span> {payload[0].name}</div> : null
-              }
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-heading text-3xl font-extrabold tabular">{total}</span>
-          <span className="text-xs text-muted-foreground">people</span>
-        </div>
-      </div>
-      <ul className="w-full space-y-2 text-sm">
-        {slices.map((s, i) => (
-          <li key={s.name} className="flex items-center gap-2.5">
-            <span className={`size-2.5 rounded-full ${DOT[i % DOT.length]}`} aria-hidden />
-            <span className="flex-1 truncate">{s.name}</span>
-            <span className="font-semibold tabular">{s.value}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie data={slices} dataKey="value" nameKey="name" innerRadius="64%" outerRadius="100%" paddingAngle={2} stroke="none" isAnimationActive>
+          {slices.map((s, i) => <Cell key={s.name} className={SLICE[i % SLICE.length]} />)}
+        </Pie>
+        <Tooltip
+          content={({ active, payload }) =>
+            active && payload?.length ? <div className={tooltipClass}><span className="font-semibold">{payload[0].value}</span> {payload[0].name}</div> : null
+          }
+        />
+      </PieChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -166,29 +145,6 @@ export function CollectionChart({ data }: { data: { date: string; amount: number
         <tbody>{data.map((d) => <tr key={d.date}><th scope="row">{d.date}</th><td>₹{d.amount}</td></tr>)}</tbody>
       </table>
     </div>
-  );
-}
-
-/** Horizontal bars as plain HTML: label, bar, value. One hue; the label carries identity. */
-export function BarList({ items, format: fmt = (v) => v.toLocaleString("en-IN") }: {
-  items: { label: string; value: number; hint?: string }[];
-  format?: (v: number) => string;
-}) {
-  const max = Math.max(...items.map((i) => i.value), 1);
-  return (
-    <ul className="space-y-3">
-      {items.map((i) => (
-        <li key={i.label} className="group">
-          <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
-            <span className="truncate">{i.label}{i.hint && <span className="ml-1.5 text-xs text-muted-foreground">{i.hint}</span>}</span>
-            <span className="font-semibold tabular">{fmt(i.value)}</span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
-            <div className="h-full rounded-full bg-primary transition-[width] duration-700 group-hover:bg-primary/80" style={{ width: `${(i.value / max) * 100}%` }} />
-          </div>
-        </li>
-      ))}
-    </ul>
   );
 }
 

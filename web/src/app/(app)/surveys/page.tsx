@@ -8,7 +8,7 @@ import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EmptyState } from "@/components/common/empty-state";
 import { Field } from "@/components/common/field";
 import { PageHeader } from "@/components/common/page-header";
-import { BarList } from "@/components/dashboard/charts";
+import { BarList } from "@/components/dashboard/bar-list";
 import { useCan } from "@/components/session-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

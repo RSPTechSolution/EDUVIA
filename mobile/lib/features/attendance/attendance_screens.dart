@@ -56,6 +56,7 @@ class _FamilyAttendanceViewState extends ConsumerState<FamilyAttendanceView> {
         onRefresh: () => ref.refresh(myAttendanceProvider(key).future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonSummary(),
           onRetry: () => ref.invalidate(myAttendanceProvider(key)),
           builder: (list) {
             if (list.isEmpty) {
@@ -301,6 +302,7 @@ class _SectionsViewState extends ConsumerState<SectionsView> {
             ),
             AsyncView(
               value: async,
+              loading: const SkeletonList(count: 4, lines: 3),
               onRetry: () => ref.invalidate(attendanceSectionsProvider(day)),
               builder: (list) {
                 if (list.isEmpty) {
@@ -531,6 +533,7 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
       ),
       body: AsyncView(
         value: async,
+        loading: const SkeletonList(count: 10, lines: 1, gap: 6),
         onRetry: () => ref.invalidate(rosterProvider((widget.sectionId, widget.date))),
         builder: (r) {
           _load(r);

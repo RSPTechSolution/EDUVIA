@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 import { AlertTriangle, BellRing, CheckCheck, Megaphone, Pencil, Pin, Plus, Trash2, Users } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion } from "@/components/motion/motion";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";

@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useHydrated } from "@/lib/use-hydrated";
+import { type PageQuery, toSearchParams } from "@/lib/query-params";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Enter your name").max(200),
@@ -23,8 +23,8 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
-export function ContactForm() {
-  const params = useSearchParams();
+export function ContactForm({ query }: { query: PageQuery }) {
+  const params = toSearchParams(query);
   const hydrated = useHydrated();
   const modules = (params.get("modules") ?? "").split(",").filter(Boolean);
   const [sent, setSent] = useState(false);

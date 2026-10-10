@@ -55,6 +55,7 @@ class MySyllabusScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(mySyllabusProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(count: 4),
           onRetry: () => ref.invalidate(mySyllabusProvider),
           builder: (kids) => kids.isEmpty
               ? ListView(children: const [EmptyPanel(icon: Icons.menu_book_outlined, title: 'Nothing to show yet')])

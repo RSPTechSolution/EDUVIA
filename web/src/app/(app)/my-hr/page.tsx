@@ -75,7 +75,8 @@ export default function MyHrPage() {
     <>
       <PageHeader title="My leave and pay" description="Your leave balance and requests, and your payslips." actions={<Button onClick={() => setApplying(true)}><Plus aria-hidden />Apply for leave</Button>} />
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {balance.isLoading ? <Skeleton className="h-20" /> : balance.data?.map((b) => (
+        {/* One placeholder per usual leave type, each the size of a balance card, so phones (one column) don't jump. */}
+        {balance.isLoading ? [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[86px] rounded-xl" />) : balance.data?.map((b) => (
           <div key={b.id} className="rounded-xl border bg-card p-4">
             <p className="text-sm text-muted-foreground">{b.name}</p>
             <p className="text-2xl font-bold tabular">{b.left ?? b.used}<span className="text-sm font-normal text-muted-foreground">{b.paid ? ` of ${b.allowed} left` : " taken"}</span></p>
@@ -86,7 +87,7 @@ export default function MyHrPage() {
         <Card>
           <CardHeader><CardTitle>Leave requests</CardTitle></CardHeader>
           <CardContent>
-            {!leave.data?.length ? <p className="text-sm text-muted-foreground">None yet.</p> : (
+            {leave.isLoading ? <Skeleton className="h-24" /> : !leave.data?.length ? <p className="text-sm text-muted-foreground">None yet.</p> : (
               <ul className="divide-y text-sm">
                 {leave.data.map((l) => (
                   <li key={l.id} className="flex flex-wrap items-center gap-2 py-2">

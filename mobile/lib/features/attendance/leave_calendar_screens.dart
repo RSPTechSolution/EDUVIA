@@ -101,6 +101,7 @@ class LeaveScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(leaveProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(),
           onRetry: () => ref.invalidate(leaveProvider),
           builder: (list) => list.isEmpty
               ? ListView(children: [
@@ -292,6 +293,7 @@ class CalendarScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(calendarProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(count: 7),
           onRetry: () => ref.invalidate(calendarProvider),
           builder: (list) {
             if (list.isEmpty) return ListView(children: const [EmptyPanel(icon: Icons.event_note_outlined, title: 'Nothing on the calendar')]);

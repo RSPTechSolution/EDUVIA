@@ -33,6 +33,19 @@ class HomeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
     final month = isoMonth(DateTime.now());
+    // Everything the cards below need. Until the first load finishes, one skeleton stands in for all of them, so the
+    // cards appear together instead of popping in one by one and pushing each other down.
+    final family = me.isFamily;
+    final needed = <AsyncValue<Object?>>[
+      if (me.role == 'driver' && me.hasModule('transport')) ref.watch(driverTodayProvider),
+      if (family && me.hasModule('attendance')) ref.watch(myAttendanceProvider(month)),
+      if (family && me.hasModule('fees')) ref.watch(myFeesProvider),
+      if (family && me.hasModule('academics')) ...[ref.watch(myHomeworkProvider), ref.watch(myTimetablesProvider)],
+      if (!family && me.hasModule('attendance') && me.can('attendance.mark')) ref.watch(attendanceSectionsProvider(isoDay(DateTime.now()))),
+      if (!family && me.hasModule('fees') && me.can('fees.view')) ref.watch(feeSummaryProvider),
+      if (!family && me.hasModule('academics') && me.teaches) ...[ref.watch(myCoversProvider), ref.watch(myTimetablesProvider)],
+    ];
+    final loading = needed.any((v) => v.isLoading && !v.hasValue && !v.hasError);
 
     return Scaffold(
       appBar: AppBar(
@@ -60,22 +73,52 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             if (me.school != null) _SchoolCard(school: me.school!, role: me.role),
             const SizedBox(height: 16),
-            if (me.role == 'driver' && me.hasModule('transport')) const DriverCard(),
-            if (me.isFamily) ...[
-              if (me.hasModule('attendance') || me.hasModule('fees')) const _FamilyCards(),
-              if (me.hasModule('academics')) const _HomeworkDue(),
-              if (me.hasModule('academics')) const _TodayLessons(),
-            ] else ...[
-              if (me.hasModule('attendance') && me.can('attendance.mark')) const _AttendanceToTake(),
-              if (me.hasModule('fees') && me.can('fees.view')) const _FeeTiles(),
-              if (me.hasModule('academics') && me.teaches) const CoversCard(),
-              if (me.hasModule('academics') && me.teaches) const _TodayLessons(),
+            if (loading)
+              const _HomeSkeleton()
+            else ...[
+              if (me.role == 'driver' && me.hasModule('transport')) const DriverCard(),
+              if (me.isFamily) ...[
+                if (me.hasModule('attendance') || me.hasModule('fees')) const _FamilyCards(),
+                if (me.hasModule('academics')) const _HomeworkDue(),
+                if (me.hasModule('academics')) const _TodayLessons(),
+              ] else ...[
+                if (me.hasModule('attendance') && me.can('attendance.mark')) const _AttendanceToTake(),
+                if (me.hasModule('fees') && me.can('fees.view')) const _FeeTiles(),
+                if (me.hasModule('academics') && me.teaches) const CoversCard(),
+                if (me.hasModule('academics') && me.teaches) const _TodayLessons(),
+              ],
             ],
             const SizedBox(height: 16),
             _ComingUp(flavor: flavor, modules: me.modules),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Stands in for the home cards while they load, shaped like the real thing: a summary card, then a heading and rows.
+class _HomeSkeleton extends StatelessWidget {
+  const _HomeSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Shimmer(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        BoneCard(
+          padding: EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [Bone.circle(40), SizedBox(width: 12), Expanded(child: FractionallySizedBox(alignment: Alignment.centerLeft, widthFactor: 0.55, child: Bone(height: 14)))]),
+            SizedBox(height: 16),
+            Row(children: [Expanded(child: Bone(height: 56, radius: 12)), SizedBox(width: 10), Expanded(child: Bone(height: 56, radius: 12))]),
+          ]),
+        ),
+        SizedBox(height: 10),
+        Padding(padding: EdgeInsets.only(top: 14, bottom: 14), child: Align(alignment: Alignment.centerLeft, child: Bone(width: 130, height: 16))),
+        SkeletonTile(),
+        SizedBox(height: 8),
+        SkeletonTile(),
+      ]),
     );
   }
 }
@@ -139,7 +182,7 @@ class _FamilyCards extends ConsumerWidget {
     final fees = me.hasModule('fees') ? ref.watch(myFeesProvider) : null;
     final kids = att?.value ?? const <StudentAttendance>[];
     final feeKids = fees?.value?.children ?? const <ChildFees>[];
-    if ((att?.isLoading ?? false) || (fees?.isLoading ?? false)) return const SkeletonList(count: 1, height: 120);
+    if ((att?.isLoading ?? false) || (fees?.isLoading ?? false)) return const SkeletonList(count: 1, height: 120, padding: EdgeInsets.only(bottom: 10));
     final ids = {for (final k in kids) k.studentId: k.name, for (final f in feeKids) f.studentId: f.name};
     if (ids.isEmpty) return const SizedBox.shrink();
     final today = DateTime.now();
@@ -286,7 +329,7 @@ class _AttendanceToTake extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final day = isoDay(DateTime.now());
     final async = ref.watch(attendanceSectionsProvider(day));
-    if (async.isLoading) return const SkeletonList(count: 1, height: 90);
+    if (async.isLoading) return const SkeletonList(count: 1, height: 90, padding: EdgeInsets.only(bottom: 10));
     final list = async.value;
     if (list == null || list.isEmpty) return const SizedBox.shrink();
     final pending = list.where((s) => !s.done).toList();

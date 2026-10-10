@@ -12,7 +12,8 @@ import { FileList } from "@/components/common/files";
 import { PageHeader } from "@/components/common/page-header";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { StatCard } from "@/components/common/stat-card";
-import { BarList, IncomeExpenseChart } from "@/components/dashboard/charts";
+import { BarList, BarListSkeleton } from "@/components/dashboard/bar-list";
+import { IncomeExpenseChart } from "@/components/dashboard/lazy-charts";
 import { useCan } from "@/components/session-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -210,13 +211,13 @@ function AccountsPage() {
         </Card>
         <Card>
           <CardHeader><CardTitle>Where it went</CardTitle><CardDescription>Expenses by head</CardDescription></CardHeader>
-          <CardContent>{expense.length ? <BarList items={expense} format={inr} /> : <p className="text-sm text-muted-foreground">No expenses in this period.</p>}</CardContent>
+          <CardContent>{!s ? <BarListSkeleton /> : expense.length ? <BarList items={expense} format={inr} /> : <p className="text-sm text-muted-foreground">No expenses in this period.</p>}</CardContent>
         </Card>
       </div>
-      {income.length > 0 && (
+      {(!s || income.length > 0) && (
         <Card className="mb-6">
           <CardHeader><CardTitle>Where it came from</CardTitle></CardHeader>
-          <CardContent><BarList items={income} format={inr} /></CardContent>
+          <CardContent>{s ? <BarList items={income} format={inr} /> : <BarListSkeleton rows={2} />}</CardContent>
         </Card>
       )}
       <Tabs value={tab} onValueChange={(v) => setTab(v as "book" | "heads")} className="mb-4">

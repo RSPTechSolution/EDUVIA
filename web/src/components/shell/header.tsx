@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChevronRight, KeyRound, LogOut, Menu, Monitor, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSession } from "@/components/session-provider";
-import { signOut } from "@/components/shell/command-palette";
+import { signOut } from "@/lib/auth/sign-out";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { fileUrl } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";

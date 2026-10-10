@@ -98,6 +98,7 @@ class NoticesScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(noticesProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(lines: 3),
           onRetry: () => ref.invalidate(noticesProvider),
           builder: (list) => list.isEmpty
               ? ListView(children: const [EmptyPanel(icon: Icons.campaign_outlined, title: 'No notices yet')])

@@ -26,17 +26,20 @@ import { formatDate, formatDateTime, inr } from "@/lib/format";
 import { useBusRoutes, useLiveTrips, useRiders, useSosAlerts, useVehicles } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
-const BusMap = dynamic(() => import("@/components/transport/bus-map").then((m) => m.BusMap), { ssr: false, loading: () => <Skeleton className="h-80 rounded-xl" /> });
+// The map draws inside a box of fixed height, which its loading placeholder fills, so nothing moves when it appears.
+const BusMap = dynamic(() => import("@/components/transport/bus-map").then((m) => m.BusMap), { ssr: false, loading: () => <Skeleton className="h-full rounded-xl" /> });
 const errText = (e: unknown, f: string) => (e instanceof ApiError ? (Object.values(e.fieldErrors)[0] ?? e.message) : f);
 
 function LiveTab() {
   const q = useLiveTrips();
-  if (q.isLoading) return <Skeleton className="h-80 rounded-xl" />;
+  if (q.isLoading) return <Skeleton className="h-[28rem] rounded-xl" />;
   const trips = q.data ?? [];
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <BusMap buses={trips.map((t) => ({ id: t.id, label: t.vehicle_number ?? t.route_name, lat: t.lat, lng: t.lng, stale: t.stale, path: t.path }))}
-        stops={trips.flatMap((t) => t.stops)} className="h-[28rem]" />
+      <div className="h-[28rem]">
+        <BusMap buses={trips.map((t) => ({ id: t.id, label: t.vehicle_number ?? t.route_name, lat: t.lat, lng: t.lng, stale: t.stale, path: t.path }))}
+          stops={trips.flatMap((t) => t.stops)} className="h-full" />
+      </div>
       <div>
         <h2 className="mb-2 font-semibold">Running now ({trips.length})</h2>
         {trips.length === 0 ? <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No bus is on the road.</p> : (

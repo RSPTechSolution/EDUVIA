@@ -157,6 +157,7 @@ class _DriverScreenState extends ConsumerState<DriverScreen> {
       ]),
       body: AsyncView(
         value: async,
+        loading: const SkeletonSummary(),
         onRetry: () => ref.invalidate(driverTodayProvider),
         builder: (today) {
           if (trip == null) {
@@ -255,6 +256,7 @@ class _MyBusScreenState extends ConsumerState<MyBusScreen> {
       appBar: AppBar(title: const Text('School bus')),
       body: AsyncView(
         value: async,
+        loading: const SkeletonSummary(rows: 3),
         onRetry: () => ref.invalidate(myBusProvider),
         builder: (kids) => ListView(padding: const EdgeInsets.all(12), children: [
           for (final k in kids)

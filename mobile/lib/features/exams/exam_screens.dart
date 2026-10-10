@@ -62,6 +62,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
         onRefresh: () => ref.refresh(myResultsProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonSummary(rows: 5),
           onRetry: () => ref.invalidate(myResultsProvider),
           builder: (kids) {
             if (kids.isEmpty) return ListView(children: const [EmptyPanel(icon: Icons.emoji_events_outlined, title: 'Nothing to show yet')]);
@@ -145,6 +146,7 @@ class ReportCardScreen extends ConsumerWidget {
       ]),
       body: AsyncView(
         value: async,
+        loading: const SkeletonDetail(rows: 8),
         onRetry: () => ref.invalidate(reportCardProvider((examId, studentId))),
         builder: (c) {
           final r = (c['result'] as Map).cast<String, dynamic>();
@@ -239,6 +241,7 @@ class MarksHomeScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Marks entry')),
       body: AsyncView(
         value: async,
+        loading: const SkeletonList(),
         onRetry: () => ref.invalidate(examsProvider),
         builder: (exams) => exams.isEmpty
             ? const EmptyPanel(icon: Icons.edit_note_rounded, title: 'No exams yet')
@@ -267,7 +270,7 @@ class _Sheets extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(sheetsProvider(examId));
     return async.when(
-      loading: () => const Padding(padding: EdgeInsets.all(16), child: LinearProgressIndicator()),
+      loading: () => const SkeletonList(count: 3, lines: 1),
       error: (e, _) => Padding(padding: const EdgeInsets.all(16), child: Text('$e')),
       data: (list) => list.isEmpty
           ? const Padding(padding: EdgeInsets.all(16), child: Text('No mark sheets for your subjects.'))
@@ -364,6 +367,7 @@ class _MarksEntryScreenState extends ConsumerState<MarksEntryScreen> {
       appBar: AppBar(title: Text(async.value == null ? 'Marks' : '${async.value!['section_label']} · ${async.value!['subject_name']}')),
       body: AsyncView(
         value: async,
+        loading: const SkeletonList(count: 10, lines: 1, gap: 6),
         onRetry: () => ref.invalidate(sheetProvider((widget.paperId, widget.sectionId))),
         builder: (s) {
           _load(s);

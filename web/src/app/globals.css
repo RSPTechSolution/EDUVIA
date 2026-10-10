@@ -217,6 +217,25 @@
   100% { transform: translateX(100%); }
 }
 
+/* ---- Entrances for content that appears after the page has loaded (components/motion/primitives.tsx) ----
+   Opacity and transform only, so they never move other content; "backwards" leaves nothing behind once they end. */
+@keyframes enter { from { opacity: 0; transform: translateY(var(--enter-y, 6px)); } }
+@keyframes enter-fade { from { opacity: 0; } }
+.enter { animation: enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.enter-fade { animation: enter-fade 0.2s ease-out backwards; }
+/* A result replacing a form in a dialog, and the tick on a success screen, which overshoots slightly. */
+@keyframes enter-pop { from { opacity: 0; transform: scale(0.96); } }
+@keyframes pop-in { 0% { transform: scale(0); } 70% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.enter-pop { animation: enter-pop 0.25s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.pop-in { animation: pop-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.1s backwards; }
+.enter-stagger > * { animation: enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.enter-stagger > :nth-child(2) { animation-delay: 40ms; }
+.enter-stagger > :nth-child(3) { animation-delay: 80ms; }
+.enter-stagger > :nth-child(4) { animation-delay: 120ms; }
+.enter-stagger > :nth-child(5) { animation-delay: 160ms; }
+.enter-stagger > :nth-child(6) { animation-delay: 200ms; }
+.enter-stagger > :nth-child(n + 7) { animation-delay: 240ms; }
+
 /* ---- Illustration and decorative motion (switched off by reduced-motion below) ---- */
 .illo-float { animation: illo-float 6s ease-in-out infinite; transform-box: fill-box; }
 .illo-bob { animation: illo-bob 4.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }

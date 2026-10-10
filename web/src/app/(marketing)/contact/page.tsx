@@ -2,8 +2,8 @@ import { Clock, MessageSquare, Rocket } from "lucide-react";
 import type { Metadata } from "next";
 import { JsonLd, breadcrumbs, graph, pageMetadata } from "@/lib/seo";
 import Link from "next/link";
-import { Suspense } from "react";
 import { GlowBackdrop } from "@/components/marketing/section";
+import type { PageQuery } from "@/lib/query-params";
 import { ContactForm } from "./contact-form";
 
 export const metadata: Metadata = pageMetadata({
@@ -19,7 +19,8 @@ const POINTS = [
   { icon: Clock, title: "Fast replies", text: "We answer every message within one business day." },
 ];
 
-export default function ContactPage() {
+export default async function ContactPage({ searchParams }: { searchParams: Promise<PageQuery> }) {
+  const query = await searchParams;
   return (
     <section className="relative isolate overflow-hidden px-5 py-16 sm:px-8 lg:py-24">
       <JsonLd data={graph(breadcrumbs([{ name: "Contact", path: "/contact" }]), { "@type": "ContactPage", name: "Contact Vidyanexa", inLanguage: "en-IN" })} />
@@ -41,9 +42,7 @@ export default function ContactPage() {
             ))}
           </ul>
         </div>
-        <Suspense>
-          <ContactForm />
-        </Suspense>
+        <ContactForm query={query} />
       </div>
     </section>
   );

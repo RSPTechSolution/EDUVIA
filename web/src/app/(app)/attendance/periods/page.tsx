@@ -88,7 +88,8 @@ function PeriodsPage() {
       <PageHeader title="Period attendance" description="Subject teachers check who is in each period, to catch students who skip lessons." />
       <input type="date" value={date} max={format(new Date(), "yyyy-MM-dd")} onChange={(e) => e.target.value && setDate(e.target.value)}
              aria-label="Date" className="mb-5 h-9 rounded-md border bg-background px-3 text-sm" />
-      {periods.isLoading ? <Skeleton className="h-32 rounded-xl" /> : !periods.data?.length ? (
+      {/* The empty state's height: what office staff, who teach no periods, end up seeing. */}
+      {periods.isLoading ? <Skeleton className="h-[230px] rounded-2xl" /> : !periods.data?.length ? (
         <EmptyState className="rounded-2xl border bg-card" illustration={<ClipboardList className="size-12 text-muted-foreground/60" aria-hidden />}
           title="No periods to take" description="You have no lessons on this day." />
       ) : (

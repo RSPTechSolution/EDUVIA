@@ -93,6 +93,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
         onRefresh: () => ref.refresh(myTimetablesProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(count: 7),
           onRetry: () => ref.invalidate(myTimetablesProvider),
           builder: (views) {
             if (views.isEmpty) return ListView(children: const [EmptyPanel(icon: Icons.calendar_month_outlined, title: 'No timetable yet')]);

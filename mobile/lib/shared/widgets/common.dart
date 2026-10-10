@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import 'skeleton.dart';
+
+export 'skeleton.dart';
 
 final _inr = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
 
@@ -82,48 +85,6 @@ class EmptyPanel extends StatelessWidget {
           Text(message!, textAlign: TextAlign.center, style: TextStyle(color: scheme.onSurfaceVariant)),
         ],
       ]),
-    );
-  }
-}
-
-/// Grey placeholder rows that pulse while data loads.
-class SkeletonList extends StatefulWidget {
-  const SkeletonList({super.key, this.count = 5, this.height = 64});
-  final int count;
-  final double height;
-
-  @override
-  State<SkeletonList> createState() => _SkeletonListState();
-}
-
-class _SkeletonListState extends State<SkeletonList> with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final base = Theme.of(context).colorScheme.onSurface;
-    return Semantics(
-      label: 'Loading',
-      child: FadeTransition(
-        opacity: Tween(begin: 0.4, end: 1.0).animate(_c),
-        child: ListView.separated(
-          physics: const NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          padding: const EdgeInsets.all(16),
-          itemCount: widget.count,
-          separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemBuilder: (_, _) => Container(
-            height: widget.height,
-            decoration: BoxDecoration(color: base.withValues(alpha: 0.07), borderRadius: BorderRadius.circular(14)),
-          ),
-        ),
-      ),
     );
   }
 }

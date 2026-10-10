@@ -37,11 +37,12 @@ export function StatCard({
         {loading ? (
           <Skeleton className="h-8 w-24" />
         ) : (
-          <p className="font-heading text-2xl font-bold tabular text-foreground">
+          <p className="h-8 truncate font-heading text-2xl leading-8 font-bold tabular text-foreground">
             {typeof value === "number" ? <AnimatedNumber value={value} /> : value}
           </p>
         )}
-        {hint && !loading && <p className="text-xs text-muted-foreground">{hint}</p>}
+        {/* The hint line always takes its space, so a card doesn't grow when its data arrives. */}
+        {loading ? <Skeleton className="my-0.5 h-3 w-28" /> : <p className="min-h-4 text-xs text-muted-foreground">{hint}</p>}
       </div>
       <div className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6", ACCENTS[accent])}>
         <Icon className="size-5" aria-hidden />

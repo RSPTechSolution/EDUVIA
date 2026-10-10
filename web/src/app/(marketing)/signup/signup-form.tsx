@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { Check, PencilLine } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,6 +20,7 @@ import { inr } from "@/lib/format";
 import { useHydrated } from "@/lib/use-hydrated";
 import { cn } from "@/lib/utils";
 import { newPassword } from "@/lib/validation";
+import { type PageQuery, toSearchParams } from "@/lib/query-params";
 
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50);
 
@@ -41,8 +41,8 @@ async function publicGet<T>(path: string): Promise<T> {
   return (await res.json()).data;
 }
 
-export function SignupForm() {
-  const params = useSearchParams();
+export function SignupForm({ initialPlans, query }: { initialPlans: Plan[] | null; query: PageQuery }) {
+  const params = toSearchParams(query);
   const hydrated = useHydrated();
   const [planCode, setPlanCode] = useState(params.get("plan") ?? "pro");
   const [cycle, setCycle] = useState<BillingCycle>(params.get("cycle") === "monthly" ? "monthly" : "yearly");
@@ -52,7 +52,7 @@ export function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
 
-  const plans = useQuery({ queryKey: ["public", "plans"], queryFn: () => publicGet<Plan[]>("/plans") });
+  const plans = useQuery({ queryKey: ["public", "plans"], initialData: initialPlans ?? undefined, queryFn: () => publicGet<Plan[]>("/plans") });
   const quote = useQuery({
     queryKey: ["quote", customModules.join(","), customStudents],
     enabled: hasCustom,

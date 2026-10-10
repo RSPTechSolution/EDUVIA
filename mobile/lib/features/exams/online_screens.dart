@@ -73,6 +73,7 @@ class MyTestsScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(myTestsProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(),
           onRetry: () => ref.invalidate(myTestsProvider),
           builder: (list) => list.isEmpty
               ? ListView(children: const [EmptyPanel(icon: Icons.quiz_outlined, title: 'No tests yet')])
@@ -341,6 +342,7 @@ class LiveClassesScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(liveProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(),
           onRetry: () => ref.invalidate(liveProvider),
           builder: (list) => list.isEmpty
               ? ListView(children: const [EmptyPanel(icon: Icons.videocam_outlined, title: 'No live classes')])

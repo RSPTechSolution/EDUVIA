@@ -69,6 +69,7 @@ class MessagesScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(conversationsProvider.future),
         child: AsyncView(
           value: async,
+          loading: const SkeletonList(count: 8),
           onRetry: () => ref.invalidate(conversationsProvider),
           builder: (list) => list.isEmpty
               ? ListView(children: const [EmptyPanel(icon: Icons.forum_outlined, title: 'No messages yet', message: 'Write to a teacher or a parent.')])
@@ -214,6 +215,7 @@ class PtmScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Parent-teacher meetings')),
       body: AsyncView(
         value: async,
+        loading: const SkeletonList(count: 3, lines: 3),
         onRetry: () => ref.invalidate(ptmProvider),
         builder: (list) => list.isEmpty
             ? const EmptyPanel(icon: Icons.handshake_outlined, title: 'No meetings scheduled')
@@ -253,7 +255,7 @@ class _PtmCard extends ConsumerWidget {
               style: TextStyle(color: scheme.onSurfaceVariant)),
           const SizedBox(height: 8),
           slots.when(
-            loading: () => const LinearProgressIndicator(),
+            loading: () => const Shimmer(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Bone(width: 220, height: 13), SizedBox(height: 8), Bone(width: 160, height: 11), SizedBox(height: 12), Bone(height: 36, radius: 10)])),
             error: (e, _) => Text(e is ApiException ? e.message : 'Could not load'),
             data: (kids) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               for (final k in kids) ...[
@@ -294,6 +296,7 @@ class SurveysScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Surveys')),
       body: AsyncView(
         value: async,
+        loading: const SkeletonList(count: 4),
         onRetry: () => ref.invalidate(surveysProvider),
         builder: (list) => list.isEmpty
             ? const EmptyPanel(icon: Icons.poll_outlined, title: 'No surveys')

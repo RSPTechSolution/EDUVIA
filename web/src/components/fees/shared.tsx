@@ -2,7 +2,6 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Banknote, CheckCircle2, CreditCard, FlaskConical, Landmark, Loader2, QrCode, ReceiptText, ShieldCheck, Smartphone, XCircle } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -62,61 +61,59 @@ export function CollectDialog({ invoice, open, onOpenChange }: { invoice: Pick<I
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <AnimatePresence mode="wait">
-          {done ? (
-            <motion.div key="done" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="py-4 text-center">
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 15, delay: 0.1 }}
-                className="mx-auto flex size-16 items-center justify-center rounded-full bg-success/12">
-                <CheckCircle2 className="size-9 text-success" aria-hidden />
-              </motion.div>
-              <DialogTitle className="mt-4">{inr(done.amount)} received</DialogTitle>
-              <DialogDescription className="mt-1">Receipt {done.receipt_no} · {invoice.student_name}</DialogDescription>
-              <div className="mt-6 flex justify-center gap-2">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-                <Link href={`/fees/receipts/${done.id}`} className={buttonVariants()}><ReceiptText aria-hidden />View receipt</Link>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div key="form" exit={{ opacity: 0 }}>
-              <DialogHeader>
-                <DialogTitle>Collect payment</DialogTitle>
-                <DialogDescription>{invoice.student_name} · {invoice.invoice_no} · {inr(invoice.balance)} due</DialogDescription>
-              </DialogHeader>
-              <form id="collect-form" className="mt-4 grid gap-4" onSubmit={(e) => { e.preventDefault(); setError(null); collect.mutate(); }}>
-                <Field label="Amount (₹)" required error={error ?? undefined}>
-                  {(a) => <Input {...a} type="number" inputMode="decimal" min={1} max={invoice.balance} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-lg font-semibold tabular" />}
+        {done ? (
+          <div className="enter-pop py-4 text-center">
+            <div
+              className="pop-in mx-auto flex size-16 items-center justify-center rounded-full bg-success/12">
+              <CheckCircle2 className="size-9 text-success" aria-hidden />
+            </div>
+            <DialogTitle className="mt-4">{inr(done.amount)} received</DialogTitle>
+            <DialogDescription className="mt-1">Receipt {done.receipt_no} · {invoice.student_name}</DialogDescription>
+            <div className="mt-6 flex justify-center gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+              <Link href={`/fees/receipts/${done.id}`} className={buttonVariants()}><ReceiptText aria-hidden />View receipt</Link>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <DialogHeader>
+              <DialogTitle>Collect payment</DialogTitle>
+              <DialogDescription>{invoice.student_name} · {invoice.invoice_no} · {inr(invoice.balance)} due</DialogDescription>
+            </DialogHeader>
+            <form id="collect-form" className="mt-4 grid gap-4" onSubmit={(e) => { e.preventDefault(); setError(null); collect.mutate(); }}>
+              <Field label="Amount (₹)" required error={error ?? undefined}>
+                {(a) => <Input {...a} type="number" inputMode="decimal" min={1} max={invoice.balance} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-lg font-semibold tabular" />}
+              </Field>
+              <fieldset>
+                <legend className="mb-2 text-sm font-medium">Paid by</legend>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                  {(["cash", "upi", "cheque", "card", "bank_transfer"] as const).map((m) => {
+                    const M = METHODS[m];
+                    return (
+                      <button key={m} type="button" aria-pressed={method === m} onClick={() => setMethod(m)}
+                        className={cn("flex flex-col items-center gap-1 rounded-lg border px-2 py-2.5 text-xs font-medium transition active:scale-95",
+                          method === m ? "border-primary bg-primary/10 text-primary" : "hover:bg-muted")}>
+                        <M.icon className="size-4" aria-hidden />{M.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+              {method !== "cash" && (
+                <Field label={method === "cheque" ? "Cheque number" : method === "upi" ? "UPI reference" : "Transaction reference"} required={needsRef}>
+                  {(a) => <Input {...a} value={reference} onChange={(e) => setReference(e.target.value)} maxLength={100} className="font-mono" />}
                 </Field>
-                <fieldset>
-                  <legend className="mb-2 text-sm font-medium">Paid by</legend>
-                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                    {(["cash", "upi", "cheque", "card", "bank_transfer"] as const).map((m) => {
-                      const M = METHODS[m];
-                      return (
-                        <button key={m} type="button" aria-pressed={method === m} onClick={() => setMethod(m)}
-                          className={cn("flex flex-col items-center gap-1 rounded-lg border px-2 py-2.5 text-xs font-medium transition active:scale-95",
-                            method === m ? "border-primary bg-primary/10 text-primary" : "hover:bg-muted")}>
-                          <M.icon className="size-4" aria-hidden />{M.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-                {method !== "cash" && (
-                  <Field label={method === "cheque" ? "Cheque number" : method === "upi" ? "UPI reference" : "Transaction reference"} required={needsRef}>
-                    {(a) => <Input {...a} value={reference} onChange={(e) => setReference(e.target.value)} maxLength={100} className="font-mono" />}
-                  </Field>
-                )}
-                <Field label="Note">{(a) => <Input {...a} value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Optional" />}</Field>
-              </form>
-              <DialogFooter className="mt-4">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <Button type="submit" form="collect-form" disabled={!Number(amount) || (needsRef && !reference.trim())} loading={collect.isPending} loadingText="Recording…">
-                  Record {amount && Number(amount) > 0 ? inr(Number(amount)) : "payment"}
-                </Button>
-              </DialogFooter>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              )}
+              <Field label="Note">{(a) => <Input {...a} value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Optional" />}</Field>
+            </form>
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="submit" form="collect-form" disabled={!Number(amount) || (needsRef && !reference.trim())} loading={collect.isPending} loadingText="Recording…">
+                Record {amount && Number(amount) > 0 ? inr(Number(amount)) : "payment"}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -177,52 +174,50 @@ export function PayOnlineDialog({ invoice, open, onOpenChange }: { invoice: Pick
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
-        <AnimatePresence mode="wait">
-          {result ? (
-            <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="py-4 text-center">
-              <motion.div initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 240, damping: 14 }}
-                className={cn("mx-auto flex size-16 items-center justify-center rounded-full", result.ok ? "bg-success/12" : "bg-destructive/10")}>
-                {result.ok ? <CheckCircle2 className="size-9 text-success" aria-hidden /> : <XCircle className="size-9 text-destructive" aria-hidden />}
-              </motion.div>
-              <DialogTitle className="mt-4">{result.ok ? `${inr(result.payment!.amount)} paid` : "Payment failed"}</DialogTitle>
-              <DialogDescription className="mt-1">{result.message}{result.payment && ` Receipt ${result.payment.receipt_no}.`}</DialogDescription>
-              <div className="mt-6 flex justify-center gap-2">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-                {result.payment && <Link href={`/fees/receipts/${result.payment.id}`} className={buttonVariants()}><ReceiptText aria-hidden />Receipt</Link>}
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div key="pay" exit={{ opacity: 0 }}>
-              <DialogHeader>
-                <DialogTitle>Pay fees</DialogTitle>
-                <DialogDescription>{invoice?.student_name} · {invoice?.term}</DialogDescription>
-              </DialogHeader>
-              {!order ? (
-                <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" />Starting secure payment…</div>
-              ) : (
-                <div className="mt-4 space-y-4">
-                  <div className="rounded-xl bg-gradient-to-br from-[oklch(0.25_0.058_264)] to-[oklch(0.35_0.07_258)] p-5 text-white shadow-lg">
-                    <p className="text-xs opacity-80">Amount to pay</p>
-                    <p className="mt-1 font-heading text-3xl font-extrabold tabular">{inr(order.amount)}</p>
-                    <p className="mt-2 text-xs opacity-80">Invoice {order.invoice_no}</p>
-                  </div>
-                  {order.test_mode && (
-                    <p className="flex items-start gap-2 rounded-lg border border-warning/35 bg-warning/10 p-3 text-xs text-warning">
-                      <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
-                      Test mode: no real money moves. Choose what the bank would say.
-                    </p>
-                  )}
-                  <div className="grid gap-2">
-                    <Button size="lg" className="h-11" onClick={() => confirm.mutate("success")} loading={confirm.isPending} loadingText="Processing…">
-                      <ShieldCheck aria-hidden />Pay {inr(order.amount)}
-                    </Button>
-                    {order.test_mode && <Button variant="ghost" size="sm" onClick={() => confirm.mutate("failure")} disabled={confirm.isPending}>Simulate a declined payment</Button>}
-                  </div>
+        {result ? (
+          <div className="enter-pop py-4 text-center">
+            <div
+              className={cn("pop-in mx-auto flex size-16 items-center justify-center rounded-full", result.ok ? "bg-success/12" : "bg-destructive/10")}>
+              {result.ok ? <CheckCircle2 className="size-9 text-success" aria-hidden /> : <XCircle className="size-9 text-destructive" aria-hidden />}
+            </div>
+            <DialogTitle className="mt-4">{result.ok ? `${inr(result.payment!.amount)} paid` : "Payment failed"}</DialogTitle>
+            <DialogDescription className="mt-1">{result.message}{result.payment && ` Receipt ${result.payment.receipt_no}.`}</DialogDescription>
+            <div className="mt-6 flex justify-center gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+              {result.payment && <Link href={`/fees/receipts/${result.payment.id}`} className={buttonVariants()}><ReceiptText aria-hidden />Receipt</Link>}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <DialogHeader>
+              <DialogTitle>Pay fees</DialogTitle>
+              <DialogDescription>{invoice?.student_name} · {invoice?.term}</DialogDescription>
+            </DialogHeader>
+            {!order ? (
+              <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" />Starting secure payment…</div>
+            ) : (
+              <div className="mt-4 space-y-4">
+                <div className="rounded-xl bg-gradient-to-br from-[oklch(0.25_0.058_264)] to-[oklch(0.35_0.07_258)] p-5 text-white shadow-lg">
+                  <p className="text-xs opacity-80">Amount to pay</p>
+                  <p className="mt-1 font-heading text-3xl font-extrabold tabular">{inr(order.amount)}</p>
+                  <p className="mt-2 text-xs opacity-80">Invoice {order.invoice_no}</p>
                 </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                {order.test_mode && (
+                  <p className="flex items-start gap-2 rounded-lg border border-warning/35 bg-warning/10 p-3 text-xs text-warning">
+                    <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
+                    Test mode: no real money moves. Choose what the bank would say.
+                  </p>
+                )}
+                <div className="grid gap-2">
+                  <Button size="lg" className="h-11" onClick={() => confirm.mutate("success")} loading={confirm.isPending} loadingText="Processing…">
+                    <ShieldCheck aria-hidden />Pay {inr(order.amount)}
+                  </Button>
+                  {order.test_mode && <Button variant="ghost" size="sm" onClick={() => confirm.mutate("failure")} disabled={confirm.isPending}>Simulate a declined payment</Button>}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

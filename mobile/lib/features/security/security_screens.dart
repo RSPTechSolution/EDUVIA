@@ -59,6 +59,7 @@ class GatePassesScreen extends ConsumerWidget {
         onRefresh: () async => ref.invalidate(gatePassesProvider),
         child: AsyncView(
           value: passes,
+          loading: const SkeletonList(),
           onRetry: () => ref.invalidate(gatePassesProvider),
           builder: (rows) => rows.isEmpty
               ? ListView(children: const [EmptyPanel(icon: Icons.confirmation_number_outlined, title: 'No gate passes',
@@ -238,6 +239,7 @@ class CctvScreen extends ConsumerWidget {
         onRefresh: () async => ref.invalidate(_cctvProvider),
         child: AsyncView(
           value: data,
+          loading: const SkeletonGrid(count: 4, height: 150),
           onRetry: () => ref.invalidate(_cctvProvider),
           builder: (d) => ListView(padding: const EdgeInsets.all(12), children: [
             Card(child: Padding(padding: const EdgeInsets.all(14), child: Text(d.settings['policy'] as String? ?? ''))),
@@ -374,6 +376,7 @@ class _GateDeskState extends ConsumerState<GateDeskScreen> {
           Text('Visitors today', style: Theme.of(context).textTheme.titleMedium),
           AsyncView(
             value: visitors,
+            loading: const SkeletonList(count: 4, padding: EdgeInsets.zero),
             onRetry: () => ref.invalidate(_insideProvider),
             builder: (rows) {
               final open = rows.where((v) => v['status'] == 'in' || v['status'] == 'expected').toList();

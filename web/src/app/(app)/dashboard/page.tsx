@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/common/stat-card";
 import { Stagger, StaggerItem } from "@/components/motion/primitives";
 import { UsageBar } from "@/components/common/usage-bar";
-import { RolesDonut, SigninsChart } from "@/components/dashboard/charts";
+import { RolesDonut, RolesDonutSkeleton, SigninsChart } from "@/components/dashboard/lazy-charts";
 import { DAY_NAMES, TodayList, formatTime } from "@/components/timetable/grid";
 import { PercentBadge } from "@/components/attendance/status";
 import { useCan, useSession } from "@/components/session-provider";
@@ -162,13 +162,15 @@ function SchoolDashboard() {
 
       <SchoolPulse />
 
-      {trial && s && (
+      {trial && (
         <Link href="/settings/billing" className="flex items-center gap-3 rounded-xl border border-info/30 bg-info/5 p-4 text-sm transition hover:border-info/50">
           <CalendarClock className="size-5 shrink-0 text-info" aria-hidden />
-          <span className="flex-1">
-            <span className="font-semibold">{s.trial_days_left > 0 ? `${s.trial_days_left} days left in your free trial` : "Your free trial has ended"}</span>{" "}
-            <span className="text-muted-foreground">You&apos;re trying the {s.plan.name} plan. Compare plans any time.</span>
-          </span>
+          {s ? (
+            <span className="flex-1">
+              <span className="font-semibold">{s.trial_days_left > 0 ? `${s.trial_days_left} days left in your free trial` : "Your free trial has ended"}</span>{" "}
+              <span className="text-muted-foreground">You&apos;re trying the {s.plan.name} plan. Compare plans any time.</span>
+            </span>
+          ) : <Skeleton className="h-4 flex-1" />}
           <ArrowRight className="size-4 text-info" aria-hidden />
         </Link>
       )}
@@ -210,7 +212,7 @@ function SchoolDashboard() {
             <CardDescription>Every enrolled student, and staff and parents with accounts</CardDescription>
           </CardHeader>
           <CardContent>
-            {s ? <RolesDonut data={s.roles} /> : <Skeleton className="h-44 w-full" />}
+            {s ? <RolesDonut data={s.roles} /> : <RolesDonutSkeleton rows={6} />}
             {s && <p className="mt-4 text-xs text-muted-foreground">{s.student_logins} of the students also have their own app login; the rest are followed by their parents.</p>}
           </CardContent>
         </Card>
@@ -220,15 +222,19 @@ function SchoolDashboard() {
         <SetupChecklist />
         <LatestNotices />
         {can("audit.view") && <RecentActivity />}
-        {s && (
+        {(s || summary.isLoading) && (
           <Card>
             <CardHeader>
               <CardTitle>Plan usage</CardTitle>
-              <CardDescription>{s.plan.name} plan</CardDescription>
+              <CardDescription>{s ? `${s.plan.name} plan` : <Skeleton className="mt-1 h-4 w-24" />}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              <UsageBar label="Students" used={s.students.used} limit={s.students.limit} />
-              <UsageBar label="Staff accounts" used={s.staff.used} limit={s.staff.limit} />
+              {s ? (
+                <>
+                  <UsageBar label="Students" used={s.students.used} limit={s.students.limit} />
+                  <UsageBar label="Staff accounts" used={s.staff.used} limit={s.staff.limit} />
+                </>
+              ) : [0, 1].map((i) => <div key={i} className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-2 w-full rounded-full" /></div>)}
               {can("billing.view") && (
                 <Link href="/settings/billing" className={buttonVariants({ variant: "outline", className: "w-full" })}>Compare plans</Link>
               )}
@@ -241,6 +247,19 @@ function SchoolDashboard() {
 }
 
 const PERSONAL_ROLES = ["teacher", "parent", "student"];
+
+function ListRowsSkeleton({ rows }: { rows: number }) {
+  return (
+    <ul className="divide-y" aria-busy="true">
+      {Array.from({ length: rows }).map((_, i) => (
+        <li key={i} className="flex items-start gap-3 py-2.5">
+          <Skeleton className="mt-0.5 size-4 rounded" />
+          <span className="flex-1"><Skeleton className="my-[3px] h-3.5 w-3/4" /><Skeleton className="my-0.5 h-3 w-1/3" /></span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 function nextLesson(view: TimetableView, day: number) {
   const now = new Date();
@@ -265,7 +284,7 @@ function LatestNotices() {
         <Link href="/notices" className="text-sm font-medium text-primary hover:underline">All notices</Link>
       </CardHeader>
       <CardContent>
-        {notices.isLoading ? <Skeleton className="h-40" /> : list.length === 0 ? <p className="py-4 text-center text-sm text-muted-foreground">No notices yet.</p> : (
+        {notices.isLoading ? <ListRowsSkeleton rows={4} /> : list.length === 0 ? <p className="py-4 text-center text-sm text-muted-foreground">No notices yet.</p> : (
           <ul className="divide-y">
             {list.map((n) => (
               <li key={n.id}>
@@ -291,7 +310,15 @@ function HomeworkDue() {
   const me = useSession();
   const hw = useMyHomework(me.modules.includes("academics"));
   const todo = (hw.data ?? []).filter((h) => h.status === "pending").sort((a, b) => a.due_date.localeCompare(b.due_date)).slice(0, 5);
-  if (!me.modules.includes("academics") || !hw.data) return null;
+  if (!me.modules.includes("academics") || hw.isError) return null;
+  if (!hw.data) {
+    return (
+      <Card>
+        <CardHeader><CardTitle>Homework to do</CardTitle><Skeleton className="mt-1 h-4 w-28" /></CardHeader>
+        <CardContent><ListRowsSkeleton rows={4} /></CardContent>
+      </Card>
+    );
+  }
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between">
@@ -324,6 +351,21 @@ function FamilySummary() {
   const attendance = useMyAttendance(month, me.modules.includes("attendance"));
   const fees = useMyFees(me.modules.includes("fees"));
   const kids = attendance.data ?? [];
+  if (attendance.isLoading || fees.isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2" aria-busy="true">
+        {[0, 1].map((i) => (
+          <Card key={i} className={cn(i === 1 && "hidden md:flex")}>
+            <CardContent>
+              <Skeleton className="h-7 w-40" />
+              <Skeleton className="mt-1 h-4 w-20" />
+              <div className="mt-3 flex gap-2"><Skeleton className="h-[34px] w-36 rounded-lg" /><Skeleton className="h-[34px] w-28 rounded-lg" /></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
   if (!kids.length && !fees.data?.children.length) return null;
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -360,7 +402,25 @@ function AttendanceToTake() {
   const can = useCan();
   const sections = useAttendanceSections(undefined, can("attendance.mark"));
   const list = sections.data?.filter((s) => s.is_class_teacher || s.marked < s.students) ?? [];
-  if (!can("attendance.mark") || !sections.data?.length) return null;
+  if (!can("attendance.mark") || sections.isError) return null;
+  if (!sections.data) {
+    return (
+      <Card>
+        <CardHeader><CardTitle>Attendance today</CardTitle><Skeleton className="mt-1 h-4 w-48" /></CardHeader>
+        <CardContent><div className="grid gap-2 sm:grid-cols-2"><Skeleton className="h-[62px] rounded-lg" /></div></CardContent>
+      </Card>
+    );
+  }
+  if (!sections.data.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Attendance today</CardTitle>
+          <CardDescription>Only the class teacher (incharge) of a class takes its daily attendance. You aren&apos;t a class teacher yet.</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
   const pending = sections.data.filter((s) => s.marked < s.students);
   return (
     <Card>
@@ -399,19 +459,30 @@ function SchoolPulse() {
   const me = useSession();
   const att = useAttendanceOverview(undefined, can("attendance.view") && me.modules.includes("attendance"));
   const fees = useFeeSummary(can("fees.view") && me.modules.includes("fees"));
-  if (!att.data && !fees.data) return null;
+  const showAtt = can("attendance.view") && me.modules.includes("attendance") && !att.isError;
+  const showFees = can("fees.view") && me.modules.includes("fees") && !fees.isError;
+  if (!showAtt && !showFees) return null;
   return (
     <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {att.data && (
+      {/* Each tile keeps its place: a placeholder until its numbers arrive, then the tile, so nothing moves. */}
+      {showAtt && (
         <>
-          <StaggerItem><StatCard label="Present today" value={att.data.percent !== null ? `${att.data.percent}%` : "Not marked"} icon={ClipboardCheck} accent="success" hint={`${att.data.sections_marked} of ${att.data.sections_total} classes marked`} href="/attendance" /></StaggerItem>
-          <StaggerItem><StatCard label="Absent today" value={att.data.counts.absent} icon={Users} accent="warning" hint={`${att.data.low_attendance.length} below 75% this month`} href="/attendance" /></StaggerItem>
+          <StaggerItem>{att.data
+            ? <StatCard label="Present today" value={att.data.percent !== null ? `${att.data.percent}%` : "Not marked"} icon={ClipboardCheck} accent="success" hint={`${att.data.sections_marked} of ${att.data.sections_total} classes marked`} href="/attendance" />
+            : <StatCard label="Present today" value="" loading icon={ClipboardCheck} accent="success" />}</StaggerItem>
+          <StaggerItem>{att.data
+            ? <StatCard label="Absent today" value={att.data.counts.absent} icon={Users} accent="warning" hint={`${att.data.low_attendance.length} below 75% this month`} href="/attendance" />
+            : <StatCard label="Absent today" value="" loading icon={Users} accent="warning" />}</StaggerItem>
         </>
       )}
-      {fees.data && (
+      {showFees && (
         <>
-          <StaggerItem><StatCard label="Fees collected today" value={inr(fees.data.collected_today)} icon={Wallet} accent="info" hint={`${inr(fees.data.collected_month)} this month`} href="/fees" /></StaggerItem>
-          <StaggerItem><StatCard label="Fees overdue" value={inr(fees.data.overdue)} icon={CalendarClock} accent="warning" hint={`${fees.data.overdue_invoices} invoices`} href="/fees?tab=invoices&status=overdue" /></StaggerItem>
+          <StaggerItem>{fees.data
+            ? <StatCard label="Fees collected today" value={inr(fees.data.collected_today)} icon={Wallet} accent="info" hint={`${inr(fees.data.collected_month)} this month`} href="/fees" />
+            : <StatCard label="Fees collected today" value="" loading icon={Wallet} accent="info" />}</StaggerItem>
+          <StaggerItem>{fees.data
+            ? <StatCard label="Fees overdue" value={inr(fees.data.overdue)} icon={CalendarClock} accent="warning" hint={`${fees.data.overdue_invoices} invoices`} href="/fees?tab=invoices&status=overdue" />
+            : <StatCard label="Fees overdue" value="" loading icon={CalendarClock} accent="warning" />}</StaggerItem>
         </>
       )}
     </Stagger>

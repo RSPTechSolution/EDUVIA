@@ -31,6 +31,15 @@ export default function MyCctvPage() {
   return (
     <>
       <PageHeader title="Classroom CCTV" description="The school's camera policy, your consent, and live viewing when the whole class agrees." />
+      {/* The three parts arrive separately and their sizes depend on their text; showing them together avoids each
+          one pushing the next down as it lands. */}
+      {settings.isLoading || consent.isLoading || cameras.isLoading ? (
+        <div className="space-y-6" aria-busy="true">
+          <Skeleton className="h-36 rounded-2xl" />
+          <Skeleton className="h-6 w-40" />
+          <div className="grid gap-3 lg:grid-cols-2"><Skeleton className="h-28 rounded-xl" /><Skeleton className="h-28 rounded-xl" /></div>
+        </div>
+      ) : (<>
       <section className="mb-6 rounded-2xl border bg-card p-5">
         <h2 className="mb-2 font-semibold">Policy</h2>
         {settings.isLoading ? <Skeleton className="h-16" /> : <p className="text-sm whitespace-pre-line text-muted-foreground">{settings.data?.policy}</p>}
@@ -69,6 +78,7 @@ export default function MyCctvPage() {
           ))}
         </ul>
       )}
+      </>)}
     </>
   );
 }

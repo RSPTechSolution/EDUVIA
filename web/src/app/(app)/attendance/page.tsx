@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { PermissionGate } from "@/components/common/permission-gate";
 import { StatCard } from "@/components/common/stat-card";
-import { AttendanceTrendChart } from "@/components/dashboard/charts";
+import { AttendanceTrendChart } from "@/components/dashboard/lazy-charts";
 import { ClassesIllustration } from "@/components/illustrations";
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion/primitives";
 import { useCan } from "@/components/session-provider";
@@ -121,8 +121,9 @@ function OverviewTab() {
             <CardDescription>Last 30 days. Worth a call home.</CardDescription>
           </CardHeader>
           <CardContent>
-            {!o ? <Skeleton className="h-48" /> : o.low_attendance.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">Nobody is below 75%.</p> : (
-              <ul className="max-h-72 divide-y overflow-y-auto">
+            {/* A fixed height, the chart's, so the row doesn't change size as the list loads. */}
+            {!o ? <Skeleton className="h-56" /> : o.low_attendance.length === 0 ? <p className="flex h-56 items-center justify-center text-sm text-muted-foreground">Nobody is below 75%.</p> : (
+              <ul className="h-56 divide-y overflow-y-auto">
                 {o.low_attendance.map((r) => (
                   <li key={r.student_id} className="flex items-center justify-between gap-2 py-2 text-sm">
                     <Link href={`/students/${r.student_id}`} className="min-w-0 truncate hover:text-primary hover:underline">{r.name}</Link>
@@ -135,7 +136,7 @@ function OverviewTab() {
         </Card>
       </div>
       <Card>
-        <CardHeader><CardTitle>Today by class</CardTitle>{o && <CountsLine counts={o.counts} />}</CardHeader>
+        <CardHeader><CardTitle>Today by class</CardTitle>{o ? <CountsLine counts={o.counts} /> : <Skeleton className="h-5 w-72 max-w-full" />}</CardHeader>
         <CardContent>
           {!o ? <Skeleton className="h-40" /> : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
