@@ -37,7 +37,7 @@ foreach ($p in 8000, 3000, 8090) {
 Write-Host "3/5 API on http://localhost:8000" -ForegroundColor Cyan
 Start-Process -FilePath "$root\api\venv\Scripts\uvicorn.exe" -WorkingDirectory "$root\api" -WindowStyle Hidden `
   -ArgumentList "app.main:app", "--reload", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=127.0.0.1"
-if (-not (Wait-Url "http://localhost:8000/api/v1/health" 300)) { throw "The API did not start. Run it in a terminal to see the error." }
+if (-not (Wait-Url "http://127.0.0.1:8000/api/v1/health" 300)) { throw "The API did not start. Run it in a terminal to see the error." }
 
 Write-Host "4/5 Web on http://localhost:3000" -ForegroundColor Cyan
 $env:NEXT_DIST_DIR = ".next-prod"
@@ -45,7 +45,7 @@ if ($Build -or -not (Test-Path "$root\web\.next-prod\BUILD_ID")) {
   Push-Location "$root\web"; npm run build; Pop-Location
 }
 Start-Process -FilePath "npm.cmd" -ArgumentList "run", "start" -WorkingDirectory "$root\web" -WindowStyle Hidden
-Wait-Url "http://localhost:3000/login" | Out-Null
+Wait-Url "http://127.0.0.1:3000/login" | Out-Null
 
 Write-Host "5/5 Flutter parent app" -ForegroundColor Cyan
 if (Test-Path "$root\mobile\build\web\index.html") {
