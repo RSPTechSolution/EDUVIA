@@ -73,7 +73,44 @@ async def _child_summaries(db: AsyncSession, school_id: uuid.UUID, rows: list[tu
     ) for s, rel, c, sec in rows]
 
 
-async def user_detail(db: AsyncSession, school_id: uuid.UUID, user_id: uuid.UUID, *, with_activity: bool = False) -> UserDetail:
+async def _module_extras(db: AsyncSession, school_id: uuid.UUID, user: User, out: UserDetail, *, with_hr: bool) -> None:
+    """What this person has to do with the other modules, for the modules the school uses."""
+    from app.core.deps import enabled_modules
+    from app.services import profile_service as prof
+    modules = await enabled_modules(db, school_id)
+    staff = user.role not in (Role.PARENT, Role.STUDENT)
+    if staff:
+        sizes = await prof.section_sizes(db, [s.section_id for s in out.class_teacher_of])
+        for s in out.class_teacher_of:
+            s.students = sizes.get(s.section_id, 0)
+        if "library" in modules:
+            lib = await prof.library_summary(db, user_id=user.id)
+            out.library = lib if lib.current or lib.returned_total else None
+        if "hr" in modules and with_hr:
+            out.hr = await prof.hr_summary(db, school_id, user.id)
+        if "transport" in modules and user.role == Role.DRIVER:
+            out.buses, out.trips = await prof.driver_duties(db, user.id)
+        if "academics" in modules and user.role in (Role.TEACHER, Role.PRINCIPAL):
+            extra = await prof.teacher_extras(db, school_id, user.id)
+            out.live_classes, out.lesson_plans_this_week, out.covers_ahead = extra["live_classes"], extra["lesson_plans_this_week"], extra["covers_ahead"]
+        if "security" in modules:
+            out.visitors = await prof.visitors_hosted(db, user.id)
+        if "hostel" in modules:
+            out.warden_of = await prof.warden_of(db, user.id)
+        if "communication" in modules and user.role == Role.TEACHER:
+            out.ptm = await prof.ptm_rows(db, teacher_id=user.id)
+    if user.role == Role.STUDENT and out.student_id:
+        out.student_overview = await prof.student_overview(db, school_id, out.student_id)
+    if user.role == Role.PARENT and out.children:
+        ids = [c.student_id for c in out.children]
+        names = {c.student_id: c.name for c in out.children}
+        out.requests = await prof.student_requests(db, ids, names, modules=modules)
+        if "communication" in modules:
+            out.ptm = await prof.ptm_rows(db, student_ids=ids, names=names)
+
+
+async def user_detail(db: AsyncSession, school_id: uuid.UUID, user_id: uuid.UUID, *, with_activity: bool = False,
+                      with_hr: bool = False) -> UserDetail:
     """A user and what they're connected to: a parent's children, a student's own record, the classes a teacher
     runs and teaches, and (for those allowed to see the audit log) their recent activity."""
     user = await get_user(db, school_id, user_id)
@@ -102,6 +139,7 @@ async def user_detail(db: AsyncSession, school_id: uuid.UUID, user_id: uuid.UUID
             .join(Section, Section.id == TimetableEntry.section_id).join(SchoolClass, SchoolClass.id == Section.class_id)
             .where(TimetableEntry.school_id == school_id, TimetableEntry.teacher_id == user.id)
             .order_by(Subject.name, SchoolClass.name, Section.name))).all()]
+    await _module_extras(db, school_id, user, out, with_hr=with_hr)
     if with_activity:
         out.activity = [ActivityItem(action=a.action, entity_type=a.entity_type, entity_id=a.entity_id, meta=a.meta or {}, created_at=a.created_at)
                         for a in (await db.scalars(select(AuditLog).where(AuditLog.school_id == school_id, AuditLog.user_id == user.id)

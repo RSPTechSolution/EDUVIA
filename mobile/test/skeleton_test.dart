@@ -41,7 +41,7 @@ void main() {
 
     fees.complete((200, FakeApi.ok({
       'children': [{'student_id': 's1', 'name': 'Aarav Patel', 'class_section': 'Class 5 – A', 'due': 0, 'overdue': 0, 'next_due_date': null, 'invoices': []}],
-      'total_due': 0, 'online_payments': false, 'test_mode': false,
+      'total_due': 0,
     })));
     await tester.pumpAndSettle();
     expect(find.byType(Shimmer), findsNothing);

@@ -17,6 +17,7 @@ class MoreScreen extends ConsumerWidget {
     final unread = ref.watch(unreadNoticesProvider).value ?? 0;
     final scheme = Theme.of(context).colorScheme;
     final items = <(IconData, String, String, String, Widget?)>[
+      if (me.hasModule('attendance') && me.role == 'teacher') (Icons.groups_outlined, 'My class', 'Your class: attendance, leave, fees and parents', '/my-class', null),
       if (me.hasModule('communication')) (Icons.campaign_outlined, 'Notices', 'Announcements from the school', '/notices',
           unread > 0 ? Badge(label: Text('$unread')) : null),
       if (me.hasModule('academics') && (me.isFamily || me.teaches)) (Icons.calendar_month_outlined, 'Timetable', me.isFamily ? 'The week, period by period' : 'Where you teach this week', '/timetable', null),

@@ -49,7 +49,7 @@ const FEATURE_GROUPS = [
     title: "Finance",
     color: "text-success bg-success/10",
     items: [
-      { href: "/features/school-fee-management-software", icon: Wallet, name: "Fee collection", text: "Fee structures, concessions, UPI and online payments, instant receipts." },
+      { href: "/features/school-fee-management-software", icon: Wallet, name: "Fee collection", text: "Fee structures, concessions, cash and UPI collection, instant receipts." },
       { href: "/features/school-fee-management-software", icon: Landmark, name: "Accounts", text: "Expenses, ledgers and Tally export for your accountant." },
       { href: "/features/school-hr-payroll-software", icon: UserCog, name: "HR & payroll", text: "Staff records, leave approvals and salary slips." },
     ],

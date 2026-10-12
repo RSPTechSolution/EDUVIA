@@ -1,15 +1,17 @@
 import re
 import uuid
 from datetime import datetime
-from typing import Literal
+from decimal import Decimal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, PlainSerializer, field_validator
 
 from app.schemas.auth import NewPassword
 from app.schemas.common import Schema
 
 _SLUG = re.compile(r"^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])$")
 Cycle = Literal["monthly", "yearly"]
+Num = Annotated[Decimal, PlainSerializer(lambda v: float(v), return_type=float)]
 
 
 class PlanBrief(Schema):
@@ -156,6 +158,54 @@ class SubscriptionOut(BaseModel):
     can_self_change: bool
     usage: UsageOut
     available_plans: list[PlanOut] = []
+    gst_rate: float = 0.18
+    online_payment: bool = False  # schools can pay for their plan online
+    test_mode: bool = False
+
+
+class CheckoutRequest(BaseModel):
+    plan_code: str = Field(max_length=80)
+    billing_cycle: Cycle = "yearly"
+    custom_modules: list[str] | None = None
+    custom_students: int | None = Field(None, ge=1, le=1_000_000)
+
+
+class CheckoutOut(BaseModel):
+    payment_id: uuid.UUID
+    plan_name: str
+    billing_cycle: str
+    base_amount: Num
+    gst_rate: float
+    gst_amount: Num
+    total: Num
+    gateway: str
+    test_mode: bool
+
+
+class ConfirmSubscriptionPayment(BaseModel):
+    outcome: Literal["success", "failure"]
+
+
+class SubscriptionPaymentOut(Schema):
+    id: uuid.UUID
+    invoice_no: str | None
+    plan_name: str
+    billing_cycle: str
+    base_amount: Num
+    gst_rate: float
+    gst_amount: Num
+    total: Num
+    status: str
+    created_at: datetime
+    paid_at: datetime | None
+    period_start: datetime | None
+    period_end: datetime | None
+
+
+class CheckoutResult(BaseModel):
+    status: str  # paid | failed
+    message: str
+    payment: SubscriptionPaymentOut | None = None
 
 
 class ChangePlanRequest(BaseModel):

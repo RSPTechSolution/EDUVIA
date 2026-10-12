@@ -166,6 +166,38 @@ export interface Subscription {
   can_self_change: boolean;
   usage: { students: number; staff: number };
   available_plans: Plan[];
+  gst_rate: number;
+  online_payment: boolean;
+  test_mode: boolean;
+}
+
+/** A school's payment to Vidyanexa for its plan (the only thing paid online). */
+export interface SubscriptionPayment {
+  id: string;
+  invoice_no: string | null;
+  plan_name: string;
+  billing_cycle: BillingCycle;
+  base_amount: number;
+  gst_rate: number;
+  gst_amount: number;
+  total: number;
+  status: string;
+  created_at: string;
+  paid_at: string | null;
+  period_start: string | null;
+  period_end: string | null;
+}
+
+export interface Checkout {
+  payment_id: string;
+  plan_name: string;
+  billing_cycle: BillingCycle;
+  base_amount: number;
+  gst_rate: number;
+  gst_amount: number;
+  total: number;
+  gateway: string;
+  test_mode: boolean;
 }
 
 export interface Lead {
@@ -268,7 +300,7 @@ export interface RoleRules {
   linked_roles: string[];
 }
 
-export interface UserDetail {
+export interface UserDetail extends PersonExtras {
   id: string;
   email: string;
   full_name: string;
@@ -282,7 +314,7 @@ export interface UserDetail {
   student_id: string | null;
   student_name: string | null;
   student: LinkedChild | null;
-  class_teacher_of: { section_id: string; label: string }[];
+  class_teacher_of: { section_id: string; label: string; students: number }[];
   teaching: string[];
   activity: { action: string; entity_type: string | null; entity_id: string | null; meta: Record<string, unknown>; created_at: string }[];
   // From UserOut
@@ -514,11 +546,8 @@ export interface Receipt {
 export interface MyFees {
   children: { student_id: string; name: string; class_section: string; due: number; overdue: number; next_due_date: string | null; invoices: InvoiceDetail[] }[];
   total_due: number;
-  online_payments: boolean;
-  test_mode: boolean;
 }
 
-export interface PaymentOrder { order_id: string; amount: number; gateway: string; test_mode: boolean; invoice_no: string; description: string }
 
 // ---- exams -----------------------------------------------------------------------------------
 
@@ -1308,4 +1337,40 @@ export interface ReminderResult {
   families: number;
   emails: number;
   skipped_recent: number;
+}
+
+// ---- profiles: everything about one person across the modules ----------------------------
+
+export interface LoanRow { title: string; author: string | null; accession_no: string; issued_on: string; due_on: string; returned_on: string | null; overdue: boolean; fine: number }
+export interface LibrarySummary { current: LoanRow[]; recent_returns: LoanRow[]; returned_total: number; fines_due: number }
+export interface RequestRow { kind: "leave" | "gate_pass" | "staff_leave"; title: string; detail: string | null; status: string; on: string; student_id: string | null; student_name: string | null }
+export interface PtmRow { title: string; on: string; slot: string; teacher_name: string | null; student_name: string | null }
+
+export interface StudentOverview {
+  library: LibrarySummary | null;
+  hostel: { hostel: string; room: string; floor: string | null; since: string } | null;
+  bus: { route: string; stop: string | null; pickup_time: string | null; drop_time: string | null; vehicle_number: string | null; driver_name: string | null; driver_phone: string | null } | null;
+  results: { exam_id: string; name: string; percent: number | null; papers: number; absent: number }[] | null;
+  homework: { pending: number; overdue: number; done: number; checked: number } | null;
+  requests: RequestRow[];
+  certificates: { kind: string; serial_no: string; issued_on: string }[] | null;
+  tests: { title: string; score: number | null; submitted_at: string | null; needs_marking: boolean }[] | null;
+  ptm: PtmRow[] | null;
+  siblings: { student_id: string; name: string; class_section: string }[];
+}
+
+export interface PersonExtras {
+  library: LibrarySummary | null;
+  hr: { department: string | null; joined_on: string | null; qualification: string | null; present_days: number; absent_days: number; leave_days: number;
+    requests: RequestRow[]; latest_payslip: { month: string; net: number } | null } | null;
+  buses: { vehicle_number: string; routes: string[]; helper: string | null }[];
+  trips: { route: string; direction: string; status: string; started_at: string; ended_at: string | null }[];
+  live_classes: { title: string; starts_at: string; sections: string[] }[];
+  lesson_plans_this_week: number;
+  covers_ahead: number;
+  visitors: { name: string; purpose: string; status: string; on: string | null }[];
+  warden_of: string[];
+  requests: RequestRow[];
+  ptm: PtmRow[];
+  student_overview: StudentOverview | null;
 }

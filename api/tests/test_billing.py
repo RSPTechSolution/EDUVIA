@@ -214,3 +214,40 @@ async def test_dashboard_summary_is_real_data(client, admin_headers):
     assert len(d["signins"]) == 14 and d["signins"][-1]["count"] >= 1  # this test's own sign-in
     assert d["plan"]["code"] == "pro" and d["active_users"] == 1
     assert d["staff"] == {"used": 1, "limit": 120}
+
+
+async def test_school_pays_for_its_plan_online_with_gst(client, db):
+    """Only the subscription is paid online: the plan price for the cycle, plus 18% GST, shown separately."""
+    h = await _trial_school(client)
+    school = await db.scalar(select(School).where(School.slug == "sunrise"))
+    school.trial_ends_at = datetime.now(UTC) - timedelta(days=1)
+    await db.commit()
+    pro = await db.scalar(select(Plan).where(Plan.code == "pro"))
+
+    sub = (await client.get(f"{API}/subscription", headers=h)).json()["data"]
+    assert sub["gst_rate"] == 0.18 and sub["online_payment"] is True
+
+    order = (await client.post(f"{API}/subscription/checkout", headers=h, json={"plan_code": "pro", "billing_cycle": "yearly"})).json()["data"]
+    gst = round(pro.price_yearly * 0.18, 2)
+    assert order["base_amount"] == pro.price_yearly and order["gst_amount"] == gst and order["total"] == pro.price_yearly + gst
+    declined = (await client.post(f"{API}/subscription/payments/{order['payment_id']}/confirm", headers=h, json={"outcome": "failure"})).json()["data"]
+    assert declined["status"] == "failed"
+    assert (await client.get(f"{API}/subscription", headers=h)).json()["data"]["status"] == "trialing"
+
+    order = (await client.post(f"{API}/subscription/checkout", headers=h, json={"plan_code": "pro", "billing_cycle": "yearly"})).json()["data"]
+    done = (await client.post(f"{API}/subscription/payments/{order['payment_id']}/confirm", headers=h, json={"outcome": "success"})).json()["data"]
+    assert done["status"] == "paid" and done["payment"]["invoice_no"].startswith("VNX-") and done["payment"]["total"] == order["total"]
+    replay = await client.post(f"{API}/subscription/payments/{order['payment_id']}/confirm", headers=h, json={"outcome": "success"})
+    assert replay.json()["error"]["code"] == "ORDER_DONE"
+
+    sub = (await client.get(f"{API}/subscription", headers=h)).json()["data"]
+    assert sub["status"] == "active" and sub["plan"]["code"] == "pro" and sub["billing_cycle"] == "yearly"
+    end = datetime.fromisoformat(sub["current_period_end"])
+    assert 364 <= (end - datetime.now(UTC)).days <= 365
+    paid = (await client.get(f"{API}/subscription/payments", headers=h)).json()["data"]
+    assert [(p["plan_name"], p["gst_amount"]) for p in paid] == [("Pro", gst)]
+
+    # Only those who manage billing can pay.
+    await factories.user(db, school, "t@sunrise.edu", "teacher")
+    t = await factories.login_headers(client, "t@sunrise.edu", PASSWORD, "sunrise")
+    assert (await client.post(f"{API}/subscription/checkout", headers=t, json={"plan_code": "pro"})).status_code == 403

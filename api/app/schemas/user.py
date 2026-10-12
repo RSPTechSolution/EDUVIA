@@ -10,6 +10,7 @@ from pydantic import AfterValidator, BaseModel, EmailStr, Field, field_validator
 from app.core.permissions import SCHOOL_ROLES
 from app.schemas.auth import NewPassword
 from app.schemas.common import Schema
+from app.schemas.profile import BusDuty, HrSummary, StudentOverview, LibrarySummary, LiveClassRow, PtmRow, RequestRow, TripRow, VisitorRow
 
 _ROLE_VALUES = {r.value for r in SCHOOL_ROLES}
 
@@ -97,6 +98,7 @@ class LinkedChild(BaseModel):
 class SectionRef(BaseModel):
     section_id: uuid.UUID
     label: str
+    students: int = 0
 
 
 class ActivityItem(BaseModel):
@@ -115,6 +117,19 @@ class UserDetail(UserOut):
     class_teacher_of: list[SectionRef] = []  # staff
     teaching: list[str] = []  # staff: "Mathematics · Class 5 – A"
     activity: list[ActivityItem] = []  # recent sign-ins and changes, for those who may see the audit log
+    # From the other modules, when the school uses them:
+    library: LibrarySummary | None = None  # books on loan to a staff member
+    hr: HrSummary | None = None  # staff: attendance, leave and pay (for HR and the person themself)
+    buses: list[BusDuty] = []  # drivers
+    trips: list[TripRow] = []
+    live_classes: list[LiveClassRow] = []  # teachers
+    lesson_plans_this_week: int = 0
+    covers_ahead: int = 0
+    visitors: list[VisitorRow] = []  # people who came to meet them
+    warden_of: list[str] = []
+    requests: list[RequestRow] = []  # parents: their children's leave requests and gate passes
+    ptm: list[PtmRow] = []  # parents and teachers: upcoming parent-teacher meetings
+    student_overview: StudentOverview | None = None  # students: library, bus, hostel, results, homework...
 
 
 class AdminSetPassword(BaseModel):

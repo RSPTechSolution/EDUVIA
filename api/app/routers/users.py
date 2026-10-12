@@ -34,10 +34,17 @@ async def audit_log(db: DB, page: PageParams = Depends(), action: str | None = Q
     return ok([AuditLogOut.model_validate(r) for r in rows], meta)
 
 
+@router.get("/me/overview", response_model=ApiResponse[UserDetail])
+async def my_overview(db: DB, current: CurrentUser = require_permission("school.view")):
+    """Your own profile: your account and everything connected to you (classes, children, books, leave and pay...)."""
+    return ok(await user_service.user_detail(db, current.require_school(), current.id, with_activity=True, with_hr=True))
+
+
 @router.get("/{user_id}", response_model=ApiResponse[UserDetail])
 async def get_user(user_id: uuid.UUID, db: DB, current: CurrentUser = require_permission("users.view")):
     return ok(await user_service.user_detail(db, current.require_school(), user_id,
-                                             with_activity=has_permission(current.role, "audit.view")))
+                                             with_activity=has_permission(current.role, "audit.view"),
+                                             with_hr=has_permission(current.role, "hr.view")))
 
 
 @router.patch("/{user_id}", response_model=ApiResponse[UserOut])

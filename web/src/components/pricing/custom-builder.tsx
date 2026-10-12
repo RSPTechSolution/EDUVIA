@@ -5,7 +5,8 @@ import { Check, Loader2, Lock } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import type { BillingCycle, PricingCatalog, Quote } from "@/lib/api/types";
-import { inr } from "@/lib/format";
+import { formatMoney, inr } from "@/lib/format";
+import { withGst } from "@/lib/gst";
 import { useDebounced } from "@/lib/hooks";
 import { MODULE_META } from "@/lib/module-meta";
 import { cn } from "@/lib/utils";
@@ -120,7 +121,7 @@ export function CustomBuilder({
         <p className="text-sm font-semibold text-muted-foreground">Your custom plan</p>
         <p className="mt-2 flex items-baseline gap-1.5">
           <span className="font-heading text-4xl font-extrabold tracking-tight tabular">{shown !== null ? inr(shown) : "—"}</span>
-          <span className="text-sm text-muted-foreground">/month</span>
+          <span className="text-sm text-muted-foreground">/month + GST</span>
           {quote.isFetching && <Loader2 className="ml-1 size-4 animate-spin text-muted-foreground" aria-label="Updating price" />}
         </p>
         <p className="text-xs text-muted-foreground">
@@ -132,7 +133,18 @@ export function CustomBuilder({
             <div className="flex justify-between"><dt className="text-muted-foreground">Platform & apps</dt><dd className="tabular">{inr(q.platform_fee)}</dd></div>
             <div className="flex justify-between"><dt className="text-muted-foreground">{q.modules.length} modules</dt><dd className="tabular">{inr(q.module_total)}</dd></div>
             <div className="flex justify-between"><dt className="text-muted-foreground">{q.students.toLocaleString("en-IN")} students</dt><dd className="tabular">{inr(q.student_total)}</dd></div>
-            <div className="flex justify-between border-t pt-2 font-semibold"><dt>Monthly total</dt><dd className="tabular">{inr(q.monthly)}</dd></div>
+            <div className="flex justify-between border-t pt-2 font-semibold"><dt>Monthly price</dt><dd className="tabular">{inr(q.monthly)}</dd></div>
+            {/* What's actually charged per billing cycle, with 18% GST on top. */}
+            {(() => {
+              const t = withGst(cycle === "yearly" ? q.yearly : q.monthly, catalog.gst_rate);
+              return (
+                <>
+                  <div className="flex justify-between pt-2"><dt className="text-muted-foreground">{cycle === "yearly" ? "Billed yearly" : "Billed monthly"}</dt><dd className="tabular">{formatMoney(t.base)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-muted-foreground">GST ({Math.round(t.rate * 100)}%)</dt><dd className="tabular">{formatMoney(t.gst)}</dd></div>
+                  <div className="flex justify-between border-t pt-2 font-semibold"><dt>Total with GST</dt><dd className="tabular">{formatMoney(t.total)}</dd></div>
+                </>
+              );
+            })()}
             <p className="pt-1 text-xs text-muted-foreground">Includes up to {q.max_staff} staff accounts and {q.storage_gb} GB storage.</p>
           </dl>
         )}

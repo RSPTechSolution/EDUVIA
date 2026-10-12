@@ -20,9 +20,13 @@ test("pricing shows INR plans and the custom builder reprices live", async ({ pa
   await expect(page.getByRole("heading", { name: "Basic", exact: true })).toBeVisible();
   await expect(page.getByText("₹2,999").first()).toBeVisible(); // comparison table, monthly price
   await page.getByRole("radio", { name: /Monthly/ }).click();
-  await expect(page.locator("article").filter({ hasText: "Basic" }).getByText("₹2,999")).toBeVisible();
+  const basic = page.locator("article").filter({ has: page.getByRole("heading", { name: "Basic", exact: true }) });
+  await expect(basic.getByText("₹2,999")).toBeVisible();
+  // Prices are shown + GST, with the total including 18% GST: 2,999 × 1.18 = 3,538.82.
+  await expect(basic.getByText("/month + GST")).toBeVisible();
+  await expect(basic.getByText("₹3,539 per month with 18% GST")).toBeVisible();
 
-  const total = page.locator("aside").getByText("Monthly total").locator("..");
+  const total = page.locator("aside").getByText("Total with GST").locator("..");
   await expect(total).toBeVisible();
   const before = await total.innerText();
   await page.getByRole("checkbox", { name: /AI Assistant/ }).click();
@@ -52,13 +56,28 @@ test("a school signs up on a trial and lands on its dashboard", async ({ page })
   await expect(page.getByRole("switch", { name: "Examinations" })).toBeDisabled();
   await expect(page.getByText("Available on Pro").first()).toBeVisible();
 
-  // During the trial the admin can switch plans immediately.
+  // During the trial the admin can try another plan for free.
   await page.goto("/settings/billing");
-  await page.getByRole("button", { name: "Switch to Pro" }).click();
+  const pro = page.locator("article").filter({ has: page.getByRole("heading", { name: "Pro", exact: true }) });
+  await pro.getByRole("button", { name: /Try it free until/ }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Switch plan" }).click();
   await expect(page.getByText("You're now on the Pro plan.")).toBeVisible();
   await page.goto("/settings/modules");
   await expect(page.getByRole("switch", { name: "Examinations" })).toBeEnabled();
+
+  // Paying for the plan online: the price, 18% GST and the total, then an invoice. (Test payments: no money moves.)
+  await page.goto("/settings/billing");
+  await page.getByRole("radio", { name: /Monthly/ }).click();
+  await page.getByRole("button", { name: /Pay and activate Pro/ }).click();
+  const checkout = page.getByRole("dialog");
+  await expect(checkout.getByText("GST (18%)")).toBeVisible();
+  const totalText = (await checkout.getByRole("button", { name: /^Pay ₹/ }).textContent())!.replace("Pay ", "").trim();
+  await checkout.getByRole("button", { name: /^Pay ₹/ }).click();
+  await expect(page.getByText("Payment received. You're on the Pro plan.")).toBeVisible();
+  const invoice = page.getByRole("table", { name: "Subscription payments" }).getByRole("row").nth(1);
+  await expect(invoice).toContainText("VNX-");
+  await expect(invoice).toContainText(totalText);
+  await expect(page.getByText(/Paid until/)).toBeVisible();
 });
 
 test("contact form enquiries reach the platform admin", async ({ page, browser }) => {

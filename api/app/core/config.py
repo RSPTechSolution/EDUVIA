@@ -81,8 +81,9 @@ class Settings(BaseSettings):
     # Public address of this API, used in short-lived download links opened by the mobile apps.
     API_PUBLIC_URL: str = "http://localhost:8000"
 
-    # Online fee payments: "test" simulates a gateway (never allowed in production),
-    # "none" turns online payment off. Real gateways (Razorpay) plug in here later.
+    # Online payment is only for schools paying for their Vidyanexa subscription (plan price + 18% GST); school fees are
+    # never paid online. "test" simulates a gateway (never allowed in production), "none" turns it off.
+    # A real gateway (Razorpay) plugs in here later.
     PAYMENT_GATEWAY: str = "test"
 
     CORS_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000"]

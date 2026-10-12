@@ -11,6 +11,7 @@ import { z } from "zod";
 import { Field } from "@/components/common/field";
 import { PageHeader } from "@/components/common/page-header";
 import { PhotoUpload } from "@/components/common/files";
+import { MyConnections } from "@/components/profile/my-connections";
 import { useSession } from "@/components/session-provider";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -80,7 +81,7 @@ function AccountPage() {
   const required = useSearchParams().get("required") === "1" || me.must_change_password;
   return (
     <>
-      <PageHeader title="My account" description="Your profile and sign-in security." />
+      <PageHeader title="My account" description="Your profile, everything connected to you, and sign-in security." />
       {required && (
         <Alert className="mb-6 border-warning/40 bg-warning/5">
           <ShieldAlert className="text-warning" aria-hidden />
@@ -120,6 +121,7 @@ function AccountPage() {
         </Card>
         <ChangePassword />
       </div>
+      {me.school && <MyConnections />}
     </>
   );
 }

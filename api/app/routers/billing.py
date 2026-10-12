@@ -4,7 +4,13 @@ from fastapi import APIRouter
 from app.core import pricing
 from app.core.deps import DB, CurrentUser, require_permission
 from app.core.errors import BadRequest
-from app.schemas.billing import ChangePlanOut, ChangePlanRequest, PlanOut, SubscriptionOut
+import uuid
+
+from app.core.config import settings
+from app.schemas.billing import (
+    ChangePlanOut, ChangePlanRequest, CheckoutOut, CheckoutRequest, CheckoutResult, ConfirmSubscriptionPayment, PlanOut,
+    SubscriptionOut, SubscriptionPaymentOut,
+)
 from app.schemas.common import ApiResponse, ok
 from app.services import billing_service, school_service
 
@@ -17,6 +23,7 @@ async def _subscription(db, school_id) -> SubscriptionOut:
     return SubscriptionOut(
         **{**view, "plan": PlanOut.model_validate(view["plan"])},
         available_plans=[PlanOut.model_validate(p) for p in await billing_service.public_plans(db)],
+        gst_rate=pricing.GST_RATE, online_payment=settings.PAYMENT_GATEWAY != "none", test_mode=settings.PAYMENT_GATEWAY == "test",
     )
 
 
@@ -58,3 +65,27 @@ async def change_plan(body: ChangePlanRequest, db: DB, current: CurrentUser = re
     await billing_service.apply_plan(db, school, plan, cycle=body.billing_cycle, status="trialing", actor_id=current.id)
     return ok(ChangePlanOut(changed=True, message=f"You're now on the {plan.name} plan.",
                             subscription=await _subscription(db, school_id)))
+
+
+@router.post("/checkout", response_model=ApiResponse[CheckoutOut], status_code=201)
+async def checkout(body: CheckoutRequest, db: DB, current: CurrentUser = require_permission("billing.manage")):
+    """Pay for a plan online: the plan price for the cycle plus 18% GST. (School fees are never paid online.)"""
+    school = await school_service.get_school(db, current.require_school())
+    p = await billing_service.checkout(db, school, current.id, body)
+    return ok(CheckoutOut(payment_id=p.id, plan_name=p.plan_name, billing_cycle=p.billing_cycle, base_amount=p.base_amount,
+                          gst_rate=float(p.gst_rate), gst_amount=p.gst_amount, total=p.total, gateway=p.gateway, test_mode=p.gateway == "test"))
+
+
+@router.post("/payments/{payment_id}/confirm", response_model=ApiResponse[CheckoutResult])
+async def confirm(payment_id: uuid.UUID, body: ConfirmSubscriptionPayment, db: DB, current: CurrentUser = require_permission("billing.manage")):
+    school = await school_service.get_school(db, current.require_school())
+    p = await billing_service.confirm_payment(db, school, payment_id, body.outcome, actor_id=current.id)
+    if p.status != "paid":
+        return ok(CheckoutResult(status="failed", message="The payment was declined. No money was taken."))
+    return ok(CheckoutResult(status="paid", message=f"Payment received. You're on the {p.plan_name} plan.",
+                             payment=SubscriptionPaymentOut.model_validate(p)))
+
+
+@router.get("/payments", response_model=ApiResponse[list[SubscriptionPaymentOut]])
+async def list_payments(db: DB, current: CurrentUser = require_permission("billing.view")):
+    return ok([SubscriptionPaymentOut.model_validate(p) for p in await billing_service.payments(db, current.require_school())])

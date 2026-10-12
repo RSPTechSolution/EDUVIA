@@ -191,24 +191,3 @@ class ChildFees(BaseModel):
 class MyFees(BaseModel):
     children: list[ChildFees]
     total_due: Amount
-    online_payments: bool
-    test_mode: bool
-
-
-class OrderOut(BaseModel):
-    order_id: uuid.UUID
-    amount: Amount
-    gateway: str
-    test_mode: bool
-    invoice_no: str
-    description: str
-
-
-class ConfirmOrder(BaseModel):
-    outcome: Literal["success", "failure"] = "success"
-
-
-class OrderResult(BaseModel):
-    status: str
-    payment: PaymentOut | None = None
-    message: str

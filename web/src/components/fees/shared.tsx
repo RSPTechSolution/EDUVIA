@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Banknote, CheckCircle2, CreditCard, FlaskConical, Landmark, Loader2, QrCode, ReceiptText, ShieldCheck, Smartphone, XCircle } from "lucide-react";
+import { AlertCircle, Banknote, CheckCircle2, CreditCard, Landmark, QrCode, ReceiptText, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ApiError, api } from "@/lib/api/client";
-import type { FeePayment, InvoiceRow, PaymentOrder } from "@/lib/api/types";
+import type { FeePayment, InvoiceRow } from "@/lib/api/types";
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -146,78 +146,6 @@ export function DiscountDialog({ invoice, open, onOpenChange }: { invoice: { id:
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button type="submit" form="disc-form" disabled={reason.trim().length < 3} loading={save.isPending} loadingText="Saving…">Save concession</Button>
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-/** Parent-facing payment. In test mode the "gateway" is this dialog; no money moves. */
-export function PayOnlineDialog({ invoice, open, onOpenChange }: { invoice: Pick<InvoiceRow, "id" | "invoice_no" | "balance" | "term" | "student_name"> | null; open: boolean; onOpenChange: (o: boolean) => void }) {
-  const qc = useQueryClient();
-  const [order, setOrder] = useState<PaymentOrder | null>(null);
-  const [result, setResult] = useState<{ ok: boolean; message: string; payment?: FeePayment } | null>(null);
-  const start = useMutation({
-    mutationFn: () => api<PaymentOrder>(`/fees/invoices/${invoice!.id}/pay`, { method: "POST" }),
-    onSuccess: ({ data }) => setOrder(data),
-    onError: (e) => { toast.error(errorText(e, "Could not start the payment")); onOpenChange(false); },
-  });
-  const confirm = useMutation({
-    mutationFn: (outcome: "success" | "failure") => api<{ status: string; message: string; payment: FeePayment | null }>(`/fees/orders/${order!.order_id}/confirm`, { method: "POST", body: { outcome } }),
-    onSuccess: ({ data }) => { setResult({ ok: data.status === "paid", message: data.message, payment: data.payment ?? undefined }); qc.invalidateQueries({ queryKey: ["fees"] }); },
-    onError: (e) => setResult({ ok: false, message: errorText(e, "The payment could not be completed") }),
-  });
-  useEffect(() => {
-    if (open && invoice) { setOrder(null); setResult(null); start.mutate(); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, invoice?.id]);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        {result ? (
-          <div className="enter-pop py-4 text-center">
-            <div
-              className={cn("pop-in mx-auto flex size-16 items-center justify-center rounded-full", result.ok ? "bg-success/12" : "bg-destructive/10")}>
-              {result.ok ? <CheckCircle2 className="size-9 text-success" aria-hidden /> : <XCircle className="size-9 text-destructive" aria-hidden />}
-            </div>
-            <DialogTitle className="mt-4">{result.ok ? `${inr(result.payment!.amount)} paid` : "Payment failed"}</DialogTitle>
-            <DialogDescription className="mt-1">{result.message}{result.payment && ` Receipt ${result.payment.receipt_no}.`}</DialogDescription>
-            <div className="mt-6 flex justify-center gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-              {result.payment && <Link href={`/fees/receipts/${result.payment.id}`} className={buttonVariants()}><ReceiptText aria-hidden />Receipt</Link>}
-            </div>
-          </div>
-        ) : (
-          <div>
-            <DialogHeader>
-              <DialogTitle>Pay fees</DialogTitle>
-              <DialogDescription>{invoice?.student_name} · {invoice?.term}</DialogDescription>
-            </DialogHeader>
-            {!order ? (
-              <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" />Starting secure payment…</div>
-            ) : (
-              <div className="mt-4 space-y-4">
-                <div className="rounded-xl bg-gradient-to-br from-[oklch(0.25_0.058_264)] to-[oklch(0.35_0.07_258)] p-5 text-white shadow-lg">
-                  <p className="text-xs opacity-80">Amount to pay</p>
-                  <p className="mt-1 font-heading text-3xl font-extrabold tabular">{inr(order.amount)}</p>
-                  <p className="mt-2 text-xs opacity-80">Invoice {order.invoice_no}</p>
-                </div>
-                {order.test_mode && (
-                  <p className="flex items-start gap-2 rounded-lg border border-warning/35 bg-warning/10 p-3 text-xs text-warning">
-                    <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
-                    Test mode: no real money moves. Choose what the bank would say.
-                  </p>
-                )}
-                <div className="grid gap-2">
-                  <Button size="lg" className="h-11" onClick={() => confirm.mutate("success")} loading={confirm.isPending} loadingText="Processing…">
-                    <ShieldCheck aria-hidden />Pay {inr(order.amount)}
-                  </Button>
-                  {order.test_mode && <Button variant="ghost" size="sm" onClick={() => confirm.mutate("failure")} disabled={confirm.isPending}>Simulate a declined payment</Button>}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );

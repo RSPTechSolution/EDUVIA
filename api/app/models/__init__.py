@@ -6,7 +6,7 @@ from app.models.academics_extra import Certificate, Enquiry, LessonPlan, Substit
 from app.models.academics import SchoolClass, Section, Student, StudentGuardian
 from app.models.audit import AuditLog
 from app.models.base import Base
-from app.models.billing import Lead, Plan
+from app.models.billing import Lead, Plan, SubscriptionPayment
 from app.models.campus import Asset, Book, BookCopy, BookIssue, Hostel, HostelAllocation, HostelRoom, StockItem, StockMove
 from app.models.security import Camera, CctvConsent, CctvView, ComplianceDoc, GatePass, Visitor, Worker, WorkerLog
 from app.models.communication import Homework, HomeworkStatus, Notice, NoticeRead
@@ -22,7 +22,7 @@ from app.models.timetable import Period, Subject, TeacherSubject, TeacherUnavail
 from app.models.transport import Boarding, Route, SosAlert, Stop, TransportAssignment, Trip, TripPing, Vehicle
 from app.models.user import PasswordResetToken, User, UserSession
 
-__all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan", "Lead", "School", "SchoolModule", "User", "UserSession", "PasswordResetToken", "AuditLog",
+__all__ = ["Base", "SchoolClass", "Section", "Student", "StudentGuardian", "Plan", "SubscriptionPayment", "Lead", "School", "SchoolModule", "User", "UserSession", "PasswordResetToken", "AuditLog",
            "Subject", "Period", "TeacherSubject", "TeacherUnavailability", "TimetableEntry",
            "AttendanceRecord", "FeeCategory", "FeeStructure", "FeeInvoice", "FeeInvoiceItem", "FeePayment", "PaymentOrder",
            "Exam", "ExamPaper", "ExamMark", "ExamRemark", "Notice", "NoticeRead", "Homework", "HomeworkStatus", "EmailLog",

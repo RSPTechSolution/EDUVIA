@@ -127,9 +127,11 @@ async def test_homework_attachments_and_notifications(client, db, school, admin_
 
     # A notice to the class (from its class teacher) reaches the parent; read state works per user.
     t7 = await db.scalar(select(User.id).where(User.email == "t7@t.com"))
-    await client.patch(f"{API}/classes/sections/{a.id}", headers=admin_headers, json={"class_teacher_id": str(t7)})
-    await client.post(f"{API}/notices", headers=t, json={"title": "Test on Friday", "body": "Ch 3", "audience": "sections",
-                                                         "section_ids": [str(a.id)]})
+    made_ct = await client.patch(f"{API}/classes/sections/{a.id}", headers=admin_headers, json={"class_teacher_id": str(t7)})
+    assert made_ct.status_code == 200, made_ct.text
+    posted = await client.post(f"{API}/notices", headers=t, json={"title": "Test on Friday", "body": "Ch 3", "audience": "sections",
+                                                                  "section_ids": [str(a.id)]})
+    assert posted.status_code == 201, posted.text
     assert (await client.get(f"{API}/notifications/unread-count", headers=p)).json()["data"]["count"] == 2
     first = (await notifications(client, p))[0]
     assert first["kind"] == "notice"

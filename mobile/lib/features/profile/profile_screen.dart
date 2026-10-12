@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/auth/models.dart';
 import '../../core/theme/theme_mode.dart';
+import 'connections.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -59,6 +60,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
+          if (me.school != null) ...[const ConnectedToYou(), const SizedBox(height: 16)],
           Card(
             child: Column(children: [
               ListTile(

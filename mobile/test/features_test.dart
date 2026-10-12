@@ -57,38 +57,22 @@ void main() {
     expect(find.descendant(of: bar, matching: find.text('Fees')), findsNothing);
   });
 
-  testWidgets('parent sees what is due and pays in test mode', (tester) async {
-    var paid = false;
+  testWidgets('parent sees what is due and is told to pay at the school office', (tester) async {
     final fake = FakeApi()
       ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson())))
       ..on('GET /fees/my', (_) => (200, FakeApi.ok({
-            'children': [{'student_id': 's1', 'name': 'Aarav Patel', 'class_section': 'Class 5 – A', 'due': paid ? 0 : 3000, 'overdue': paid ? 0 : 3000,
-              'next_due_date': '2026-07-15', 'invoices': [invoice(balance: paid ? 0 : 3000, overdue: !paid, status: paid ? 'paid' : 'partial')]}],
-            'total_due': paid ? 0 : 3000, 'online_payments': true, 'test_mode': true,
-          })))
-      ..on('POST /fees/invoices/i1/pay', (_) => (201, FakeApi.ok({'order_id': 'o1', 'amount': 3000, 'gateway': 'test', 'test_mode': true, 'invoice_no': 'INV-2627-00001', 'description': 'Quarter 2'})))
-      ..on('POST /fees/orders/o1/confirm', (req) {
-        expect(req.data['outcome'], 'success');
-        paid = true;
-        return (200, FakeApi.ok({'status': 'paid', 'message': 'Payment received. Thank you!', 'payment': {
-          'id': 'p1', 'receipt_no': 'RCT-2627-00009', 'amount': 3000, 'method': 'online', 'reference': 'pay_test', 'note': null,
-          'paid_at': '2026-10-03T10:00:00Z', 'collected_by': 'Paid online by Suresh Patel'}}));
-      });
+            'children': [{'student_id': 's1', 'name': 'Aarav Patel', 'class_section': 'Class 5 – A', 'due': 3000, 'overdue': 3000,
+              'next_due_date': '2026-07-15', 'invoices': [invoice()]}],
+            'total_due': 3000,
+          })));
     await pump(tester, container(fake));
     await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Fees')));
     await tester.pumpAndSettle();
-    expect(find.text('₹3,000 is overdue · Test payments'), findsOneWidget);
-    expect(find.text('Overdue'), findsWidgets);
-
-    await tester.tap(find.widgetWithText(FilledButton, 'Pay ₹3,000'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Test mode'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Pay ₹3,000').last);
-    await tester.pumpAndSettle();
-    expect(find.text('₹3,000 paid'), findsOneWidget);
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Done'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('All paid up. Thank you!'), findsOneWidget);
+    expect(find.text('₹3,000 is overdue'), findsOneWidget);
+    expect(find.textContaining('at the school office'), findsOneWidget);
+    expect(find.textContaining('Pay ₹3,000'), findsOneWidget);
+    expect(find.byType(FilledButton), findsNothing); // no online payment
+    expect(fake.calls.where((c) => c.contains('/pay')), isEmpty);
   });
 
   testWidgets('teacher marks the rest present, one absent, and saves', (tester) async {
@@ -306,6 +290,59 @@ void main() {
     await pump(tester, container(fake, flavor: AppFlavor.staff));
     expect(find.text('Your covers'), findsOneWidget);
     expect(find.textContaining('Class 7 – A Science for Priya Verma'), findsOneWidget);
+  });
+
+  testWidgets('class teacher opens My class: attendance, fees and the roster with parents', (tester) async {
+    final me = meJson(role: 'teacher')..['permissions'] = ['school.view', 'attendance.view', 'attendance.mark']..['modules'] = ['attendance', 'fees'];
+    var reminded = false;
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(me)))
+      ..on('GET /attendance/sections', (_) => (200, FakeApi.ok([])))
+      ..on('GET /classes/my', (_) => (200, FakeApi.ok([{
+            'section_id': 'sec1', 'label': 'Class 5 – A', 'is_class_teacher': true, 'students': 8, 'attendance_marked': true, 'present': 7,
+            'absent': 1, 'on_leave': 0, 'pending_leave': 2, 'pending_gate_passes': 0, 'fees_enabled': true, 'students_overdue': 1, 'overdue_amount': 3000}])))
+      ..on('GET /classes/my/sec1', (_) => (200, FakeApi.ok({'section_id': 'sec1', 'label': 'Class 5 – A', 'class_teacher': 'Priya Verma', 'fees_enabled': true,
+            'month_start': '2026-10-01', 'students': [{'student_id': 's1', 'name': 'Aarav Patel', 'roll_no': 1, 'admission_no': 'GV1', 'photo_file_id': null,
+              'today': 'present', 'attendance_percent': 96.0, 'days_absent': 0, 'fee_due': 3000, 'fee_overdue': true,
+              'guardians': ['Suresh Patel (father) · +91 98140 20001']}]})))
+      ..on('POST /classes/my/sec1/fee-reminders', (_) {
+        reminded = true;
+        return (200, FakeApi.ok({'invoices': 1, 'families': 1, 'emails': 0, 'skipped_recent': 0}));
+      });
+    await pump(tester, container(fake, flavor: AppFlavor.staff));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('My class'));
+    await tester.pumpAndSettle();
+    expect(find.text('7/8'), findsOneWidget);
+    expect(find.text('₹3,000 overdue'), findsOneWidget);
+    expect(find.text('1. Aarav Patel'), findsOneWidget);
+    expect(find.text('Suresh Patel (father) · +91 98140 20001'), findsOneWidget);
+    await tester.tap(find.text('Remind parents'));
+    await tester.pumpAndSettle();
+    expect(reminded, isTrue);
+    expect(find.text('Reminded 1 family about overdue fees'), findsOneWidget);
+  });
+
+  testWidgets("a parent's profile shows what is connected to them", (tester) async {
+    final fake = FakeApi()
+      ..on('GET /auth/me', (_) => (200, FakeApi.ok(meJson()..['modules'] = ['attendance'])))
+      ..on('GET /attendance/my', (_) => (200, FakeApi.ok([])))
+      ..on('GET /users/me/overview', (_) => (200, FakeApi.ok({
+            'role': 'parent', 'class_teacher_of': [], 'teaching': [], 'buses': [], 'library': null, 'hr': null, 'ptm': [], 'student_overview': null,
+            'children': [{'student_id': 's1', 'name': 'Aarav Patel', 'class_section': 'Class 5 – A', 'relationship': 'father', 'admission_no': 'GV1',
+              'attendance_percent': 96.0, 'fee_due': 3000, 'fee_overdue': true}],
+            'requests': [{'kind': 'leave', 'title': 'Leave (family)', 'detail': '14 Oct · Wedding', 'status': 'pending', 'on': '2026-10-14',
+              'student_id': 's1', 'student_name': 'Aarav Patel'}]})));
+    await pump(tester, container(fake));
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('More')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Profile & settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Connected to you'), findsOneWidget);
+    expect(find.text('Aarav Patel · Class 5 – A'), findsOneWidget);
+    expect(find.textContaining('₹3,000 overdue'), findsOneWidget);
+    expect(find.text('Leave (family) · Aarav Patel'), findsOneWidget);
   });
 
   testWidgets('parent asks for leave and sees it pending', (tester) async {

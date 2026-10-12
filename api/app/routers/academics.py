@@ -11,6 +11,7 @@ from app.schemas.academics import (
 from app.schemas.common import ApiResponse, Message, PageParams, ok
 from app.schemas.accounts import ReminderResult
 from app.schemas.class_teacher import ClassReminderIn, MyClass, MyClassDetail
+from app.schemas.profile import StudentOverview
 from app.services import academics_service, class_teacher_service, student_service
 
 classes = APIRouter(dependencies=[require_module("students")])
@@ -116,6 +117,13 @@ async def create_student(body: StudentCreate, db: DB, current: CurrentUser = req
 @students.get("/{student_id}", response_model=ApiResponse[StudentDetail])
 async def get_student(student_id: uuid.UUID, db: DB, current: CurrentUser = require_permission("students.view")):
     return ok(await student_service.detail(db, current.require_school(), student_id))
+
+
+@students.get("/{student_id}/overview", response_model=ApiResponse[StudentOverview])
+async def student_overview(student_id: uuid.UUID, db: DB, current: CurrentUser = require_permission("students.view")):
+    """Everything about the student from the other modules: library, bus, hostel, results, homework, requests..."""
+    from app.services import profile_service
+    return ok(await profile_service.student_overview(db, current.require_school(), student_id))
 
 
 @students.patch("/{student_id}", response_model=ApiResponse[StudentDetail])

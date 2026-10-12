@@ -68,7 +68,7 @@ function Dashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-start justify-between">
-            <div><CardTitle>Recent payments</CardTitle><CardDescription>Counter and online</CardDescription></div>
+            <div><CardTitle>Recent payments</CardTitle><CardDescription>Recorded at the counter</CardDescription></div>
           </CardHeader>
           <CardContent>
             {!s ? <Skeleton className="h-60" /> : (

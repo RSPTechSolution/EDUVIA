@@ -168,6 +168,9 @@ async def test_period_attendance_and_bunks(client, db, school, admin_headers):
             "section_id": str(section.id), "day": day.isoweekday(), "period_id": period["id"], "subject_id": maths["id"], "teacher_id": str(teacher.id)})
     ids = [(await client.post(f"{API}/students", headers=admin_headers, json=student_body(section, f"B{i}", first_name=n))).json()["data"]["student"]["id"]
            for i, n in enumerate(["Avi", "Bea", "Cy"])]
+    # t is the class teacher (incharge): period attendance belongs to them, for every period of the class.
+    # o only teaches P2 there, so o takes no attendance.
+    await client.patch(f"{API}/classes/sections/{section.id}", headers=admin_headers, json={"class_teacher_id": str(t.id)})
     th = await factories.login_headers(client, "pt1@t.com", PASSWORD, school.slug)
     oh = await factories.login_headers(client, "pt2@t.com", PASSWORD, school.slug)
     # Morning roll call by the admin: Cy absent.
@@ -175,11 +178,14 @@ async def test_period_attendance_and_bunks(client, db, school, admin_headers):
         {"student_id": ids[0], "status": "present"}, {"student_id": ids[1], "status": "present"}, {"student_id": ids[2], "status": "absent"}]})
 
     cards = (await client.get(f"{API}/attendance/periods", headers=th, params={"date": day.isoformat()})).json()["data"]
-    assert [(c["period_name"], c["marked"]) for c in cards] == [("P1", False)]
+    assert [(c["period_name"], c["marked"]) for c in cards] == [("P1", False), ("P2", False)]
+    assert (await client.get(f"{API}/attendance/periods", headers=oh, params={"date": day.isoformat()})).json()["data"] == []
     entry = cards[0]["entry_id"]
     roster = (await client.get(f"{API}/attendance/periods/{entry}", headers=th, params={"date": day.isoformat()})).json()["data"]
     assert [(s["name"], s["absent"]) for s in roster["students"]] == [("Avi Sharma", False), ("Bea Sharma", False), ("Cy Sharma", True)]
     assert (await client.get(f"{API}/attendance/periods/{entry}", headers=oh, params={"date": day.isoformat()})).status_code == 403
+    denied = await client.put(f"{API}/attendance/periods/{cards[1]['entry_id']}", headers=oh, json={"date": day.isoformat(), "absent_ids": []})
+    assert denied.status_code == 403 and denied.json()["error"]["code"] == "NOT_YOUR_SECTION"
 
     saved = (await client.put(f"{API}/attendance/periods/{entry}", headers=th, json={"date": day.isoformat(), "absent_ids": [ids[1], ids[2]]})).json()["data"]
     assert saved["marked"] and [s["absent"] for s in saved["students"]] == [False, True, True]

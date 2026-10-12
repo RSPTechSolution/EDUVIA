@@ -85,13 +85,13 @@ function PeriodsPage() {
   useEffect(() => { setEntryId(null); }, [date]);
   return (
     <>
-      <PageHeader title="Period attendance" description="Subject teachers check who is in each period, to catch students who skip lessons." />
+      <PageHeader title="Period attendance" description="The class teacher (incharge) checks who is in each period of their class, to catch students who skip lessons." />
       <input type="date" value={date} max={format(new Date(), "yyyy-MM-dd")} onChange={(e) => e.target.value && setDate(e.target.value)}
              aria-label="Date" className="mb-5 h-9 rounded-md border bg-background px-3 text-sm" />
       {/* The empty state's height: what office staff, who teach no periods, end up seeing. */}
       {periods.isLoading ? <Skeleton className="h-[230px] rounded-2xl" /> : !periods.data?.length ? (
         <EmptyState className="rounded-2xl border bg-card" illustration={<ClipboardList className="size-12 text-muted-foreground/60" aria-hidden />}
-          title="No periods to take" description="You have no lessons on this day." />
+          title="No periods to take" description="Only the class teacher (incharge) takes period attendance, for the periods of their own class." />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
           <ul className="space-y-2" aria-label="Your periods">

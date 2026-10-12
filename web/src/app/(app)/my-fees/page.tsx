@@ -1,24 +1,23 @@
 "use client";
 
 import { format, parseISO } from "date-fns";
-import { CalendarClock, CheckCircle2, ChevronDown, ReceiptText, ShieldCheck, Wallet } from "lucide-react";
+import { CalendarClock, CheckCircle2, ChevronDown, Landmark, ReceiptText, Wallet } from "lucide-react";
 import { AnimatePresence, motion } from "@/components/motion/motion";
 import Link from "next/link";
 import { useState } from "react";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
-import { InvoiceStatus, METHODS, PayOnlineDialog } from "@/components/fees/shared";
+import { InvoiceStatus, METHODS } from "@/components/fees/shared";
 import { FamilyIllustration } from "@/components/illustrations";
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion/primitives";
 import { useSession } from "@/components/session-provider";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { InvoiceDetail } from "@/lib/api/types";
 import { formatDateTime, inr } from "@/lib/format";
 import { useMyFees } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
-function InvoiceCard({ inv, onPay, canPay }: { inv: InvoiceDetail; onPay: () => void; canPay: boolean }) {
+function InvoiceCard({ inv }: { inv: InvoiceDetail }) {
   const [open, setOpen] = useState(inv.balance > 0);
   const net = inv.total - inv.discount;
   return (
@@ -58,10 +57,11 @@ function InvoiceCard({ inv, onPay, canPay }: { inv: InvoiceDetail; onPay: () => 
                     <span className="flex-1"><span className="font-medium">{inr(p.amount)}</span> <span className="text-muted-foreground">· {METHODS[p.method]?.label ?? p.method} · {formatDateTime(p.paid_at)}</span></span>
                   </Link>
                 ))}
-                {inv.balance > 0 && canPay && (
-                  <Button className="w-full" size="lg" onClick={onPay}><ShieldCheck aria-hidden />Pay {inr(inv.balance)} online</Button>
+                {inv.balance > 0 && (
+                  <p className="flex items-start gap-2 rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                    <Landmark className="mt-0.5 size-4 shrink-0" aria-hidden />Pay {inr(inv.balance)} at the school office (cash, UPI, cheque or bank transfer). Your receipt appears here once it&apos;s recorded.
+                  </p>
                 )}
-                {inv.balance > 0 && !canPay && <p className="text-xs text-muted-foreground">Pay at the school office.</p>}
               </div>
             </div>
           </motion.div>
@@ -75,13 +75,12 @@ export default function MyFeesPage() {
   const me = useSession();
   const q = useMyFees();
   const [index, setIndex] = useState(0);
-  const [paying, setPaying] = useState<(InvoiceDetail & { student_name: string }) | null>(null);
   const data = q.data;
   const child = data?.children[Math.min(index, (data?.children.length ?? 1) - 1)];
 
   return (
     <>
-      <PageHeader title="Fees" description={me.role === "parent" ? "Fees for your children, receipts and online payment." : "Your fees and receipts."} />
+      <PageHeader title="Fees" description={me.role === "parent" ? "Fees for your children and their receipts. Fees are paid at the school office." : "Your fees and receipts."} />
       {q.isLoading ? <Skeleton className="h-96 rounded-2xl" /> : !data || !child ? (
         <EmptyState className="rounded-2xl border bg-card" illustration={<FamilyIllustration />} title="Nothing to show yet" description="No student is linked to this account." />
       ) : (
@@ -92,7 +91,6 @@ export default function MyFeesPage() {
               <p className="mt-1 font-heading text-4xl font-extrabold tabular">{inr(data.total_due)}</p>
               <p className="mt-2 text-sm text-white/80">
                 {data.total_due === 0 ? "All paid up. Thank you!" : data.children.some((c) => c.overdue > 0) ? `${inr(data.children.reduce((n, c) => n + c.overdue, 0))} is overdue.` : "Nothing overdue."}
-                {data.test_mode && " · Online payments are in test mode."}
               </p>
               <Wallet className="absolute -right-4 -bottom-6 size-36 text-white/10" aria-hidden />
             </div>
@@ -112,13 +110,12 @@ export default function MyFeesPage() {
             {child.invoices.length === 0 && <p className="text-sm text-muted-foreground">No invoices yet.</p>}
             {child.invoices.map((inv) => (
               <StaggerItem key={inv.id}>
-                <InvoiceCard inv={inv} canPay={data.online_payments} onPay={() => setPaying({ ...inv, student_name: child.name })} />
+                <InvoiceCard inv={inv} />
               </StaggerItem>
             ))}
           </Stagger>
         </>
       )}
-      <PayOnlineDialog invoice={paying} open={Boolean(paying)} onOpenChange={(o) => !o && setPaying(null)} />
     </>
   );
 }

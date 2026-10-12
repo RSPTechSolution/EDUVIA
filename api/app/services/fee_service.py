@@ -1,5 +1,4 @@
 """Fee categories, class fee structures, invoices, counter collection, concessions and online payment."""
-import secrets
 import uuid
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
@@ -9,17 +8,16 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.core.errors import AppError, Conflict, NotFound
+from app.core.errors import Conflict, NotFound
 from app.models import (
-    FeeCategory, FeeInvoice, FeeInvoiceItem, FeePayment, FeeStructure, PaymentOrder, School, SchoolClass, Section,
+    FeeCategory, FeeInvoice, FeeInvoiceItem, FeePayment, FeeStructure, School, SchoolClass, Section,
     Student, StudentGuardian, User,
 )
 from app.schemas.common import PageMeta, PageParams
 from app.schemas.finance import (
     CategoryIn, CategoryOut, CategoryUpdate, ChildFees, ClassDue, CollectPayment, DayAmount, DiscountSet, FeeSummary,
-    GenerateInvoices, GenerateResult, InvoiceDetail, InvoiceItemOut, InvoiceRow, MethodAmount, MyFees, OrderOut,
-    OrderResult, PaymentOut, Receipt, StructureClass, StructureMatrix, StructureSet,
+    GenerateInvoices, GenerateResult, InvoiceDetail, InvoiceItemOut, InvoiceRow, MethodAmount, MyFees,
+    PaymentOut, Receipt, StructureClass, StructureMatrix, StructureSet,
 )
 from app.services import audit_service
 from app.services import notify
@@ -369,47 +367,6 @@ async def my_fees(db: AsyncSession, user: User) -> MyFees:
             class_section=invoices[0].class_section if invoices else "",
             due=sum((i.balance for i in open_), ZERO), overdue=sum((i.balance for i in open_ if i.overdue), ZERO),
             next_due_date=min((i.due_date for i in open_), default=None), invoices=invoices))
-    online = settings.PAYMENT_GATEWAY != "none"
-    return MyFees(children=children, total_due=sum((c.due for c in children), ZERO), online_payments=online,
-                  test_mode=settings.PAYMENT_GATEWAY == "test")
-
-
-async def create_order(db: AsyncSession, user: User, invoice_id: uuid.UUID) -> OrderOut:
-    if settings.PAYMENT_GATEWAY == "none":
-        raise AppError("Online payment isn't available. Please pay at the school office.", code="ONLINE_PAYMENT_OFF", status_code=409)
-    inv = await _get_invoice(db, user.school_id, invoice_id)
-    if inv.student_id not in {s.id for s in await own_students(db, user)}:
-        raise NotFound("Invoice not found")
-    due = balance(inv)
-    if due <= 0 or inv.status == "cancelled":
-        raise Conflict("Nothing is due on this invoice", code="ALREADY_PAID")
-    order = PaymentOrder(school_id=user.school_id, invoice_id=inv.id, amount=due, gateway=settings.PAYMENT_GATEWAY,
-                         gateway_order_id=f"order_test_{secrets.token_hex(8)}", created_by=user.id)
-    db.add(order)
-    await db.flush()
-    return OrderOut(order_id=order.id, amount=due, gateway=order.gateway, test_mode=order.gateway == "test",
-                    invoice_no=inv.invoice_no, description=inv.term)
-
-
-async def confirm_order(db: AsyncSession, user: User, order_id: uuid.UUID, outcome: str) -> OrderResult:
-    """Test gateway only: pretend the bank said yes (or no). A real gateway confirms via its signed webhook."""
-    order = await db.scalar(select(PaymentOrder).where(PaymentOrder.id == order_id, PaymentOrder.school_id == user.school_id,
-                                                       PaymentOrder.created_by == user.id))
-    if not order:
-        raise NotFound("Payment not found")
-    if order.gateway != "test" or settings.ENVIRONMENT == "production":
-        raise AppError("This payment is confirmed by the gateway", code="GATEWAY_CONFIRMS", status_code=409)
-    if order.status != "created":
-        raise Conflict("This payment was already processed", code="ORDER_DONE")
-    if outcome == "failure":
-        order.status = "failed"
-        return OrderResult(status="failed", message="The payment was declined. No money was taken.")
-    inv = await _get_invoice(db, user.school_id, order.invoice_id)
-    amount = min(order.amount, balance(inv))
-    if amount <= 0:
-        order.status = "failed"
-        return OrderResult(status="failed", message="This invoice was already paid.")
-    p = await _record_payment(db, inv, amount, "online", reference=f"pay_test_{secrets.token_hex(6)}", note="Test payment",
-                              collected_by=None, paid_by=user.id)
-    order.status, order.payment_id = "paid", p.id
-    return OrderResult(status="paid", payment=(await _payments_out(db, [p]))[0], message="Payment received. Thank you!")
+    # School fees are paid at the school (cash, UPI, cheque or bank transfer) and recorded by the office; they are
+    # never paid online through Vidyanexa. Only a school's own subscription is paid online.
+    return MyFees(children=children, total_due=sum((c.due for c in children), ZERO))

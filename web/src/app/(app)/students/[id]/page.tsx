@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ParentPicker } from "@/components/academics/pickers";
 import { StudentRecords } from "@/components/academics/student-records";
+import { StudentOverviewSection } from "@/components/profile/sections";
 import { StudentFields, studentSchema, toApi, type StudentValues } from "@/components/academics/student-fields";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EmptyState } from "@/components/common/empty-state";
@@ -314,6 +315,9 @@ function StudentProfile({ id }: { id: string }) {
       </div>
 
       <StudentRecords studentId={s.id} />
+
+      {/* Library, bus, hostel, results, homework, requests, certificates... from every module the school uses. */}
+      <div className="mt-6"><StudentOverviewSection studentId={s.id} /></div>
 
       <Card className="mt-6">
         <CardHeader>

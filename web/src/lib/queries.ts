@@ -9,7 +9,7 @@ import type {
   AttendanceOverview, AuditEntry, ChildResults, Exam, ExamDetail, HomeworkDetail, HomeworkItem, HomeworkTarget, MarksSheet,
   MarksSheetRef, MyHomework, Notice, ReportCard, SectionResults, AvailableTeacher, FeeCategory, FeeSummary, InvoiceDetail, InvoiceRow, MyFees, Receipt, Roster,
   SectionCard, SectionReport, StructureMatrix, StudentAttendance, ClassItem, DashboardSummary, ModuleState, Period, RoleRules, School, Student, StudentDetail, StudentOption, Subject,
-  Subscription, TeacherInfo, TimetableView, User, UserDetail, MyClass, MyClassDetail,
+  Subscription, TeacherInfo, TimetableView, User, UserDetail, MyClass, MyClassDetail, StudentOverview,
 } from "@/lib/api/types";
 
 export const qk = {
@@ -754,4 +754,14 @@ export function useMyClasses() {
 
 export function useMyClass(sectionId: string | null) {
   return useQuery({ queryKey: ["classes", "my", sectionId], enabled: Boolean(sectionId), queryFn: async () => (await api<MyClassDetail>(`/classes/my/${sectionId}`)).data });
+}
+
+/** Everything about a student from the other modules (library, bus, hostel, results, homework, requests...). */
+export function useStudentOverview(id: string) {
+  return useQuery({ queryKey: ["student", id, "overview"], queryFn: async () => (await api<StudentOverview>(`/students/${id}/overview`)).data });
+}
+
+/** The signed-in person's own profile, with everything connected to them. */
+export function useMyOverview() {
+  return useQuery({ queryKey: ["me", "overview"], queryFn: async () => (await api<UserDetail>("/users/me/overview")).data });
 }

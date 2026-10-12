@@ -10,16 +10,18 @@ Plan enforcement happens in three places:
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import pricing
+from app.core.config import settings
 from app.core.database import elevated, set_tenant
-from app.core.errors import BadRequest, Conflict, Forbidden, NotFound
+from app.core.errors import AppError, BadRequest, Conflict, Forbidden, NotFound
 from app.core.permissions import MODULES, STAFF_ROLES, Role
 from app.core.security import hash_password
-from app.models import Lead, Plan, School, SchoolModule, Student, User
+from app.models import Lead, Plan, School, SchoolModule, Student, SubscriptionPayment, User
 from app.services import audit_service
 
 STAFF_ROLE_VALUES = {r.value for r in STAFF_ROLES}
@@ -141,6 +143,90 @@ async def apply_plan(db: AsyncSession, school: School, plan: Plan, *, cycle: str
                                entity_type="plan", entity_id=plan.code, meta={"from": old_code, "to": plan.code, "cycle": cycle})
     await db.flush()
     return school
+
+
+# ---- paying for the subscription (online, with GST) ---------------------------------------
+
+def with_gst(base: Decimal) -> tuple[Decimal, Decimal, Decimal]:
+    """(base, GST, total) in rupees and paise. GST is charged on top of the plan price."""
+    base = Decimal(base).quantize(Decimal("0.01"))
+    gst = (base * Decimal(str(pricing.GST_RATE))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return base, gst, base + gst
+
+
+async def _plan_for_checkout(db: AsyncSession, school: School, data) -> Plan:
+    if school.plan and data.plan_code == school.plan.code:
+        return school.plan  # paying for (or renewing) the current plan, which may be a private custom plan
+    if data.plan_code == "custom":
+        try:
+            q = pricing.quote(data.custom_modules or [], data.custom_students or 0)
+        except ValueError as e:
+            raise BadRequest(str(e), code="INVALID_CUSTOM_PLAN")
+        return await create_custom_plan(db, q, school.slug)
+    return await plan_by_code(db, data.plan_code)
+
+
+async def checkout(db: AsyncSession, school: School, user_id: uuid.UUID, data) -> SubscriptionPayment:
+    """Starts paying for a plan: the plan price for the cycle, plus 18% GST. Only subscriptions are paid online."""
+    if settings.PAYMENT_GATEWAY == "none":
+        raise AppError("Online payment isn't switched on yet. Contact the Vidyanexa team to renew.", code="ONLINE_PAYMENT_OFF", status_code=409)
+    plan = await _plan_for_checkout(db, school, data)
+    problem = _fits(await usage(db, school.id), plan)
+    if problem:
+        raise Conflict(f"This plan is too small: {problem}.", code="PLAN_TOO_SMALL")
+    base, gst, total = with_gst(Decimal(plan.price_yearly if data.billing_cycle == "yearly" else plan.price_monthly))
+    if total <= 0:
+        raise BadRequest("This plan has no price to pay", code="NOTHING_TO_PAY")
+    payment = SubscriptionPayment(
+        school_id=school.id, plan_id=plan.id, plan_name=plan.name, billing_cycle=data.billing_cycle, base_amount=base,
+        gst_rate=Decimal(str(pricing.GST_RATE)), gst_amount=gst, total=total, gateway=settings.PAYMENT_GATEWAY,
+        gateway_order_id=f"order_test_{secrets.token_hex(8)}", created_by=user_id)
+    db.add(payment)
+    await db.flush()
+    return payment
+
+
+async def _next_invoice_no(db: AsyncSession, when: datetime) -> str:
+    fy = when.year if when.month >= 4 else when.year - 1
+    prefix = f"VNX-{fy % 100:02d}{(fy + 1) % 100:02d}-"
+    async with elevated(db):  # numbered across all schools: these are Vidyanexa's own invoices
+        n = await db.scalar(select(func.count()).select_from(SubscriptionPayment).where(SubscriptionPayment.invoice_no.like(f"{prefix}%")))
+    return f"{prefix}{(n or 0) + 1:05d}"
+
+
+async def confirm_payment(db: AsyncSession, school: School, payment_id: uuid.UUID, outcome: str, *, actor_id: uuid.UUID) -> SubscriptionPayment:
+    """Test gateway only: pretend the bank said yes (or no). A real gateway (Razorpay) confirms through its signed webhook."""
+    payment = await db.scalar(select(SubscriptionPayment).where(SubscriptionPayment.id == payment_id, SubscriptionPayment.school_id == school.id))
+    if not payment:
+        raise NotFound("Payment not found")
+    if payment.gateway != "test" or settings.ENVIRONMENT == "production":
+        raise AppError("This payment is confirmed by the payment gateway", code="GATEWAY_CONFIRMS", status_code=409)
+    if payment.status != "created":
+        raise Conflict("This payment was already processed", code="ORDER_DONE")
+    if outcome == "failure":
+        payment.status = "failed"
+        await db.flush()
+        return payment
+    now = _now()
+    # Renewing early adds the new period after the one already paid for.
+    start = school.current_period_end if school.subscription_status == "active" and school.current_period_end and school.current_period_end > now else now
+    plan = await db.get(Plan, payment.plan_id)
+    await apply_plan(db, school, plan, cycle=payment.billing_cycle, status="active", actor_id=actor_id)
+    payment.status, payment.paid_at = "paid", now
+    payment.period_start = start
+    payment.period_end = start + timedelta(days=365 if payment.billing_cycle == "yearly" else 30)
+    school.current_period_end = payment.period_end
+    payment.gateway_payment_id = f"pay_test_{secrets.token_hex(6)}"
+    payment.invoice_no = await _next_invoice_no(db, now)
+    await audit_service.record(db, "billing.payment", school_id=school.id, user_id=actor_id, entity_type="subscription_payment",
+                               entity_id=str(payment.id), meta={"plan": payment.plan_name, "total": str(payment.total), "invoice_no": payment.invoice_no})
+    await db.flush()
+    return payment
+
+
+async def payments(db: AsyncSession, school_id: uuid.UUID) -> list[SubscriptionPayment]:
+    return list((await db.scalars(select(SubscriptionPayment).where(SubscriptionPayment.school_id == school_id, SubscriptionPayment.status == "paid")
+                                  .order_by(SubscriptionPayment.paid_at.desc()))).all())
 
 
 def subscription_view(school: School, used: dict[str, int]) -> dict:

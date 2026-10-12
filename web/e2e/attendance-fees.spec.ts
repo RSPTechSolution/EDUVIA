@@ -53,7 +53,7 @@ test("office collects a fee and opens the receipt", async ({ page }) => {
   await expect(page.getByText("E2E-UPI-1")).toBeVisible();
 });
 
-test("parent sees attendance and pays online in test mode", async ({ page }) => {
+test("parent sees attendance and dues, and pays at the school office", async ({ page }) => {
   // Bill Class 5 a one-off term so Aarav always has something due, however often this runs.
   const admin = await apiAs(DEMO.admin);
   const classes = (await admin("GET", "/classes")) as { id: string; name: string }[];
@@ -66,15 +66,9 @@ test("parent sees attendance and pays online in test mode", async ({ page }) => 
   await expect(page.getByText("this year").first()).toBeVisible();
   await page.goto("/my-fees");
   await expect(page.getByText(/Total due for all children/)).toBeVisible();
-  const pay = page.getByRole("button", { name: /Pay ₹[\d,]+ online/ }).first();
-  const amount = (await pay.textContent())!.match(/₹[\d,]+/)![0];
-  await pay.click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog.getByText(/Test mode/)).toBeVisible();
-  await dialog.getByRole("button", { name: `Pay ${amount}` }).click();
-  await expect(dialog.getByText(`${amount} paid`)).toBeVisible();
-  await dialog.getByRole("link", { name: "Receipt" }).click();
-  await expect(page.getByRole("article", { name: /Receipt RCT-/ })).toBeVisible();
+  // School fees are never paid online through Vidyanexa: parents are told to pay at the office.
+  await expect(page.getByText(/at the school office \(cash, UPI, cheque or bank transfer\)/).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Pay .* online/ })).toHaveCount(0);
 });
 
 test("parents cannot open staff fee or attendance pages", async ({ page }) => {

@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import AppError, Forbidden, NotFound
 from app.core.permissions import has_permission
 from app.models import (
-    AttendanceRecord, CalendarEvent, LeaveRequest, PeriodAttendance, Period, School, Section, Student, Subject, Substitution,
+    AttendanceRecord, CalendarEvent, LeaveRequest, PeriodAttendance, Period, School, Section, Student, Subject,
     TimetableEntry, User,
 )
 from app.schemas.attendance_extra import (
@@ -272,13 +272,14 @@ async def scan(db: AsyncSession, user: User, code: str) -> ScanOut:
 # ---- period-wise ------------------------------------------------------------------------------
 
 async def _my_entries(db: AsyncSession, user: User, day: date) -> list[tuple[TimetableEntry, bool]]:
-    """Today's periods this teacher takes: their own (unless covered by someone) and those they cover."""
-    covered_away = set((await db.scalars(select(Substitution.entry_id).where(Substitution.date == day,
-                                                                              Substitution.absent_teacher_id == user.id))).all())
-    own = (await db.scalars(select(TimetableEntry).where(TimetableEntry.teacher_id == user.id, TimetableEntry.day == day.isoweekday()))).all()
-    cover_ids = (await db.scalars(select(Substitution.entry_id).where(Substitution.date == day, Substitution.substitute_id == user.id))).all()
-    covers = (await db.scalars(select(TimetableEntry).where(TimetableEntry.id.in_(cover_ids)))).all() if cover_ids else []
-    return [(e, False) for e in own if e.id not in covered_away] + [(e, True) for e in covers]
+    """Today's periods of the classes this teacher is the class teacher (incharge) of: attendance, including
+    period-wise attendance, belongs to the incharge. Subject teachers keep their lessons, homework and marks."""
+    from app.services.academics_service import class_teacher_sections
+    sections = await class_teacher_sections(db, user)
+    if not sections:
+        return []
+    rows = (await db.scalars(select(TimetableEntry).where(TimetableEntry.section_id.in_(sections), TimetableEntry.day == day.isoweekday()))).all()
+    return [(e, False) for e in rows]
 
 
 async def my_periods(db: AsyncSession, user: User, day: date) -> list[PeriodCard]:
@@ -305,7 +306,7 @@ async def _entry_for(db: AsyncSession, user: User, entry_id: uuid.UUID, day: dat
     if e.day != day.isoweekday():
         raise field_error("date", "This period isn't on that day")
     if not has_permission(user.role, "attendance.manage") and e.id not in {x.id for x, _ in await _my_entries(db, user, day)}:
-        raise Forbidden("You can only take attendance for your own periods", code="NOT_YOUR_PERIOD")
+        raise Forbidden("Only the class teacher (incharge) of this class can take its period attendance", code="NOT_YOUR_SECTION")
     return e
 
 

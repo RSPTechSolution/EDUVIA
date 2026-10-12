@@ -14,7 +14,7 @@ import 'fees_data.dart';
 final _date = DateFormat('d MMM yyyy');
 final _dateTime = DateFormat('d MMM yyyy, h:mm a');
 
-/// The Fees tab: dues and online payment for families, collection for office staff.
+/// The Fees tab: dues and receipts for families (fees are paid at the school office), collection for office staff.
 class FeesScreen extends ConsumerWidget {
   const FeesScreen({super.key});
 
@@ -60,7 +60,7 @@ class _FamilyFeesViewState extends ConsumerState<FamilyFeesView> {
         onRefresh: () => ref.refresh(myFeesProvider.future),
         child: AsyncView(
           value: async,
-          loading: const SkeletonSummary(),
+          loading: const _FeesSkeleton(),
           onRetry: () => ref.invalidate(myFeesProvider),
           builder: (data) {
             if (data.children.isEmpty) {
@@ -69,7 +69,7 @@ class _FamilyFeesViewState extends ConsumerState<FamilyFeesView> {
             final c = data.children[child.clamp(0, data.children.length - 1)];
             final overdue = data.children.fold<double>(0, (n, x) => n + x.overdue);
             return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
-              _DueHero(total: data.totalDue, overdue: overdue, testMode: data.testMode, many: data.children.length > 1),
+              _DueHero(total: data.totalDue, overdue: overdue, many: data.children.length > 1),
               const SizedBox(height: 12),
               ChildSwitcher(
                 names: [for (final x in data.children) x.name],
@@ -77,20 +77,7 @@ class _FamilyFeesViewState extends ConsumerState<FamilyFeesView> {
                 index: child,
                 onChanged: (i) => setState(() => child = i),
               ),
-              for (final inv in c.invoices)
-                _InvoiceCard(
-                  inv: inv,
-                  canPay: data.onlinePayments,
-                  onPay: () async {
-                    final paid = await showModalBottomSheet<bool>(
-                      context: context,
-                      isScrollControlled: true,
-                      showDragHandle: true,
-                      builder: (_) => PaySheet(invoice: inv),
-                    );
-                    if (paid == true) ref.invalidate(myFeesProvider);
-                  },
-                ),
+              for (final inv in c.invoices) _InvoiceCard(inv: inv),
               if (c.invoices.isEmpty) const EmptyPanel(icon: Icons.receipt_long_outlined, title: 'No invoices yet'),
             ]);
           },
@@ -100,11 +87,43 @@ class _FamilyFeesViewState extends ConsumerState<FamilyFeesView> {
   }
 }
 
+/// The family fees screen's shape while it loads: the total-due card, the child chips and two invoice cards.
+class _FeesSkeleton extends StatelessWidget {
+  const _FeesSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer(
+      child: ListView(physics: const NeverScrollableScrollPhysics(), padding: const EdgeInsets.fromLTRB(16, 8, 16, 0), children: [
+        const Bone(height: 128, radius: 20),
+        const SizedBox(height: 12),
+        const Row(children: [Bone(width: 116, height: 50, radius: 14), SizedBox(width: 8), Bone(width: 116, height: 50, radius: 14)]),
+        for (var i = 0; i < 2; i++) ...[
+          const SizedBox(height: 10),
+          const BoneCard(
+            child: Column(children: [
+              Row(children: [
+                Bone.circle(40),
+                SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Bone(width: 150, height: 14), SizedBox(height: 8), Bone(width: 100, height: 10)])),
+                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Bone(width: 70, height: 16), SizedBox(height: 6), Bone(width: 50, height: 16, radius: 8)]),
+              ]),
+              SizedBox(height: 14),
+              Bone(height: 10),
+              SizedBox(height: 8),
+              Bone(height: 10),
+            ]),
+          ),
+        ],
+      ]),
+    );
+  }
+}
+
 class _DueHero extends StatelessWidget {
-  const _DueHero({required this.total, required this.overdue, required this.testMode, required this.many});
+  const _DueHero({required this.total, required this.overdue, required this.many});
   final double total;
   final double overdue;
-  final bool testMode;
   final bool many;
 
   @override
@@ -130,10 +149,7 @@ class _DueHero extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            [
-              total == 0 ? 'All paid up. Thank you!' : overdue > 0 ? '${inr(overdue)} is overdue' : 'Nothing overdue',
-              if (testMode) 'Test payments',
-            ].join(' · '),
+            total == 0 ? 'All paid up. Thank you!' : overdue > 0 ? '${inr(overdue)} is overdue' : 'Nothing overdue',
             style: const TextStyle(color: Colors.white70),
           ),
         ]),
@@ -143,10 +159,8 @@ class _DueHero extends StatelessWidget {
 }
 
 class _InvoiceCard extends StatelessWidget {
-  const _InvoiceCard({required this.inv, required this.canPay, required this.onPay});
+  const _InvoiceCard({required this.inv});
   final Invoice inv;
-  final bool canPay;
-  final VoidCallback onPay;
 
   @override
   Widget build(BuildContext context) {
@@ -189,15 +203,20 @@ class _InvoiceCard extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/fees/receipt/${p.id}'),
             ),
-          if (inv.balance > 0 && canPay)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: FilledButton.icon(
-                onPressed: onPay,
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                icon: const Icon(Icons.verified_user_rounded),
-                label: Text('Pay ${inr(inv.balance)}'),
-              ),
+          // School fees are paid at the school, never online through the app; the office records it.
+          if (inv.balance > 0)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: scheme.surfaceContainerHighest.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(12)),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Icon(Icons.account_balance_rounded, size: 18, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Pay ${inr(inv.balance)} at the school office (cash, UPI, cheque or bank transfer). Your receipt appears here once it\'s recorded.',
+                      style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant)),
+                ),
+              ]),
             ),
         ],
       ),
@@ -221,149 +240,6 @@ class _Line extends StatelessWidget {
     );
   }
 }
-
-/// Online payment. In test mode the bank's answer is chosen here; no money moves.
-class PaySheet extends ConsumerStatefulWidget {
-  const PaySheet({super.key, required this.invoice});
-  final Invoice invoice;
-  @override
-  ConsumerState<PaySheet> createState() => _PaySheetState();
-}
-
-class _PaySheetState extends ConsumerState<PaySheet> {
-  Map<String, dynamic>? order;
-  String? error;
-  bool busy = false;
-  ({bool ok, String message, FeePayment? payment})? result;
-
-  @override
-  void initState() {
-    super.initState();
-    _start();
-  }
-
-  Future<void> _start() async {
-    try {
-      final res = await ref.read(apiClientProvider).post<Map<String, dynamic>>('/fees/invoices/${widget.invoice.id}/pay', parse: (d) => (d as Map).cast());
-      if (mounted) setState(() => order = res.data);
-    } on ApiException catch (e) {
-      if (mounted) setState(() => error = e.message);
-    }
-  }
-
-  Future<void> _confirm(String outcome) async {
-    setState(() => busy = true);
-    try {
-      final res = await ref.read(apiClientProvider).post<Map<String, dynamic>>('/fees/orders/${order!['order_id']}/confirm',
-          body: {'outcome': outcome}, parse: (d) => (d as Map).cast());
-      final d = res.data;
-      final p = d['payment'] is Map ? FeePayment.fromJson((d['payment'] as Map).cast()) : null;
-      if (d['status'] == 'paid') HapticFeedback.heavyImpact();
-      setState(() => result = (ok: d['status'] == 'paid', message: d['message'] as String, payment: p));
-    } on ApiException catch (e) {
-      setState(() => result = (ok: false, message: e.message, payment: null));
-    } finally {
-      if (mounted) setState(() => busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final s = statusColors(context);
-    final scheme = Theme.of(context).colorScheme;
-    Widget body;
-    if (error != null) {
-      body = ErrorPanel(message: error!);
-    } else if (result != null) {
-      final r = result!;
-      body = Column(mainAxisSize: MainAxisSize.min, children: [
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.elasticOut,
-          builder: (_, t, child) => Transform.scale(scale: t, child: child),
-          child: CircleAvatar(
-            radius: 38,
-            backgroundColor: (r.ok ? s.success : s.danger).withValues(alpha: 0.12),
-            child: Icon(r.ok ? Icons.check_circle_rounded : Icons.cancel_rounded, size: 52, color: r.ok ? s.success : s.danger),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Text(r.ok ? '${inr(r.payment!.amount)} paid' : 'Payment failed', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-        const SizedBox(height: 4),
-        Text([r.message, if (r.payment != null) 'Receipt ${r.payment!.receiptNo}'].join(' '), textAlign: TextAlign.center, style: TextStyle(color: scheme.onSurfaceVariant)),
-        const SizedBox(height: 20),
-        Row(children: [
-          Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context, r.ok), child: const Text('Done'))),
-          if (r.payment != null) ...[
-            const SizedBox(width: 10),
-            Expanded(
-              child: FilledButton(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                  context.push('/fees/receipt/${r.payment!.id}');
-                },
-                child: const Text('Receipt'),
-              ),
-            ),
-          ],
-        ]),
-      ]);
-    } else if (order == null) {
-      // Shaped like the pay sheet below, while the payment order is created.
-      body = const Shimmer(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-          Bone(width: 120, height: 22, radius: 8),
-          SizedBox(height: 16),
-          Bone(height: 64, radius: 14),
-          SizedBox(height: 12),
-          Bone(height: 64, radius: 14),
-          SizedBox(height: 20),
-          Bone(height: 48, radius: 12),
-        ]),
-      );
-    } else {
-      final o = order!;
-      body = Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-        Text('Pay fees', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-        Text('${widget.invoice.studentName} · ${widget.invoice.term}', style: TextStyle(color: scheme.onSurfaceVariant)),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), gradient: const LinearGradient(colors: [Color(0xFF1565D7), Color(0xFF0E8FA8)])),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Amount to pay', style: TextStyle(color: Colors.white70)),
-            Text(inr((o['amount'] as num).toDouble()), style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800)),
-            Text('Invoice ${o['invoice_no']}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          ]),
-        ),
-        if (o['test_mode'] == true) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: s.warning.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: s.warning.withValues(alpha: 0.4))),
-            child: Row(children: [
-              Icon(Icons.science_outlined, color: s.warning),
-              const SizedBox(width: 10),
-              Expanded(child: Text('Test mode: no real money moves. Choose what the bank would say.', style: TextStyle(color: s.warning, fontSize: 13))),
-            ]),
-          ),
-        ],
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: busy ? null : () => _confirm('success'),
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-          icon: busy ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.verified_user_rounded),
-          label: Text(busy ? 'Processing…' : 'Pay ${inr((o['amount'] as num).toDouble())}'),
-        ),
-        if (o['test_mode'] == true) TextButton(onPressed: busy ? null : () => _confirm('failure'), child: const Text('Simulate a declined payment')),
-      ]);
-    }
-    return SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(20, 0, 20, 20), child: AnimatedSize(duration: const Duration(milliseconds: 250), child: body)));
-  }
-}
-
-// ---- office staff --------------------------------------------------------------------------------
 
 class StaffFeesView extends ConsumerStatefulWidget {
   const StaffFeesView({super.key});

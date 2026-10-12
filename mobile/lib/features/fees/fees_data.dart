@@ -84,14 +84,10 @@ class ChildFees {
 class MyFees {
   MyFees.fromJson(Map<String, dynamic> j)
       : children = [for (final c in (j['children'] as List).cast<Map>()) ChildFees.fromJson(c.cast())],
-        totalDue = _n(j['total_due']),
-        onlinePayments = j['online_payments'] as bool,
-        testMode = j['test_mode'] as bool;
+        totalDue = _n(j['total_due']);
 
   final List<ChildFees> children;
   final double totalDue;
-  final bool onlinePayments;
-  final bool testMode;
 }
 
 class FeeSummary {

@@ -3,6 +3,7 @@
 import { Check, Sparkles } from "lucide-react";
 import type { BillingCycle, Plan } from "@/lib/api/types";
 import { inr } from "@/lib/format";
+import { withGst } from "@/lib/gst";
 import { cn } from "@/lib/utils";
 
 export function CycleToggle({ value, onChange }: { value: BillingCycle; onChange: (c: BillingCycle) => void }) {
@@ -29,10 +30,15 @@ export function CycleToggle({ value, onChange }: { value: BillingCycle; onChange
   );
 }
 
+/** How a plan's price reads for a billing cycle. Prices exclude GST; `withTax` is what's actually charged per cycle. */
 export function planPrice(plan: Pick<Plan, "price_monthly" | "price_yearly">, cycle: BillingCycle) {
+  const charge = cycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+  const taxed = withGst(charge);
   return cycle === "yearly"
-    ? { headline: inr(Math.round(plan.price_yearly / 12)), unit: "/month, billed yearly", total: `${inr(plan.price_yearly)} per year` }
-    : { headline: inr(plan.price_monthly), unit: "/month", total: "Billed monthly" };
+    ? { headline: inr(Math.round(plan.price_yearly / 12)), unit: "/month + GST, billed yearly", total: `${inr(plan.price_yearly)} + GST per year`,
+        charge, taxed, withTax: `${inr(taxed.total)} per year with 18% GST` }
+    : { headline: inr(plan.price_monthly), unit: "/month + GST", total: "Billed monthly",
+        charge, taxed, withTax: `${inr(taxed.total)} per month with 18% GST` };
 }
 
 export const limitText = (n: number | null, noun: string) => (n === null ? `Unlimited ${noun}` : `Up to ${n.toLocaleString("en-IN")} ${noun}`);
@@ -74,7 +80,8 @@ export function PlanCards({
               <span className="font-heading text-4xl font-extrabold tracking-tight tabular">{price.headline}</span>
               <span className="text-sm text-muted-foreground">{price.unit}</span>
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">{price.total} · + GST</p>
+            <p className="mt-1 text-xs text-muted-foreground">{price.total}</p>
+            <p className="mt-0.5 text-xs font-medium text-foreground/80">{price.withTax}</p>
             <div className="mt-6">{renderCta(plan)}</div>
             <ul className="mt-7 space-y-2.5 text-sm">
               <li className="flex gap-2.5 font-medium"><Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />{limitText(plan.max_students, "students")}</li>

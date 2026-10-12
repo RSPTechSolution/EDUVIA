@@ -70,37 +70,27 @@ async def test_generate_collect_and_discount(client, db, school, admin_headers):
     assert {m["method"] for m in summary["by_method"]} == {"upi", "cash"}
 
 
-async def test_parent_views_and_pays_online(client, db, school, admin_headers):
+async def test_parent_sees_dues_but_fees_are_not_paid_online(client, db, school, admin_headers):
+    """Parents see what's due; the office records payments. School fees are never paid online through Vidyanexa."""
     student_id, other_id, parent_pw, _, _ = await setup(client, db, school, admin_headers)
     await generate(client, admin_headers, "Quarter 1", date.today() - timedelta(days=5))
     p = await factories.login_headers(client, "dad@t.com", parent_pw, school.slug)
 
     mine = (await client.get(f"{API}/fees/my", headers=p)).json()["data"]
-    assert mine["test_mode"] and mine["online_payments"] and mine["total_due"] == 12000
+    assert mine["total_due"] == 12000 and "online_payments" not in mine
     child = mine["children"][0]
     assert child["student_id"] == student_id and child["overdue"] == 12000 and child["invoices"][0]["overdue"]
-
-    other_inv = (await client.get(f"{API}/fees/invoices", headers=admin_headers, params={"student_id": other_id})).json()["data"][0]
-    assert (await client.post(f"{API}/fees/invoices/{other_inv['id']}/pay", headers=p)).status_code == 404
     assert (await client.get(f"{API}/fees/invoices", headers=p)).status_code == 403
 
     inv_id = child["invoices"][0]["id"]
-    order = (await client.post(f"{API}/fees/invoices/{inv_id}/pay", headers=p)).json()["data"]
-    assert order["amount"] == 12000 and order["test_mode"]
-    declined = (await client.post(f"{API}/fees/orders/{order['order_id']}/confirm", headers=p, json={"outcome": "failure"})).json()["data"]
-    assert declined["status"] == "failed"
+    assert (await client.post(f"{API}/fees/invoices/{inv_id}/pay", headers=p)).status_code in (404, 405)
 
-    order = (await client.post(f"{API}/fees/invoices/{inv_id}/pay", headers=p)).json()["data"]
-    done = (await client.post(f"{API}/fees/orders/{order['order_id']}/confirm", headers=p, json={"outcome": "success"})).json()["data"]
-    assert done["status"] == "paid" and done["payment"]["method"] == "online"
-    assert done["payment"]["collected_by"] == "Paid online by Dad One"
-    replay = await client.post(f"{API}/fees/orders/{order['order_id']}/confirm", headers=p, json={"outcome": "success"})
-    assert replay.json()["error"]["code"] == "ORDER_DONE"
-
+    # The office records the payment; the parent sees it and can open the receipt.
+    paid = (await client.post(f"{API}/fees/invoices/{inv_id}/payments", headers=admin_headers,
+                              json={"amount": 12000, "method": "upi", "reference": "UPI-1"})).json()["data"]
     after = (await client.get(f"{API}/fees/my", headers=p)).json()["data"]
     assert after["total_due"] == 0 and after["children"][0]["invoices"][0]["status"] == "paid"
-    receipt = await client.get(f"{API}/fees/payments/{done['payment']['id']}/receipt", headers=p)
-    assert receipt.status_code == 200
+    assert (await client.get(f"{API}/fees/payments/{paid['id']}/receipt", headers=p)).status_code == 200
 
 
 async def test_permissions_and_isolation(client, db, school, other_school, admin_headers):

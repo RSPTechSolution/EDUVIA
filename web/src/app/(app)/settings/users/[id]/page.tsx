@@ -9,6 +9,7 @@ import Link from "next/link";
 import { use, useState } from "react";
 import { toast } from "sonner";
 import { PercentBadge } from "@/components/attendance/status";
+import { PersonSections, StudentOverviewCards } from "@/components/profile/sections";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EmptyState } from "@/components/common/empty-state";
 import { PermissionGate } from "@/components/common/permission-gate";
@@ -180,7 +181,7 @@ function UserPage({ id }: { id: string }) {
                 <p className="mb-2 flex items-center gap-2 text-sm font-medium"><GraduationCap className="size-4 text-primary" aria-hidden />Class teacher (incharge) of</p>
                 {u.class_teacher_of.length === 0 ? <p className="text-sm text-muted-foreground">No class.</p> : (
                   <div className="flex flex-wrap gap-2">
-                    {u.class_teacher_of.map((s) => <Link key={s.section_id} href={`/attendance/${s.section_id}`} className="rounded-full border bg-primary/[0.06] px-3 py-1 text-sm hover:border-primary/40">{s.label}</Link>)}
+                    {u.class_teacher_of.map((s) => <Link key={s.section_id} href={`/attendance/${s.section_id}`} className="rounded-full border bg-primary/[0.06] px-3 py-1 text-sm hover:border-primary/40">{s.label} <span className="text-muted-foreground">· {s.students} students</span></Link>)}
                   </div>
                 )}
               </div>
@@ -194,6 +195,10 @@ function UserPage({ id }: { id: string }) {
           </Card>
         )}
       </div>
+
+      {/* Everything else connected to them: work and pay, books, bus duty, teaching, visitors, their children's requests. */}
+      <div className="mt-6"><PersonSections p={u} /></div>
+      {u.student_overview && u.student_id && <div className="mt-6"><StudentOverviewCards o={u.student_overview} studentId={u.student_id} /></div>}
 
       {can("audit.view") && (
         <Card className="mt-6">

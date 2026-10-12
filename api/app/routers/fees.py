@@ -7,8 +7,8 @@ from app.core.deps import DB, CurrentUser, require_module, require_permission
 from app.core.permissions import has_permission
 from app.schemas.common import ApiResponse, PageParams, ok
 from app.schemas.finance import (
-    CategoryIn, CategoryOut, CategoryUpdate, CollectPayment, ConfirmOrder, DiscountSet, FeeSummary, GenerateInvoices,
-    GenerateResult, InvoiceDetail, InvoiceRow, MyFees, OrderOut, OrderResult, PaymentOut, Receipt, StructureMatrix, StructureSet,
+    CategoryIn, CategoryOut, CategoryUpdate, CollectPayment, DiscountSet, FeeSummary, GenerateInvoices,
+    GenerateResult, InvoiceDetail, InvoiceRow, MyFees, PaymentOut, Receipt, StructureMatrix, StructureSet,
 )
 from app.services import fee_service as svc, pdf_service
 
@@ -100,19 +100,6 @@ async def receipt(payment_id: uuid.UUID, db: DB, current: CurrentUser = require_
 async def mine(db: DB, current: CurrentUser = require_permission("school.view")):
     current.require_school()
     return ok(await svc.my_fees(db, current.user))
-
-
-@router.post("/invoices/{invoice_id}/pay", response_model=ApiResponse[OrderOut], status_code=201)
-async def pay(invoice_id: uuid.UUID, db: DB, current: CurrentUser = require_permission("school.view")):
-    current.require_school()
-    return ok(await svc.create_order(db, current.user, invoice_id))
-
-
-@router.post("/orders/{order_id}/confirm", response_model=ApiResponse[OrderResult])
-async def confirm(order_id: uuid.UUID, body: ConfirmOrder, db: DB, current: CurrentUser = require_permission("school.view")):
-    current.require_school()
-    return ok(await svc.confirm_order(db, current.user, order_id, body.outcome))
-
 
 
 @router.get("/payments/{payment_id}/receipt.pdf")
