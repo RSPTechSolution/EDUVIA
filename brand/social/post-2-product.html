@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Cinzel; src: url("../../web/src/fonts/Cinzel-SemiBold.ttf"); font-weight: 600; }
+* { box-sizing: border-box; margin: 0; }
+body { width: 1080px; height: 1350px; overflow: hidden; background: #F7F2E8; color: #15233F; font-family: "Segoe UI", Arial, sans-serif; }
+.page { position: relative; height: 100%; padding: 80px 80px 0; background: radial-gradient(900px 600px at 100% 0%, rgba(184,137,60,.18), transparent 60%), #F7F2E8; }
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand img { width: 56px; }
+.word { font-family: Cinzel; font-weight: 600; font-size: 30px; letter-spacing: .08em; }
+.kicker { margin-top: 64px; font-size: 24px; letter-spacing: .2em; color: #B8893C; font-weight: 700; }
+h1 { margin-top: 18px; font-family: Georgia, serif; font-size: 76px; line-height: 1.08; letter-spacing: -.01em; }
+h1 em { font-style: normal; color: #B8893C; }
+.sub { margin-top: 24px; font-size: 30px; line-height: 1.45; color: #5B6478; max-width: 900px; }
+.stage { position: absolute; left: 80px; right: -140px; top: 600px; bottom: 0; }
+.browser { position: absolute; left: 0; top: 0; width: 1040px; border-radius: 22px; overflow: hidden; background: #fff;
+  box-shadow: 0 40px 90px -20px rgba(21,35,63,.45), 0 0 0 1px rgba(21,35,63,.08); }
+.bar { height: 40px; background: #EDE7DA; display: flex; gap: 9px; align-items: center; padding: 0 18px; }
+.bar i { width: 13px; height: 13px; border-radius: 50%; background: #d8cfbd; }
+.browser img { display: block; width: 100%; }
+.phone { position: absolute; left: 640px; top: 70px; width: 270px; border: 10px solid #15233F; border-radius: 40px; overflow: hidden; background: #fff;
+  box-shadow: 0 40px 80px -15px rgba(21,35,63,.55); }
+.phone img { display: block; width: 100%; }
+.badge { position: absolute; left: -24px; top: 560px; background: #15233F; color: #F7F2E8; border-radius: 18px; padding: 22px 28px; font-size: 26px;
+  box-shadow: 0 20px 40px -10px rgba(21,35,63,.5); }
+.badge b { color: #E2BE74; }
+</style></head>
+<body><div class="page">
+  <div class="brand"><img src="../png/vidyanexa-crest.png" alt=""><div class="word">VIDYANEXA</div></div>
+  <div class="kicker">THE WHOLE SCHOOL, ONE SCREEN</div>
+  <h1>Office, teachers and parents, <em>finally in sync.</em></h1>
+  <p class="sub">Principals see the day at a glance. Parents see attendance, homework and fees on their phone.</p>
+  <div class="stage">
+    <div class="browser"><div class="bar"><i></i><i></i><i></i></div><img src="../../web/public/marketing/dashboard-light.png" alt=""></div>
+    <div class="phone"><img src="../../web/public/marketing/app-parent.png" alt=""></div>
+    <div class="badge">✓ Receipt sent to parent · <b>₹12,500</b></div>
+  </div>
+</div></body></html>

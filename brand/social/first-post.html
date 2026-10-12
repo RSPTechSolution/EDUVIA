@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Cinzel; src: url("../../web/src/fonts/Cinzel-SemiBold.ttf"); font-weight: 600; }
+* { box-sizing: border-box; margin: 0; }
+body { width: 1080px; height: 1350px; background: #0E1729; color: #F7F2E8; font-family: "Segoe UI", Arial, sans-serif; overflow: hidden; }
+.page { position: relative; height: 100%; padding: 96px 88px 80px; display: flex; flex-direction: column;
+  background: radial-gradient(900px 700px at 85% 8%, rgba(184,137,60,.22), transparent 60%), radial-gradient(800px 700px at 0% 100%, rgba(40,70,140,.35), transparent 60%), #0E1729; }
+.grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(247,242,232,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(247,242,232,.05) 1px, transparent 1px);
+  background-size: 54px 54px; -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, #000 30%, transparent 100%); }
+.brand { position: relative; display: flex; align-items: center; gap: 26px; }
+.brand img { width: 104px; }
+.word { font-family: Cinzel; font-weight: 600; font-size: 54px; letter-spacing: .08em; line-height: 1; }
+.tag { font-family: Cinzel; font-size: 17px; letter-spacing: .32em; color: #B8893C; margin-top: 12px; }
+.kicker { position: relative; margin-top: 110px; font-size: 26px; letter-spacing: .2em; color: #E2BE74; font-weight: 600; }
+h1 { position: relative; margin-top: 26px; font-family: Georgia, serif; font-size: 84px; line-height: 1.08; font-weight: 700; letter-spacing: -.01em; }
+h1 em { font-style: normal; color: #E2BE74; }
+.sub { position: relative; margin-top: 34px; font-size: 32px; line-height: 1.45; color: rgba(247,242,232,.78); max-width: 860px; }
+.chips { position: relative; margin-top: 54px; display: flex; flex-wrap: wrap; gap: 16px; }
+.chip { border: 1.5px solid rgba(184,137,60,.55); background: rgba(247,242,232,.05); border-radius: 999px; padding: 14px 26px; font-size: 27px; color: #F7F2E8; }
+.foot { position: relative; margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; border-top: 2px solid rgba(184,137,60,.5); padding-top: 34px; }
+.foot b { display: block; font-size: 34px; color: #F7F2E8; }
+.foot span { font-size: 26px; color: rgba(247,242,232,.7); }
+.cta { font-size: 28px; font-weight: 700; color: #0E1729; background: #E2BE74; padding: 18px 30px; border-radius: 14px; }
+</style></head>
+<body><div class="page"><div class="grid"></div>
+  <div class="brand"><img src="../png/vidyanexa-crest-reverse.png" alt=""><div><div class="word">VIDYANEXA</div><div class="tag">SCHOOL MANAGEMENT</div></div></div>
+  <div class="kicker">HELLO, SCHOOLS OF INDIA</div>
+  <h1>Run your whole school from <em>one calm</em> workspace.</h1>
+  <p class="sub">Registers, fee ledgers and WhatsApp groups, replaced by one app for the office, teachers and parents.</p>
+  <div class="chips">
+    <span class="chip">Attendance</span><span class="chip">Fees &amp; receipts</span><span class="chip">Exams &amp; report cards</span>
+    <span class="chip">Timetable</span><span class="chip">Bus tracking</span><span class="chip">Parent app</span><span class="chip">HR &amp; payroll</span>
+  </div>
+  <div class="foot"><div><b>Built for Indian schools</b><span>Web and mobile apps</span></div><div class="cta">vidyanexa.com</div></div>
+</div></body></html>
