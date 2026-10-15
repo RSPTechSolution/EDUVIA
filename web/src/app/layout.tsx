@@ -34,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN" suppressHydrationWarning className={cn(ui.variable, jetbrains.variable, cinzel.variable)}>
+    <html lang="en-IN" data-scroll-behavior="smooth" suppressHydrationWarning className={cn(ui.variable, jetbrains.variable, cinzel.variable)}>
       {/* Extensions such as Grammarly add attributes to <body> before React loads. */}
       <body className="min-h-dvh" suppressHydrationWarning>
         <Providers>{children}</Providers>

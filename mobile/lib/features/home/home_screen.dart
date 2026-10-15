@@ -9,6 +9,7 @@ import '../../core/auth/session.dart';
 import '../../core/config/app_config.dart';
 import '../../shared/widgets/brand.dart';
 import '../../shared/widgets/common.dart';
+import '../../shared/widgets/motion.dart';
 import '../attendance/attendance_data.dart';
 import '../attendance/attendance_screens.dart' show statusColor;
 import '../fees/fees_data.dart';
@@ -71,25 +72,27 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 4),
             Text(DateFormat('EEEE, d MMMM').format(DateTime.now()), style: TextStyle(color: muted)),
             const SizedBox(height: 20),
-            if (me.school != null) _SchoolCard(school: me.school!, role: me.role),
+            if (me.school != null) Entrance(child: _SchoolCard(school: me.school!, role: me.role)),
             const SizedBox(height: 16),
             if (loading)
               const _HomeSkeleton()
-            else ...[
-              if (me.role == 'driver' && me.hasModule('transport')) const DriverCard(),
-              if (me.isFamily) ...[
-                if (me.hasModule('attendance') || me.hasModule('fees')) const _FamilyCards(),
-                if (me.hasModule('academics')) const _HomeworkDue(),
-                if (me.hasModule('academics')) const _TodayLessons(),
-              ] else ...[
-                if (me.hasModule('attendance') && me.can('attendance.mark')) const _AttendanceToTake(),
-                if (me.hasModule('fees') && me.can('fees.view')) const _FeeTiles(),
-                if (me.hasModule('academics') && me.teaches) const CoversCard(),
-                if (me.hasModule('academics') && me.teaches) const _TodayLessons(),
-              ],
-            ],
+            else
+              // The cards rise in one after another once their data is ready.
+              ...[
+                if (me.role == 'driver' && me.hasModule('transport')) const DriverCard(),
+                if (me.isFamily) ...[
+                  if (me.hasModule('attendance') || me.hasModule('fees')) const _FamilyCards(),
+                  if (me.hasModule('academics')) const _HomeworkDue(),
+                  if (me.hasModule('academics')) const _TodayLessons(),
+                ] else ...[
+                  if (me.hasModule('attendance') && me.can('attendance.mark')) const _AttendanceToTake(),
+                  if (me.hasModule('fees') && me.can('fees.view')) const _FeeTiles(),
+                  if (me.hasModule('academics') && me.teaches) const CoversCard(),
+                  if (me.hasModule('academics') && me.teaches) const _TodayLessons(),
+                ],
+              ].indexed.map((e) => Entrance(index: e.$1 + 1, child: e.$2)),
             const SizedBox(height: 16),
-            _ComingUp(flavor: flavor, modules: me.modules),
+            Entrance(index: 5, child: _ComingUp(flavor: flavor, modules: me.modules)),
           ],
         ),
       ),
@@ -254,10 +257,11 @@ class _MiniStat extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => InkWell(
+  Widget build(BuildContext context) => Pressable(child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: Container(
+        // Ink, not Container, so the ripple shows on top of the tinted background.
+        child: Ink(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)),
           child: Row(children: [
@@ -271,7 +275,7 @@ class _MiniStat extends StatelessWidget {
             ),
           ]),
         ),
-      );
+      ));
 }
 
 class _HomeworkDue extends ConsumerWidget {

@@ -28,7 +28,7 @@ export function StatCard({
   const body = (
     <div
       className={cn(
-        "flex h-full items-start justify-between gap-4 rounded-xl border bg-card p-5 shadow-xs",
+        "stat-card group flex h-full items-start justify-between gap-4 rounded-2xl border bg-card p-5",
         href && "card-lift",
       )}
     >

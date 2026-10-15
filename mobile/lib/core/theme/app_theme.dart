@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -152,6 +153,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      // A ripple from the touch point on every tap (the shimmering "sparkle" ripple where the platform supports it).
+      splashFactory: kIsWeb ? InkRipple.splashFactory : InkSparkle.splashFactory,
       brightness: scheme.brightness,
       scaffoldBackgroundColor: scheme.surface,
       textTheme: textTheme,

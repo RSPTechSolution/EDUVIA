@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { GoogleAnalytics } from "@/components/marketing/analytics";
+import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { REFRESH_COOKIE } from "@/lib/auth/cookies";
@@ -21,6 +22,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <main id="main" className="flex-1">{children}</main>
       <SiteFooter />
       <GoogleAnalytics />
+      <SmoothScroll />
       <JsonLd data={graph(ORGANIZATION, WEBSITE)} />
     </div>
   );

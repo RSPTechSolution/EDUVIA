@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 function Hero({ subtitle, children }: { subtitle: string; children?: React.ReactNode }) {
   const me = useSession();
   return (
-    <div className="aurora relative overflow-hidden rounded-2xl bg-panel p-6 text-white shadow-lg sm:p-8">
+    <div className="aurora dash-hero relative overflow-hidden rounded-2xl bg-panel p-6 text-white shadow-lg sm:p-8">
       <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-[radial-gradient(closest-side,rgb(217_226_255/0.25),transparent)]" />
       <div aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 size-80 rounded-full bg-[radial-gradient(closest-side,rgb(0_25_68/0.3),transparent)]" />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -151,7 +151,7 @@ function SchoolDashboard() {
   const trial = me.school?.subscription_status === "trialing";
 
   return (
-    <div className="space-y-6">
+    <div className="dash-cards space-y-6">
       <Hero subtitle={`${me.school?.name} · ${roleLabel(me.role)}`}>
         {can("users.manage") && <Link href="/settings/users" className={heroButton}><UserPlus className="size-4" aria-hidden />Add user</Link>}
         {can("school.manage") && <Link href="/settings/school" className={heroButton}><Settings2 className="size-4" aria-hidden />School profile</Link>}
@@ -503,7 +503,7 @@ function PersonalDashboard() {
   const subjects = new Set(first?.entries.map((e) => e.subject_id)).size;
 
   return (
-    <div className="space-y-6">
+    <div className="dash-cards space-y-6">
       <Hero subtitle={`${me.school?.name} · ${roleLabel(me.role)}`}>
         <Link href="/my-timetable" className={heroButton}><CalendarDays className="size-4" aria-hidden />{me.role === "parent" ? "Children's timetable" : "My timetable"}</Link>
         <Link href="/account" className={heroButton}><Settings2 className="size-4" aria-hidden />My account</Link>
@@ -566,7 +566,7 @@ function PlatformDashboard() {
   const leads = useQuery({ queryKey: ["platform", "leads", "new"], queryFn: () => api<Lead[]>("/platform/leads", { query: { status: "new", page_size: 5 } }) });
   const newest = all.data?.data[0];
   return (
-    <div className="space-y-6">
+    <div className="dash-cards space-y-6">
       <Hero subtitle="Platform overview">
         <Link href="/platform/schools" className={heroButton}><Building2 className="size-4" aria-hidden />Schools</Link>
         <Link href="/platform/leads" className={heroButton}><Inbox className="size-4" aria-hidden />Leads</Link>

@@ -6,6 +6,7 @@ import 'core/auth/auth_controller.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode.dart';
+import 'shared/widgets/motion.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +25,7 @@ class VidyanexaApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ref.watch(themeModeProvider),
+      scrollBehavior: const AppScrollBehavior(),
       routerConfig: ref.watch(routerProvider),
     );
   }
