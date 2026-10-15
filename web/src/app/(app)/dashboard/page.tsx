@@ -10,6 +10,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/common/stat-card";
 import { Stagger, StaggerItem } from "@/components/motion/primitives";
+import { CustomiseDashboard, DashboardSections } from "@/components/dashboard/customise";
 import { UsageBar } from "@/components/common/usage-bar";
 import { RolesDonut, RolesDonutSkeleton, SigninsChart } from "@/components/dashboard/lazy-charts";
 import { DAY_NAMES, TodayList, formatTime } from "@/components/timetable/grid";
@@ -27,6 +28,8 @@ import {
   useAttendanceOverview, useAttendanceSections, useAudit, useCurrentSchool, useDashboardSummary, useFeeSummary, useMyAttendance, useMyFees,
   useMyHomework, useMyTimetables, useNotices, useSchools, useUsers,
 } from "@/lib/queries";
+import { toast } from "sonner";
+import { celebrate } from "@/lib/celebrate";
 import { cn } from "@/lib/utils";
 
 function Hero({ subtitle, children }: { subtitle: string; children?: React.ReactNode }) {
@@ -74,8 +77,19 @@ function SetupChecklist() {
     { done: reviewed, label: "Choose the modules you need", detail: "Switch off anything you won't use to keep menus simple.", href: "/settings/modules", show: can("modules.manage") },
     { done: (users.data?.meta?.total ?? 0) > 1, label: "Add your staff", detail: "Create accounts for principals, teachers and office staff.", href: "/settings/users", show: can("users.view") },
   ].filter((s) => s.show);
-  if (!steps.length) return null;
   const done = steps.filter((s) => s.done).length;
+  const complete = steps.length > 0 && done === steps.length;
+  // The first time every step is done, celebrate once (remembered on this device).
+  useEffect(() => {
+    if (!complete) return;
+    try {
+      if (localStorage.getItem("vnx-setup-celebrated")) return;
+      localStorage.setItem("vnx-setup-celebrated", "1");
+    } catch { return; }
+    celebrate();
+    toast.success("Your school is set up", { description: "Everything on the checklist is done." });
+  }, [complete]);
+  if (!steps.length) return null;
   return (
     <Card>
       <CardHeader>
@@ -156,11 +170,10 @@ function SchoolDashboard() {
         {can("users.manage") && <Link href="/settings/users" className={heroButton}><UserPlus className="size-4" aria-hidden />Add user</Link>}
         {can("school.manage") && <Link href="/settings/school" className={heroButton}><Settings2 className="size-4" aria-hidden />School profile</Link>}
         {can("billing.view") && <Link href="/settings/billing" className={heroButton}><CreditCard className="size-4" aria-hidden />{me.school?.plan.name} plan</Link>}
+        <CustomiseDashboard layoutKey="school" className={heroButton} sections={SCHOOL_SECTIONS.filter((x) => x.id !== "activity" || can("audit.view"))} />
       </Hero>
 
       <Suspense><WelcomeBanner /></Suspense>
-
-      <SchoolPulse />
 
       {trial && (
         <Link href="/settings/billing" className="flex items-center gap-3 rounded-xl border border-info/30 bg-info/5 p-4 text-sm transition hover:border-info/50">
@@ -175,6 +188,9 @@ function SchoolDashboard() {
         </Link>
       )}
 
+      <DashboardSections layoutKey="school" sections={[
+        { id: "pulse", label: "Today at school", node: <SchoolPulse /> },
+        { id: "stats", label: "Key numbers", node: (
       <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StaggerItem>
         <StatCard label="Active accounts" value={s?.active_users ?? 0} loading={summary.isLoading} icon={Users} hint="Staff, parents and students" href={can("users.view") ? "/settings/users" : undefined} />
@@ -197,15 +213,17 @@ function SchoolDashboard() {
           />
         </StaggerItem>
       </Stagger>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        ) },
+        { id: "signins", label: "Sign-in activity", span: 4, node: (
+        <Card>
           <CardHeader>
             <CardTitle>Sign-in activity</CardTitle>
             <CardDescription>How many times people signed in each day</CardDescription>
           </CardHeader>
           <CardContent>{s ? <SigninsChart data={s.signins} /> : <Skeleton className="h-64 w-full" />}</CardContent>
         </Card>
+        ) },
+        { id: "people", label: "People at your school", span: 2, node: (
         <Card>
           <CardHeader>
             <CardTitle>People at your school</CardTitle>
@@ -216,12 +234,12 @@ function SchoolDashboard() {
             {s && <p className="mt-4 text-xs text-muted-foreground">{s.student_logins} of the students also have their own app login; the rest are followed by their parents.</p>}
           </CardContent>
         </Card>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <SetupChecklist />
-        <LatestNotices />
-        {can("audit.view") && <RecentActivity />}
+        ) },
+        { id: "setup", label: "Set up your school", span: 2, node: <SetupChecklist /> },
+        { id: "notices", label: "Notices", span: 2, node: <LatestNotices /> },
+        ...(can("audit.view") ? [{ id: "activity", label: "Recent activity", span: 2 as const, node: <RecentActivity /> }] : []),
+        { id: "plan", label: "Plan usage", span: 2, node: (
+          <>
         {(s || summary.isLoading) && (
           <Card>
             <CardHeader>
@@ -241,10 +259,18 @@ function SchoolDashboard() {
             </CardContent>
           </Card>
         )}
-      </div>
+          </>
+        ) },
+      ]} />
     </div>
   );
 }
+
+const SCHOOL_SECTIONS = [
+  { id: "pulse", label: "Today at school" }, { id: "stats", label: "Key numbers" }, { id: "signins", label: "Sign-in activity" },
+  { id: "people", label: "People at your school" }, { id: "setup", label: "Set up your school" }, { id: "notices", label: "Notices" },
+  { id: "activity", label: "Recent activity" }, { id: "plan", label: "Plan usage" },
+];
 
 const PERSONAL_ROLES = ["teacher", "parent", "student"];
 
@@ -507,8 +533,14 @@ function PersonalDashboard() {
       <Hero subtitle={`${me.school?.name} · ${roleLabel(me.role)}`}>
         <Link href="/my-timetable" className={heroButton}><CalendarDays className="size-4" aria-hidden />{me.role === "parent" ? "Children's timetable" : "My timetable"}</Link>
         <Link href="/account" className={heroButton}><Settings2 className="size-4" aria-hidden />My account</Link>
+        <CustomiseDashboard layoutKey={me.role} className={heroButton} sections={[
+          { id: "stats", label: "Key numbers" }, { id: "focus", label: teacher ? "Attendance to take" : "Your children" }, { id: "notices", label: "Notices" },
+          ...(!teacher ? [{ id: "homework", label: "Homework to do" }] : []), { id: "timetable", label: "Today's timetable" },
+        ]} />
       </Hero>
 
+      <DashboardSections layoutKey={me.role} sections={[
+        { id: "stats", label: "Key numbers", node: (
       <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StaggerItem>
           <StatCard label={teacher ? "Lessons today" : "Periods today"} value={todayCount} loading={views.isLoading} icon={CalendarDays} href="/my-timetable" />
@@ -528,15 +560,12 @@ function PersonalDashboard() {
             : <StatCard label="Teachers" value={new Set(all.flatMap((v) => v.entries.map((e) => e.teacher_id).filter(Boolean))).size} loading={views.isLoading} icon={LayoutGrid} accent="warning" hint="Teaching your week" />}
         </StaggerItem>
       </Stagger>
-
-      {teacher ? <AttendanceToTake /> : <FamilySummary />}
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <LatestNotices />
-        {!teacher && <HomeworkDue />}
-      </div>
-
-      {views.isLoading ? <Skeleton className="h-72 rounded-xl" /> : !all.length ? (
+        ) },
+        { id: "focus", label: teacher ? "Attendance to take" : "Your children", node: teacher ? <AttendanceToTake /> : <FamilySummary /> },
+        { id: "notices", label: "Notices", span: teacher ? 6 : 3, node: <LatestNotices /> },
+        ...(!teacher ? [{ id: "homework", label: "Homework to do", span: 3 as const, node: <HomeworkDue /> }] : []),
+        { id: "timetable", label: "Today's timetable", node: (
+      views.isLoading ? <Skeleton className="h-72 rounded-xl" /> : !all.length ? (
         <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
           {me.role === "parent" ? "No children are linked to your account yet. Please contact the school office." : "Nothing is scheduled for you yet."}
         </CardContent></Card>
@@ -555,7 +584,9 @@ function PersonalDashboard() {
             </Card>
           ))}
         </div>
-      )}
+      )
+        ) },
+      ]} />
     </div>
   );
 }

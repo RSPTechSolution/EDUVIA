@@ -458,27 +458,30 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
 
   Future<void> _save(Roster r) async {
     setState(() => saving = true);
+    final path = '/attendance/sections/${widget.sectionId}';
+    final body = {
+      'date': widget.date,
+      'records': [
+        for (final e in marks.entries)
+          if (e.value != null) {'student_id': e.key, 'status': e.value, 'remark': (remarks[e.key] ?? '').trim().isEmpty ? null : remarks[e.key]!.trim()},
+      ],
+    };
+    final absent = marks.values.where((v) => v == 'absent').length;
     try {
-      await ref
-          .read(apiClientProvider)
-          .put<Object?>(
-            '/attendance/sections/${widget.sectionId}',
-            body: {
-              'date': widget.date,
-              'records': [
-                for (final e in marks.entries)
-                  if (e.value != null)
-                    {'student_id': e.key, 'status': e.value, 'remark': (remarks[e.key] ?? '').trim().isEmpty ? null : remarks[e.key]!.trim()},
-              ],
-            },
-          );
-      HapticFeedback.mediumImpact();
+      await ref.read(apiClientProvider).put<Object?>(path, body: body);
       if (!mounted) return;
-      final c = marks.values.where((v) => v == 'absent').length;
-      showSnack(context, 'Attendance saved · $c absent');
+      showSnack(context, 'Attendance saved · $absent absent');
       Navigator.of(context).maybePop();
     } on ApiException catch (e) {
-      if (mounted) showSnack(context, e.message, error: true);
+      if (e.isNetwork) {
+        // No connection: keep it on the phone and send it as soon as the app can reach the school again.
+        await ref.read(apiClientProvider).sendLater('PUT', path, body, 'Attendance for ${r.label}');
+        if (!mounted) return;
+        showSnack(context, "You're offline. Attendance is saved on this phone and will be sent when you're back online.");
+        Navigator.of(context).maybePop();
+      } else if (mounted) {
+        showSnack(context, e.message, error: true);
+      }
     } finally {
       if (mounted) setState(() => saving = false);
     }

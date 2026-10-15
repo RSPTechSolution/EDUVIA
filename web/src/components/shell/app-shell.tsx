@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageTransition } from "@/components/motion/primitives";
 import { SessionProvider } from "@/components/session-provider";
 import { Header } from "@/components/shell/header";
@@ -11,12 +11,10 @@ import { rememberSidebar } from "@/components/shell/shell-cookies";
 import { Sidebar, SidebarBrand, SidebarNav } from "@/components/shell/sidebar";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import type { Me } from "@/lib/api/types";
+import { accentCss } from "@/lib/theme/palette";
 
 // The search palette's code loads the first time someone opens it, not with every page.
 const CommandPalette = dynamic(() => import("@/components/shell/command-palette").then((m) => m.CommandPalette), { ssr: false });
-
-// A school's own colour, as a CSS colour we can safely put in a style tag.
-const HEX = /^#[0-9a-f]{6}$/i;
 
 export function AppShell({ me, collapsed: initiallyCollapsed, platform, bannerHidden, children }: {
   me: Me; collapsed: boolean; platform: Platform | null; bannerHidden: string | null; children: React.ReactNode;
@@ -45,10 +43,10 @@ export function AppShell({ me, collapsed: initiallyCollapsed, platform, bannerHi
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // The school's own colour, on the whole document so dialogs and menus (rendered in portals) match. It's in the server
-  // HTML, so the page never flashes the default navy first. Navy is the default theme, which already adapts to dark mode.
+  // The school's accent colour, as a full light and dark palette on the whole document, so dialogs and menus (rendered in
+  // portals) match. It's in the server HTML, so the page never flashes the default navy first.
   const brand = me.school?.brand_color;
-  const brandCss = brand && HEX.test(brand) && brand.toLowerCase() !== "#15233f" ? `:root{--primary:${brand};--ring:${brand}}` : null;
+  const brandCss = useMemo(() => (brand ? accentCss(brand) : null), [brand]);
 
   // Accounts created with a temporary password must set their own first.
   useEffect(() => {

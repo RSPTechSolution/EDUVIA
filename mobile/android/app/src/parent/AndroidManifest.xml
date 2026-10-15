@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Parent app only: the home-screen widget with today's attendance and the next fee due. -->
+    <application>
+        <receiver android:name=".TodayWidgetProvider" android:exported="true" android:label="@string/today_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/today_widget_info" />
+        </receiver>
+    </application>
+</manifest>

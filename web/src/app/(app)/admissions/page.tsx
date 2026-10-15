@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";
+import { LoadMore, useLoadMore } from "@/components/common/load-more";
 import { Field } from "@/components/common/field";
 import { PageHeader } from "@/components/common/page-header";
 import { PermissionGate } from "@/components/common/permission-gate";
@@ -184,6 +185,7 @@ export default function AdmissionsPage() {
   const [page, setPage] = useState(1);
   const summary = useEnquirySummary();
   const q = useEnquiries({ page, status: filter === "due" ? undefined : filter || undefined, due: filter === "due" || undefined, search: search.trim() || undefined });
+  const more = useLoadMore(q.data?.data, q.data?.meta, (e) => e.id);
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState<Enquiry | null>(null);
   const s = summary.data;
@@ -217,12 +219,12 @@ export default function AdmissionsPage() {
           <Input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search name or phone" className="h-9 pl-9" aria-label="Search enquiries" />
         </div>
       </div>
-      {q.isLoading ? <Skeleton className="h-72 rounded-xl" /> : !q.data?.data.length ? (
+      {q.isLoading && !more.rows.length ? <Skeleton className="h-72 rounded-xl" /> : !more.rows.length ? (
         <EmptyState className="rounded-2xl border bg-card" title="No enquiries here" description="Add walk-ins and phone calls, or share your website's admission form." action={<Button onClick={() => setCreating(true)}><Plus aria-hidden />New enquiry</Button>} />
       ) : (
         <div className="overflow-hidden rounded-2xl border bg-card">
           <ul role="list" aria-label="Enquiries" className="divide-y">
-            {q.data.data.map((e) => (
+            {more.rows.map((e) => (
               <li key={e.id}>
                 <button type="button" onClick={() => setOpen(e)} className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-left hover:bg-muted/40">
                   <span className="min-w-0 flex-1">
@@ -239,13 +241,7 @@ export default function AdmissionsPage() {
           </ul>
         </div>
       )}
-      {q.data?.meta && q.data.meta.total > q.data.meta.page_size && (
-        <div className="mt-4 flex items-center justify-center gap-2 text-sm">
-          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-          <span className="text-muted-foreground">Page {page} of {Math.ceil(q.data.meta.total / q.data.meta.page_size)}</span>
-          <Button variant="outline" size="sm" disabled={page * q.data.meta.page_size >= q.data.meta.total} onClick={() => setPage((p) => p + 1)}>Next</Button>
-        </div>
-      )}
+      <LoadMore shown={more.rows.length} total={more.total} hasMore={more.hasMore} loading={q.isFetching && page > 1} onLoadMore={() => setPage(more.nextPage)} noun="enquiries" />
       <NewEnquiryDialog open={creating} onOpenChange={setCreating} />
       <EnquirySheet enquiry={open} onOpenChange={(o) => !o && setOpen(null)} />
     </PermissionGate>

@@ -42,6 +42,8 @@ dependencies:
   google_fonts: 8.0.0
   url_launcher: ^6.3.3
   geolocator: ^14.1.1
+  shared_preferences: ^2.5.6
+  home_widget: ^0.10.0
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +56,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -106,15 +109,31 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
+# Theme version 2: the crest on Material navy. Images are drawn by web/scripts/app-icons.mjs.
 flutter_launcher_icons:
   image_path: "assets/brand/launcher.png"
   android: true
   ios: true
   remove_alpha_ios: true
-  adaptive_icon_background: "#F7F2E8"
+  image_path_ios_dark_transparent: "assets/brand/launcher-dark.png"
+  adaptive_icon_background: "#2F4A86"
   adaptive_icon_foreground: "assets/brand/launcher-foreground.png"
+  adaptive_icon_monochrome: "assets/brand/launcher-monochrome.png"
   web:
     generate: true
     image_path: "assets/brand/launcher.png"
-    background_color: "#F7F2E8"
-    theme_color: "#15233F"
+    background_color: "#2F4A86"
+    theme_color: "#2F4A86"
+
+# The screen shown while the app starts: the crest on navy, or on the dark surface in dark mode.
+flutter_native_splash:
+  color: "#2F4A86"
+  color_dark: "#121318"
+  image: "assets/brand/splash.png"
+  android_12:
+    color: "#2F4A86"
+    color_dark: "#121318"
+    image: "assets/brand/launcher-foreground.png"
+    icon_background_color: "#2F4A86"
+    icon_background_color_dark: "#2F4578"
+  web: true

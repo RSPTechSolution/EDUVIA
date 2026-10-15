@@ -104,7 +104,7 @@ function Invoices() {
   const classes = useClasses();
   const terms = useFeeTerms();
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(useSearchParams().get("q") ?? ""); // quick actions link here with ?q=
   const [statusParam, setStatus] = useParam("status");
   const status = statusParam ?? "all";
   const [classId, setClassId] = useState("all");

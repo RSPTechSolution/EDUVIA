@@ -109,12 +109,8 @@ class StatusColors extends ThemeExtension<StatusColors> {
   static const dark = StatusColors(success: Brand.successDark, warning: Brand.warningDark, info: Brand.infoDark, danger: Brand.dangerDark);
 
   @override
-  StatusColors copyWith({Color? success, Color? warning, Color? info, Color? danger}) => StatusColors(
-        success: success ?? this.success,
-        warning: warning ?? this.warning,
-        info: info ?? this.info,
-        danger: danger ?? this.danger,
-      );
+  StatusColors copyWith({Color? success, Color? warning, Color? info, Color? danger}) =>
+      StatusColors(success: success ?? this.success, warning: warning ?? this.warning, info: info ?? this.info, danger: danger ?? this.danger);
 
   @override
   StatusColors lerp(StatusColors? other, double t) {
@@ -129,8 +125,18 @@ class StatusColors extends ThemeExtension<StatusColors> {
 }
 
 class AppTheme {
-  static ThemeData light() => _build(_light);
-  static ThemeData dark() => _build(_dark);
+  static ThemeData light([String? accent]) => _build(_scheme(accent, Brightness.light) ?? _light);
+  static ThemeData dark([String? accent]) => _build(_scheme(accent, Brightness.dark) ?? _dark);
+
+  /// A school's own accent colour as a full Material 3 scheme (the same method as the web app). Navy, the default,
+  /// keeps the hand-tuned scheme above.
+  static ColorScheme? _scheme(String? accent, Brightness b) {
+    final hex = accent?.replaceFirst('#', '').toLowerCase();
+    if (hex == null || hex.length != 6 || hex == '15233f' || hex == '2f4a86') return null;
+    final v = int.tryParse(hex, radix: 16);
+    if (v == null) return null;
+    return ColorScheme.fromSeed(seedColor: Color(0xFF000000 | v), brightness: b, dynamicSchemeVariant: DynamicSchemeVariant.tonalSpot);
+  }
 
   /// A strong, solid panel that keeps white text readable in both modes (summary cards such as fees due).
   static Color heroPanel(ColorScheme s) => s.brightness == Brightness.dark ? s.primaryContainer : s.primary;
@@ -138,17 +144,21 @@ class AppTheme {
   static ThemeData _build(ColorScheme scheme) {
     final isDark = scheme.brightness == Brightness.dark;
     final base = _fontTheme(ThemeData(brightness: scheme.brightness).textTheme);
-    final textTheme = base.copyWith(
-      displaySmall: base.displaySmall?.copyWith(fontWeight: FontWeight.w600),
-      headlineLarge: base.headlineLarge?.copyWith(fontWeight: FontWeight.w600),
-      headlineMedium: base.headlineMedium?.copyWith(fontWeight: FontWeight.w600),
-      headlineSmall: base.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
-      titleLarge: base.titleLarge?.copyWith(fontWeight: FontWeight.w500),
-    ).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
+    final textTheme = base
+        .copyWith(
+          displaySmall: base.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+          headlineLarge: base.headlineLarge?.copyWith(fontWeight: FontWeight.w600),
+          headlineMedium: base.headlineMedium?.copyWith(fontWeight: FontWeight.w600),
+          headlineSmall: base.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+          titleLarge: base.titleLarge?.copyWith(fontWeight: FontWeight.w500),
+        )
+        .apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
 
     final cardColor = isDark ? scheme.surfaceContainerLow : scheme.surfaceContainerLowest;
-    OutlineInputBorder field(Color c, [double w = 1]) =>
-        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c, width: w));
+    OutlineInputBorder field(Color c, [double w = 1]) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: c, width: w),
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -173,7 +183,10 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: scheme.outlineVariant)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: scheme.outlineVariant),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -217,10 +230,17 @@ class AppTheme {
       dialogTheme: DialogThemeData(backgroundColor: scheme.surfaceContainerHigh, surfaceTintColor: Colors.transparent),
       bottomSheetTheme: BottomSheetThemeData(backgroundColor: scheme.surfaceContainerLow, surfaceTintColor: Colors.transparent),
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
-      pageTransitionsTheme: const PageTransitionsTheme(builders: {
-        TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-      }),
+      // Moving between screens: the new one fades in while sliding forward (iOS keeps its own native slide).
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 }

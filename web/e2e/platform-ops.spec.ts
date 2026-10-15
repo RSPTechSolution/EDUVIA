@@ -1,3 +1,4 @@
+import { accentTokens } from "../src/lib/theme/palette";
 import { expect, test } from "./fixtures";
 import { DEMO, apiAs, login } from "./helpers";
 
@@ -38,9 +39,12 @@ test("school admin picks a school colour and downloads the school's data", async
   await expect(page).toHaveURL(/\/dashboard/);
   await page.goto("/settings/school");
   await page.getByRole("radio", { name: "Teal" }).click();
+  await expect(page.getByText("Preview: Teal")).toBeVisible();
+  await page.getByRole("button", { name: "Use Teal" }).click();
   await expect(page.getByText(/Colour saved/)).toBeVisible();
-  // The page reloads, and the server sends the school's colour with it.
-  await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--primary").trim())).toBe("#0f766e");
+  // The page reloads, and the server sends the school's full colour scheme with it, built from the colour.
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--primary").trim()).catch(() => ""))
+    .toBe(accentTokens("#0f766e", false).primary);
 
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download all school data" }).click();

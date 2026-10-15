@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FileDown } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -23,6 +23,7 @@ import { ApiError, api } from "@/lib/api/client";
 import type { School } from "@/lib/api/types";
 import { downloadFile } from "@/lib/download";
 import { qk, useCurrentSchool } from "@/lib/queries";
+import { DEFAULT_ACCENTS, accentTokens } from "@/lib/theme/palette";
 import { cn } from "@/lib/utils";
 import { timeZoneOptions, tzLabel } from "@/lib/timezones";
 
@@ -195,9 +196,36 @@ function SchoolProfilePage() {
 }
 
 const BRAND_COLORS = [
-  ["#15233F", "Navy"], ["#2563eb", "Blue"], ["#0f766e", "Teal"], ["#15803d", "Green"],
-  ["#b45309", "Amber"], ["#be123c", "Rose"], ["#7e22ce", "Purple"], ["#334155", "Slate"],
+  ["#15233F", "Navy"], ["#4f46e5", "Indigo"], ["#2563eb", "Blue"], ["#0f766e", "Teal"], ["#15803d", "Green"],
+  ["#b45309", "Amber"], ["#be123c", "Maroon"], ["#7e22ce", "Purple"], ["#334155", "Slate"],
 ] as const;
+
+/** A small sample of the app in one mode, drawn with the palette generated from `hex`. */
+function AccentPreview({ hex, dark }: { hex: string; dark: boolean }) {
+  const vars = Object.fromEntries(Object.entries(accentTokens(DEFAULT_ACCENTS.includes(hex.toLowerCase()) ? "#2f4a86" : hex, dark)).map(([k, v]) => [`--${k}`, v]));
+  return (
+    <div aria-hidden style={vars as React.CSSProperties} className="overflow-hidden rounded-2xl border border-border bg-background text-foreground transition-colors duration-300">
+      <div className="flex">
+        <div className="hidden w-28 shrink-0 space-y-1.5 bg-sidebar p-2.5 sm:block">
+          <div className="rounded-full bg-sidebar-primary px-2.5 py-1 text-[11px] font-semibold text-sidebar-primary-foreground">Dashboard</div>
+          <div className="px-2.5 py-1 text-[11px] text-sidebar-muted">Students</div>
+          <div className="px-2.5 py-1 text-[11px] text-sidebar-muted">Fees</div>
+        </div>
+        <div className="flex-1 space-y-2.5 p-3">
+          <div className="rounded-xl bg-panel px-3 py-2.5 text-xs font-semibold text-panel-foreground">Good morning</div>
+          <div className="flex gap-2">
+            <div className="flex-1 rounded-xl border border-border bg-card p-2 text-[11px]"><span className="text-muted-foreground">Attendance</span><div className="text-sm font-semibold">94%</div></div>
+            <div className="flex-1 rounded-xl bg-primary-container p-2 text-[11px] text-primary-container-foreground">Fees<div className="text-sm font-semibold">₹48,500</div></div>
+          </div>
+          <div className="flex gap-2">
+            <span className="rounded-full bg-primary px-3 py-1 text-[11px] font-medium text-primary-foreground">Save</span>
+            <span className="rounded-full border border-input px-3 py-1 text-[11px] font-medium text-primary">Cancel</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function BrandCard({ current, editable }: { current: string | null; editable: boolean }) {
   const qc = useQueryClient();
@@ -207,22 +235,41 @@ function BrandCard({ current, editable }: { current: string | null; editable: bo
     onError: (e) => toast.error(e instanceof ApiError ? e.message : "Could not save"),
   });
   const active = current ?? "#15233F";
+  const [picked, setPicked] = useState<string>(active);
+  useEffect(() => setPicked(active), [active]); // the saved colour arrives after the page opens
+  const name = BRAND_COLORS.find(([h]) => h === picked)?.[1] ?? "Custom";
   return (
     <Card className="mt-6">
       <CardHeader>
         <CardTitle>School colour</CardTitle>
-        <CardDescription>Used for buttons, links and highlights in Vidyanexa for everyone at your school.</CardDescription>
+        <CardDescription>
+          Vidyanexa builds a full light and dark colour scheme from this colour: buttons, the menu, highlights and charts,
+          for everyone at your school. Text always keeps a readable contrast.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-5">
         <div role="radiogroup" aria-label="School colour" className="flex flex-wrap gap-3">
-          {BRAND_COLORS.map(([hex, name]) => (
-            <button key={hex} type="button" role="radio" aria-checked={active === hex} aria-label={name} disabled={!editable || save.isPending}
-              onClick={() => hex !== active && save.mutate(hex)}
-              className={cn("size-10 rounded-full ring-offset-2 ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed",
-                active === hex && "ring-2 ring-foreground")}
+          {BRAND_COLORS.map(([hex, label]) => (
+            <button key={hex} type="button" role="radio" aria-checked={picked === hex} aria-label={label} disabled={!editable || save.isPending}
+              onClick={() => setPicked(hex)}
+              className={cn("size-10 rounded-full ring-offset-2 ring-offset-background transition-transform outline-none hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:hover:scale-100",
+                picked === hex && "ring-2 ring-foreground")}
               style={{ background: hex }} />
           ))}
         </div>
+        <div>
+          <p className="mb-2 text-sm font-medium">Preview: {name}</p>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div><p className="mb-1.5 text-xs text-muted-foreground">Light</p><AccentPreview hex={picked} dark={false} /></div>
+            <div><p className="mb-1.5 text-xs text-muted-foreground">Dark</p><AccentPreview hex={picked} dark /></div>
+          </div>
+        </div>
+        {editable && (
+          <div className="flex gap-2">
+            <Button onClick={() => save.mutate(picked)} disabled={picked === active} loading={save.isPending} loadingText="Saving…">Use {name}</Button>
+            {picked !== active && <Button variant="ghost" onClick={() => setPicked(active)}>Cancel</Button>}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

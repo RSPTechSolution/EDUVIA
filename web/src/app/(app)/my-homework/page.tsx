@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, api } from "@/lib/api/client";
 import type { MyHomework } from "@/lib/api/types";
 import { useMyHomework } from "@/lib/queries";
+import { patchLists } from "@/lib/optimistic";
 import { cn } from "@/lib/utils";
 
 const dueLabel = (d: string) => { const x = parseISO(d); return isToday(x) ? "Due today" : isTomorrow(x) ? "Due tomorrow" : `Due ${format(x, "EEE d MMM")}`; };
@@ -27,15 +28,17 @@ function Item({ h }: { h: MyHomework }) {
   const [note, setNote] = useState(h.note ?? "");
   const toggle = useMutation({
     mutationFn: (done: boolean) => api(`/homework/${h.id}/done`, { method: "POST", body: { student_id: h.student_id, done, note: note || null } }),
-    onSuccess: (_d, done) => { qc.invalidateQueries({ queryKey: ["homework", "my"] }); setNoting(false); toast.success(done ? "Marked as done" : "Marked as not done"); },
-    onError: (e) => toast.error(e instanceof ApiError ? e.message : "Could not update"),
+    onMutate: (done) => patchLists<MyHomework>(qc, ["homework", "my"], (x) => x.id === h.id && x.student_id === h.student_id, { status: done ? "done" : "pending" }),
+    onSuccess: (_d, done) => { setNoting(false); toast.success(done ? "Marked as done" : "Marked as not done"); },
+    onError: (e, _v, undo) => { undo?.(); toast.error(e instanceof ApiError ? e.message : "Could not update"); },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["homework", "my"] }),
   });
   const teacherDone = h.status === "checked" || h.status === "incomplete";
   const Icon = h.status === "checked" ? CheckCircle2 : h.status === "incomplete" ? XCircle : h.status === "done" ? CheckCircle2 : Circle;
   return (
     <motion.li layout className={cn("rounded-xl border bg-card p-4", h.overdue && "border-destructive/40")}>
       <div className="flex items-start gap-3">
-        <button type="button" disabled={teacherDone || toggle.isPending} onClick={() => toggle.mutate(h.status !== "done")}
+        <button type="button" disabled={teacherDone} onClick={() => toggle.mutate(h.status !== "done")}
           aria-label={h.status === "done" ? "Mark as not done" : "Mark as done"} aria-pressed={h.status !== "pending"}
           className={cn("mt-0.5 rounded-full transition active:scale-90 disabled:cursor-default",
             h.status === "checked" ? "text-success" : h.status === "incomplete" ? "text-destructive" : h.status === "done" ? "text-info" : "text-muted-foreground hover:text-primary")}>

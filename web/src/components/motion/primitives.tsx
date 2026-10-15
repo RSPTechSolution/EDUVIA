@@ -84,5 +84,5 @@ export function AnimatedNumber({ value, format = (n) => Math.round(n).toLocaleSt
 /** A short cross-fade between pages, keyed by the caller (e.g. pathname). No sliding, so nothing appears to move. */
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const first = useFirstPaint();
-  return <div className={first ? undefined : "enter-fade"}>{children}</div>;
+  return <div className={first ? undefined : "page-enter"}>{children}</div>;
 }

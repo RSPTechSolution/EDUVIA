@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from typing import Literal
 
-from pydantic import AfterValidator, BaseModel, EmailStr, Field, field_validator
+from pydantic import AfterValidator, BaseModel, EmailStr, Field, RootModel, field_validator
 
 from app.core.permissions import SCHOOL_ROLES
 from app.schemas.auth import NewPassword
@@ -146,3 +146,14 @@ class AuditLogOut(Schema):
     meta: dict
     ip_address: str | None
     created_at: datetime
+
+
+class PreferencesIn(RootModel[dict[str, Any]]):
+    """Personal settings to save, by name (e.g. {"dashboard": {"order": [...], "hidden": [...]}})."""
+
+    @field_validator("root")
+    @classmethod
+    def _small(cls, v: dict[str, Any]) -> dict[str, Any]:
+        if len(v) > 20 or any(len(k) > 40 for k in v):
+            raise ValueError("Too many settings")
+        return v

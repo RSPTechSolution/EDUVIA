@@ -1,5 +1,5 @@
 class SchoolBrief {
-  const SchoolBrief({required this.id, required this.name, required this.slug, required this.timezone, required this.currency});
+  const SchoolBrief({required this.id, required this.name, required this.slug, required this.timezone, required this.currency, this.brandColor});
 
   final String id;
   final String name;
@@ -7,13 +7,17 @@ class SchoolBrief {
   final String timezone;
   final String currency;
 
+  /// The school's accent colour (e.g. "#0f766e"), if it picked one; the app's colours are built from it.
+  final String? brandColor;
+
   factory SchoolBrief.fromJson(Map<String, dynamic> j) => SchoolBrief(
-        id: j['id'] as String,
-        name: j['name'] as String,
-        slug: j['slug'] as String,
-        timezone: j['timezone'] as String,
-        currency: j['currency'] as String,
-      );
+    id: j['id'] as String,
+    name: j['name'] as String,
+    slug: j['slug'] as String,
+    timezone: j['timezone'] as String,
+    currency: j['currency'] as String,
+    brandColor: j['brand_color'] as String?,
+  );
 }
 
 /// The signed-in user, as returned by `/auth/me` and `/auth/login`.
@@ -53,17 +57,17 @@ class Me {
   }
 
   factory Me.fromJson(Map<String, dynamic> j) => Me(
-        id: j['id'] as String,
-        email: j['email'] as String,
-        fullName: j['full_name'] as String,
-        role: j['role'] as String,
-        mustChangePassword: j['must_change_password'] as bool? ?? false,
-        phone: j['phone'] as String?,
-        school: j['school'] is Map ? SchoolBrief.fromJson((j['school'] as Map).cast<String, dynamic>()) : null,
-        lastLoginAt: j['last_login_at'] != null ? DateTime.tryParse(j['last_login_at'] as String) : null,
-        modules: (j['modules'] as List?)?.cast<String>() ?? const [],
-        permissions: (j['permissions'] as List?)?.cast<String>() ?? const [],
-      );
+    id: j['id'] as String,
+    email: j['email'] as String,
+    fullName: j['full_name'] as String,
+    role: j['role'] as String,
+    mustChangePassword: j['must_change_password'] as bool? ?? false,
+    phone: j['phone'] as String?,
+    school: j['school'] is Map ? SchoolBrief.fromJson((j['school'] as Map).cast<String, dynamic>()) : null,
+    lastLoginAt: j['last_login_at'] != null ? DateTime.tryParse(j['last_login_at'] as String) : null,
+    modules: (j['modules'] as List?)?.cast<String>() ?? const [],
+    permissions: (j['permissions'] as List?)?.cast<String>() ?? const [],
+  );
 }
 
 const roleLabels = {

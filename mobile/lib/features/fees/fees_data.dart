@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/paging.dart';
 import '../../core/auth/auth_controller.dart';
 
 double _n(Object? v) => (v as num?)?.toDouble() ?? 0;
 
 class FeePayment {
   FeePayment.fromJson(Map<String, dynamic> j)
-      : id = j['id'] as String,
-        receiptNo = j['receipt_no'] as String,
-        amount = _n(j['amount']),
-        method = j['method'] as String,
-        reference = j['reference'] as String?,
-        paidAt = DateTime.parse(j['paid_at'] as String).toLocal(),
-        collectedBy = j['collected_by'] as String?;
+    : id = j['id'] as String,
+      receiptNo = j['receipt_no'] as String,
+      amount = _n(j['amount']),
+      method = j['method'] as String,
+      reference = j['reference'] as String?,
+      paidAt = DateTime.parse(j['paid_at'] as String).toLocal(),
+      collectedBy = j['collected_by'] as String?;
 
   final String id;
   final String receiptNo;
@@ -26,23 +27,23 @@ class FeePayment {
 
 class Invoice {
   Invoice.fromJson(Map<String, dynamic> j)
-      : id = j['id'] as String,
-        invoiceNo = j['invoice_no'] as String,
-        studentId = j['student_id'] as String,
-        studentName = j['student_name'] as String,
-        admissionNo = j['admission_no'] as String,
-        classSection = j['class_section'] as String,
-        term = j['term'] as String,
-        dueDate = DateTime.parse(j['due_date'] as String),
-        total = _n(j['total']),
-        discount = _n(j['discount']),
-        paid = _n(j['paid']),
-        balance = _n(j['balance']),
-        status = j['status'] as String,
-        overdue = j['overdue'] as bool,
-        discountReason = j['discount_reason'] as String?,
-        items = [for (final i in (j['items'] as List? ?? const []).cast<Map>()) (i['name'] as String, _n(i['amount']))],
-        payments = [for (final p in (j['payments'] as List? ?? const []).cast<Map>()) FeePayment.fromJson(p.cast())];
+    : id = j['id'] as String,
+      invoiceNo = j['invoice_no'] as String,
+      studentId = j['student_id'] as String,
+      studentName = j['student_name'] as String,
+      admissionNo = j['admission_no'] as String,
+      classSection = j['class_section'] as String,
+      term = j['term'] as String,
+      dueDate = DateTime.parse(j['due_date'] as String),
+      total = _n(j['total']),
+      discount = _n(j['discount']),
+      paid = _n(j['paid']),
+      balance = _n(j['balance']),
+      status = j['status'] as String,
+      overdue = j['overdue'] as bool,
+      discountReason = j['discount_reason'] as String?,
+      items = [for (final i in (j['items'] as List? ?? const []).cast<Map>()) (i['name'] as String, _n(i['amount']))],
+      payments = [for (final p in (j['payments'] as List? ?? const []).cast<Map>()) FeePayment.fromJson(p.cast())];
 
   final String id;
   final String invoiceNo;
@@ -66,12 +67,12 @@ class Invoice {
 
 class ChildFees {
   ChildFees.fromJson(Map<String, dynamic> j)
-      : studentId = j['student_id'] as String,
-        name = j['name'] as String,
-        classSection = j['class_section'] as String,
-        due = _n(j['due']),
-        overdue = _n(j['overdue']),
-        invoices = [for (final i in (j['invoices'] as List).cast<Map>()) Invoice.fromJson(i.cast())];
+    : studentId = j['student_id'] as String,
+      name = j['name'] as String,
+      classSection = j['class_section'] as String,
+      due = _n(j['due']),
+      overdue = _n(j['overdue']),
+      invoices = [for (final i in (j['invoices'] as List).cast<Map>()) Invoice.fromJson(i.cast())];
 
   final String studentId;
   final String name;
@@ -83,8 +84,8 @@ class ChildFees {
 
 class MyFees {
   MyFees.fromJson(Map<String, dynamic> j)
-      : children = [for (final c in (j['children'] as List).cast<Map>()) ChildFees.fromJson(c.cast())],
-        totalDue = _n(j['total_due']);
+    : children = [for (final c in (j['children'] as List).cast<Map>()) ChildFees.fromJson(c.cast())],
+      totalDue = _n(j['total_due']);
 
   final List<ChildFees> children;
   final double totalDue;
@@ -92,14 +93,14 @@ class MyFees {
 
 class FeeSummary {
   FeeSummary.fromJson(Map<String, dynamic> j)
-      : collectedToday = _n(j['collected_today']),
-        collectedMonth = _n(j['collected_month']),
-        collectedYear = _n(j['collected_year']),
-        outstanding = _n(j['outstanding']),
-        overdue = _n(j['overdue']),
-        overdueInvoices = j['overdue_invoices'] as int,
-        collectionRate = (j['collection_rate'] as num?)?.toDouble(),
-        recent = [for (final p in (j['recent'] as List).cast<Map>()) FeePayment.fromJson(p.cast())];
+    : collectedToday = _n(j['collected_today']),
+      collectedMonth = _n(j['collected_month']),
+      collectedYear = _n(j['collected_year']),
+      outstanding = _n(j['outstanding']),
+      overdue = _n(j['overdue']),
+      overdueInvoices = j['overdue_invoices'] as int,
+      collectionRate = (j['collection_rate'] as num?)?.toDouble(),
+      recent = [for (final p in (j['recent'] as List).cast<Map>()) FeePayment.fromJson(p.cast())];
 
   final double collectedToday;
   final double collectedMonth;
@@ -113,11 +114,11 @@ class FeeSummary {
 
 class Receipt {
   Receipt.fromJson(Map<String, dynamic> j)
-      : payment = FeePayment.fromJson((j['payment'] as Map).cast()),
-        invoice = Invoice.fromJson((j['invoice'] as Map).cast()),
-        schoolName = j['school_name'] as String,
-        schoolAddress = j['school_address'] as String?,
-        balanceAfter = _n(j['balance_after']);
+    : payment = FeePayment.fromJson((j['payment'] as Map).cast()),
+      invoice = Invoice.fromJson((j['invoice'] as Map).cast()),
+      schoolName = j['school_name'] as String,
+      schoolAddress = j['school_address'] as String?,
+      balanceAfter = _n(j['balance_after']);
 
   final FeePayment payment;
   final Invoice invoice;
@@ -146,12 +147,15 @@ final feeSummaryProvider = FutureProvider.autoDispose<FeeSummary>((ref) async {
 });
 
 /// Staff invoice search: (search text, status filter).
-final invoiceSearchProvider = FutureProvider.autoDispose.family<List<Invoice>, (String, String)>((ref, args) async {
-  final res = await ref.watch(apiClientProvider).get<List<Invoice>>('/fees/invoices',
-      query: {'search': args.$1.isEmpty ? null : args.$1, 'status': args.$2, 'page_size': 50},
-      parse: (d) => [for (final x in (d as List).cast<Map>()) Invoice.fromJson(x.cast())]);
-  return res.data;
-});
+final invoiceSearchProvider = FutureProvider.autoDispose.family<PagedList<Invoice>, (String, String)>(
+  (ref, args) => fetchPages(
+    ref.watch(apiClientProvider),
+    '/fees/invoices',
+    ref.watch(pagesProvider('invoices:${args.$1}:${args.$2}')),
+    Invoice.fromJson,
+    query: {'search': args.$1.isEmpty ? null : args.$1, 'status': args.$2},
+  ),
+);
 
 final invoiceProvider = FutureProvider.autoDispose.family<Invoice, String>((ref, id) async {
   final res = await ref.watch(apiClientProvider).get<Invoice>('/fees/invoices/$id', parse: (d) => Invoice.fromJson((d as Map).cast()));

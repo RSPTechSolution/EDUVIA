@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";
+import { LoadMore, useLoadMore } from "@/components/common/load-more";
 import { Field } from "@/components/common/field";
 import { PageHeader } from "@/components/common/page-header";
 import { PermissionGate } from "@/components/common/permission-gate";
@@ -111,11 +112,12 @@ export default function HomeworkPage() {
   const [page, setPage] = useState(1);
   const q = useHomeworkList(page, sectionId === "all" ? undefined : sectionId);
   const [setting, setSetting] = useState(false);
+  const more = useLoadMore(q.data?.data, q.data?.meta, (h) => h.id);
   const groups = useMemo(() => {
     const today = format(new Date(), "yyyy-MM-dd");
-    const items = q.data?.data ?? [];
+    const items = more.rows;
     return [["Upcoming", items.filter((h) => h.due_date >= today)], ["Past", items.filter((h) => h.due_date < today)]] as const;
-  }, [q.data]);
+  }, [more.rows]);
   return (
     <PermissionGate permission="homework.manage">
       <PageHeader title="Homework" description="Set homework for your classes and check who has done it."
@@ -124,7 +126,7 @@ export default function HomeworkPage() {
         <SelectTrigger className="mb-4 h-9 w-56" aria-label="Class"><SelectValue>{sectionId === "all" ? "All my classes" : targets.data?.find((t) => t.section_id === sectionId)?.section_label}</SelectValue></SelectTrigger>
         <SelectContent className="max-h-72"><SelectItem value="all">All my classes</SelectItem>{targets.data?.map((t) => <SelectItem key={t.section_id} value={t.section_id}>{t.section_label}</SelectItem>)}</SelectContent>
       </Select>
-      {q.isLoading ? <Skeleton className="h-64 rounded-xl" /> : !q.data?.data.length ? (
+      {q.isLoading && !more.rows.length ? <Skeleton className="h-64 rounded-xl" /> : !more.rows.length ? (
         <EmptyState className="rounded-2xl border bg-card" illustration={<ClassesIllustration />} title="No homework yet" action={<Button onClick={() => setSetting(true)}><BookOpenCheck aria-hidden />Set homework</Button>} />
       ) : groups.map(([label, items]) => items.length > 0 && (
         <section key={label} className="mb-6">
@@ -132,13 +134,7 @@ export default function HomeworkPage() {
           <Stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{items.map((h) => <StaggerItem key={h.id}><HomeworkCard h={h} /></StaggerItem>)}</Stagger>
         </section>
       ))}
-      {q.data?.meta && q.data.meta.total > q.data.meta.page_size && (
-        <div className="flex items-center justify-center gap-2 text-sm">
-          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Newer</Button>
-          <span className="text-muted-foreground">Page {page} of {Math.ceil(q.data.meta.total / q.data.meta.page_size)}</span>
-          <Button variant="outline" size="sm" disabled={page * q.data.meta.page_size >= q.data.meta.total} onClick={() => setPage((p) => p + 1)}>Older</Button>
-        </div>
-      )}
+      <LoadMore shown={more.rows.length} total={more.total} hasMore={more.hasMore} loading={q.isFetching && page > 1} onLoadMore={() => setPage(more.nextPage)} noun="homework" />
       <SetHomeworkDialog open={setting} onOpenChange={setSetting} />
     </PermissionGate>
   );

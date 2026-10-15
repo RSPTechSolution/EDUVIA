@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 import { AlertTriangle, BellRing, CheckCheck, Megaphone, Pencil, Pin, Plus, Trash2, Users } from "lucide-react";
 import { AnimatePresence, motion } from "@/components/motion/motion";
+import { LoadMore, useLoadMore } from "@/components/common/load-more";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -22,6 +23,7 @@ import { ApiError, api } from "@/lib/api/client";
 import type { Notice } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
 import { useNoticeSections, useNotices } from "@/lib/queries";
+import { patchLists } from "@/lib/optimistic";
 import { cn } from "@/lib/utils";
 
 const PRIORITY = {
@@ -111,7 +113,10 @@ function NoticeCard({ n, onEdit, onDelete }: { n: Notice; onEdit: () => void; on
   const [open, setOpen] = useState(false);
   const read = useMutation({
     mutationFn: () => api(`/notices/${n.id}/read`, { method: "POST" }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["notices"] }); },
+    // The unread dot goes at once; it comes back only if the server says no.
+    onMutate: () => patchLists<Notice>(qc, ["notices"], (x) => x.id === n.id, { read: true }),
+    onError: (_e, _v, undo) => undo?.(),
+    onSettled: () => { qc.invalidateQueries({ queryKey: ["notices"] }); },
   });
   const P = PRIORITY[n.priority];
   const toggle = () => { setOpen((o) => !o); if (!n.read && !read.isPending) read.mutate(); };
@@ -172,8 +177,8 @@ export default function NoticesPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["notices"] }); setRemoving(null); toast.success("Notice removed"); },
     onError: (e) => { setRemoving(null); toast.error(e instanceof ApiError ? e.message : "Could not remove"); },
   });
-  const list = q.data?.data ?? [];
-  const meta = q.data?.meta;
+  const more = useLoadMore(q.data?.data, q.data?.meta, (n) => n.id);
+  const list = more.rows;
   const readAll = useMutation({
     mutationFn: async () => { for (const n of list.filter((x) => !x.read)) await api(`/notices/${n.id}/read`, { method: "POST" }); },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notices"] }),
@@ -191,20 +196,14 @@ export default function NoticesPage() {
             className={cn("rounded-md px-3 py-1.5 font-medium", unread === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>{l}</button>
         ))}
       </div>
-      {q.isLoading ? <div className="space-y-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}</div> : list.length === 0 ? (
+      {q.isLoading && !list.length ? <div className="space-y-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}</div> : list.length === 0 ? (
         <EmptyState className="rounded-2xl border bg-card" illustration={<FamilyIllustration />} title={unread ? "You're all caught up" : "No notices yet"} description={unread ? "Nothing new since you last looked." : undefined} />
       ) : (
         <ul className="space-y-3">
           {list.map((n) => <NoticeCard key={n.id} n={n} onEdit={() => setCompose({ open: true, notice: n })} onDelete={() => setRemoving(n)} />)}
         </ul>
       )}
-      {meta && meta.total > meta.page_size && (
-        <div className="mt-4 flex items-center justify-center gap-2 text-sm">
-          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Newer</Button>
-          <span className="text-muted-foreground">Page {page} of {Math.ceil(meta.total / meta.page_size)}</span>
-          <Button variant="outline" size="sm" disabled={page * meta.page_size >= meta.total} onClick={() => setPage((p) => p + 1)}>Older</Button>
-        </div>
-      )}
+      <LoadMore shown={list.length} total={more.total} hasMore={more.hasMore} loading={q.isFetching && page > 1} onLoadMore={() => setPage(more.nextPage)} noun="notices" />
       <ComposeDialog open={compose.open} notice={compose.notice} onOpenChange={(o) => setCompose((c) => ({ ...c, open: o }))} />
       <ConfirmDialog open={Boolean(removing)} onOpenChange={(o) => !o && setRemoving(null)} destructive pending={del.isPending}
         title={`Remove "${removing?.title}"?`} description="It disappears for everyone." confirmLabel="Remove" onConfirm={() => removing && del.mutate(removing.id)} />

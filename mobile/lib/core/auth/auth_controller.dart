@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
+import '../api/offline.dart';
 import '../config/app_config.dart';
 import 'models.dart';
 import 'token_store.dart';
@@ -12,7 +13,12 @@ final tokenStoreProvider = Provider<TokenStore>((ref) => SecureTokenStore());
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final config = ref.watch(appConfigProvider);
-  final client = ApiClient(baseUrl: config.apiBaseUrl, tokens: ref.watch(tokenStoreProvider));
+  final client = ApiClient(baseUrl: config.apiBaseUrl, tokens: ref.watch(tokenStoreProvider), store: PrefsStore());
+  // Count (and try to send) changes left waiting from the last time the app was open.
+  client.queue.all().then((list) {
+    pendingChanges.value = list.length;
+    if (list.isNotEmpty) client.flushPending();
+  });
   // Refresh failed: drop to the sign-in screen.
   client.onSessionExpired = () => ref.read(authControllerProvider.notifier).sessionExpired();
   return client;
@@ -53,8 +59,7 @@ class AuthController extends AsyncNotifier<AuthState> {
     }
   }
 
-  Future<Me> _fetchMe() async =>
-      (await _api.get<Me>('/auth/me', parse: (j) => Me.fromJson((j as Map).cast<String, dynamic>()))).data;
+  Future<Me> _fetchMe() async => (await _api.get<Me>('/auth/me', parse: (j) => Me.fromJson((j as Map).cast<String, dynamic>()))).data;
 
   /// Signs out and returns a SignedOut state if this account can't use this app.
   Future<SignedOut?> _rejectIfWrongApp(Me me) async {
@@ -121,10 +126,10 @@ class AuthController extends AsyncNotifier<AuthState> {
   }
 
   Future<void> requestPasswordReset(String email, String? schoolSlug) => _api.post(
-        '/auth/password-reset/request',
-        auth: false,
-        body: {'email': email.trim(), 'school_slug': (schoolSlug?.trim().isEmpty ?? true) ? null : schoolSlug!.trim()},
-      );
+    '/auth/password-reset/request',
+    auth: false,
+    body: {'email': email.trim(), 'school_slug': (schoolSlug?.trim().isEmpty ?? true) ? null : schoolSlug!.trim()},
+  );
 
   Future<void> signOut() async {
     await _signOutQuietly();
@@ -138,6 +143,9 @@ class AuthController extends AsyncNotifier<AuthState> {
       debugPrint('logout request failed: $e'); // tokens are cleared regardless
     }
     await _tokens.clear();
+    // Nothing of this person's stays on the phone for the next one: saved answers and unsent changes go too.
+    await _api.clearSaved();
+    await _api.queue.clear();
   }
 
   void sessionExpired() {

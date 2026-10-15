@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
 import '../auth/token_store.dart';
+import 'offline.dart';
 
 /// An error returned by the Vidyanexa API (or a network failure).
 class ApiException implements Exception {
@@ -19,10 +21,7 @@ class ApiException implements Exception {
   Map<String, String> get fieldErrors {
     final d = details;
     if (d is! List) return const {};
-    return {
-      for (final e in d.whereType<Map>())
-        '${e['field']}': '${e['message']}'.replaceFirst('Value error, ', ''),
-    };
+    return {for (final e in d.whereType<Map>()) '${e['field']}': '${e['message']}'.replaceFirst('Value error, ', '')};
   }
 
   @override
@@ -55,17 +54,22 @@ Duration? apiRetry(int retryCount, Object error) {
 }
 
 class ApiResult<T> {
-  ApiResult(this.data, this.meta);
+  ApiResult(this.data, this.meta, {this.savedAt});
   final T data;
   final Map<String, dynamic>? meta;
+
+  /// Set when the server couldn't be reached and this is the answer saved on the phone at that time.
+  final DateTime? savedAt;
 }
 
 /// Dio wrapper that adds the bearer token, refreshes it once when it expires,
 /// and turns every failure into an [ApiException].
 class ApiClient {
-  ApiClient({required String baseUrl, required this.tokens, this.onSessionExpired, HttpClientAdapter? adapter})
-      : _dio = Dio(),
-        _plain = Dio() {
+  ApiClient({required String baseUrl, required this.tokens, this.onSessionExpired, HttpClientAdapter? adapter, OfflineStore? store})
+    : _dio = Dio(),
+      _plain = Dio(),
+      store = store ?? MemoryStore() {
+    queue = OfflineQueue(this.store);
     for (final d in [_dio, _plain]) {
       if (adapter != null) d.httpClientAdapter = adapter;
       d.options
@@ -83,6 +87,14 @@ class ApiClient {
   /// can never wait on the queued error handler that is waiting on them.
   final Dio _plain;
   final TokenStore tokens;
+
+  /// The last answer to each GET, kept so screens still show something without a connection.
+  final OfflineStore store;
+
+  /// Changes made without a connection, sent when it comes back.
+  late final OfflineQueue queue;
+  static const _cacheIndex = 'cache-index';
+  static const _cacheMax = 120;
 
   /// Called when refreshing fails, so the app can return to the sign-in screen.
   void Function()? onSessionExpired;
@@ -146,29 +158,102 @@ class ApiClient {
     bool auth = true,
     T Function(Object? json)? parse,
   }) async {
+    query?.removeWhere((_, v) => v == null);
+    final key = 'get:$path?${(query ?? const {}).entries.map((e) => '${e.key}=${e.value}').join('&')}';
+    ApiResult<T> result(Map<String, dynamic> json, [DateTime? savedAt]) =>
+        ApiResult(parse != null ? parse(json['data']) : json['data'] as T, json['meta'] as Map<String, dynamic>?, savedAt: savedAt);
     try {
       final res = await _dio.request<Map<String, dynamic>>(
         path,
         data: body,
-        queryParameters: query?..removeWhere((_, v) => v == null),
+        queryParameters: query,
         options: Options(method: method, extra: {'auth': auth}),
       );
-      final json = res.data ?? const {};
-      final data = json['data'];
-      return ApiResult(parse != null ? parse(data) : data as T, json['meta'] as Map<String, dynamic>?);
+      final json = res.data ?? const <String, dynamic>{};
+      if (offlineSince.value != null) offlineSince.value = null;
+      if (method == 'GET' && auth) unawaited(_remember(key, json));
+      if (pendingChanges.value > 0 && !_flushing) unawaited(flushPending());
+      return result(json);
     } on DioException catch (e) {
-      throw ApiException.fromDio(e);
+      final err = ApiException.fromDio(e);
+      // No connection: show the last answer saved on this phone, if there is one.
+      if (err.isNetwork && method == 'GET' && auth) {
+        final saved = await _recall(key);
+        if (saved != null) {
+          offlineSince.value ??= saved.$1;
+          return result(saved.$2, saved.$1);
+        }
+      }
+      throw err;
     }
   }
 
-  Future<ApiResult<T>> get<T>(String path, {Map<String, dynamic>? query, T Function(Object?)? parse}) =>
-      request('GET', path, query: query, parse: parse);
+  Future<void> _remember(String key, Map<String, dynamic> json) async {
+    try {
+      await store.write(key, jsonEncode({'at': DateTime.now().toIso8601String(), 'json': json}));
+      final index = [...?(jsonDecode(await store.read(_cacheIndex) ?? '[]') as List?)?.cast<String>()]
+        ..remove(key)
+        ..add(key);
+      while (index.length > _cacheMax) {
+        await store.remove(index.removeAt(0));
+      }
+      await store.write(_cacheIndex, jsonEncode(index));
+    } catch (_) {
+      // Saving for later is best effort; the answer itself already arrived.
+    }
+  }
+
+  Future<(DateTime, Map<String, dynamic>)?> _recall(String key) async {
+    try {
+      final raw = await store.read(key);
+      if (raw == null) return null;
+      final j = jsonDecode(raw) as Map<String, dynamic>;
+      return (DateTime.parse(j['at'] as String), (j['json'] as Map).cast<String, dynamic>());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Forgets every saved answer (on sign-out, so the next person on this phone never sees them).
+  Future<void> clearSaved() async {
+    final index = (jsonDecode(await store.read(_cacheIndex) ?? '[]') as List).cast<String>();
+    for (final k in index) {
+      await store.remove(k);
+    }
+    await store.remove(_cacheIndex);
+    offlineSince.value = null;
+  }
+
+  /// Keeps a change on the phone to send when the connection is back.
+  Future<void> sendLater(String method, String path, Object? body, String label) =>
+      queue.add(PendingChange(method: method, path: path, body: body, label: label));
+
+  bool _flushing = false;
+
+  /// Sends the changes waiting on this phone. Returns how many went through.
+  Future<int> flushPending() async {
+    if (_flushing) return 0;
+    _flushing = true;
+    try {
+      return await queue.flush((c) async {
+        try {
+          await request<Object?>(c.method, c.path, body: c.body);
+        } on ApiException catch (e) {
+          if (e.isNetwork) throw OfflineError();
+          rethrow;
+        }
+      });
+    } finally {
+      _flushing = false;
+    }
+  }
+
+  Future<ApiResult<T>> get<T>(String path, {Map<String, dynamic>? query, T Function(Object?)? parse}) => request('GET', path, query: query, parse: parse);
 
   Future<ApiResult<T>> post<T>(String path, {Object? body, bool auth = true, T Function(Object?)? parse}) =>
       request('POST', path, body: body, auth: auth, parse: parse);
 
-  Future<ApiResult<T>> put<T>(String path, {Object? body, T Function(Object?)? parse}) =>
-      request('PUT', path, body: body, parse: parse);
+  Future<ApiResult<T>> put<T>(String path, {Object? body, T Function(Object?)? parse}) => request('PUT', path, body: body, parse: parse);
 
   /// A 10-minute link to [path] (e.g. `/fees/payments/<id>/receipt.pdf`) that works without the
   /// Authorization header, so the phone's browser or PDF viewer can open it.

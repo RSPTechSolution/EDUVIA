@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ApiError, api } from "@/lib/api/client";
 import type { ExamDetail, ExamPaper, StudentResult } from "@/lib/api/types";
 import { useClasses, useExam, useMarksSheets, useSectionResults, useSubjects } from "@/lib/queries";
+import { celebrate } from "@/lib/celebrate";
 import { cn } from "@/lib/utils";
 
 const errorText = (e: unknown, fallback: string) => e instanceof ApiError ? (Object.values(e.fieldErrors)[0] ?? e.message) : fallback;
@@ -343,7 +344,7 @@ function ExamPage({ id }: { id: string }) {
   const e = q.data;
   const toggle = useMutation({
     mutationFn: () => api(`/exams/${id}/${e?.published_at ? "unpublish" : "publish"}`, { method: "POST" }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["exams"] }); setConfirm(false); toast.success(e?.published_at ? "Results hidden from families" : "Results published to families"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["exams"] }); setConfirm(false); toast.success(e?.published_at ? "Results hidden from families" : "Results published to families"); if (!e?.published_at) celebrate(); },
     onError: (err) => { setConfirm(false); toast.error(errorText(err, "Could not change")); },
   });
   const del = useMutation({

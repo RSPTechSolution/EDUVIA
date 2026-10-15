@@ -1,11 +1,13 @@
+import json
 import uuid
 
 from fastapi import APIRouter, Depends, Query
 
-from app.core.deps import DB, CurrentUser, require_permission
+from app.core.deps import DB, Auth, CurrentUser, require_permission
+from app.core.errors import BadRequest
 from app.core.permissions import has_permission
 from app.schemas.common import ApiResponse, Message, PageParams, ok
-from app.schemas.user import AdminSetPassword, AuditLogOut, UserCreate, UserDetail, UserOut, UserUpdate
+from app.schemas.user import AdminSetPassword, PreferencesIn, AuditLogOut, UserCreate, UserDetail, UserOut, UserUpdate
 from app.services import user_service
 
 router = APIRouter()
@@ -38,6 +40,23 @@ async def audit_log(db: DB, page: PageParams = Depends(), action: str | None = Q
 async def my_overview(db: DB, current: CurrentUser = require_permission("school.view")):
     """Your own profile: your account and everything connected to you (classes, children, books, leave and pay...)."""
     return ok(await user_service.user_detail(db, current.require_school(), current.id, with_activity=True, with_hr=True))
+
+
+@router.get("/me/preferences", response_model=ApiResponse[dict])
+async def my_preferences(current: Auth):
+    """Your personal settings, such as your dashboard layout. They follow you to every device."""
+    return ok(current.user.preferences or {})
+
+
+@router.put("/me/preferences", response_model=ApiResponse[dict])
+async def save_my_preferences(body: PreferencesIn, db: DB, current: Auth):
+    """Saves the settings sent; settings not sent are kept."""
+    merged = {**(current.user.preferences or {}), **body.root}
+    if len(json.dumps(merged)) > 16_000:
+        raise BadRequest("Too many settings saved.")
+    current.user.preferences = merged
+    await db.flush()
+    return ok(merged)
 
 
 @router.get("/{user_id}", response_model=ApiResponse[UserDetail])

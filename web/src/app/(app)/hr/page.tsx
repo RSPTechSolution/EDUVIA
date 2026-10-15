@@ -21,6 +21,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApiError, api } from "@/lib/api/client";
 import { formatDate, inr, roleLabel } from "@/lib/format";
 import { usePayrollRuns, useStaffDay, useStaffDetail, useStaffDirectory, useStaffLeave } from "@/lib/queries";
+import type { StaffLeave } from "@/lib/api/types";
+import { patchLists } from "@/lib/optimistic";
 import { cn } from "@/lib/utils";
 
 const errText = (e: unknown, f: string) => (e instanceof ApiError ? (Object.values(e.fieldErrors)[0] ?? e.message) : f);
@@ -186,8 +188,10 @@ function LeaveTab() {
   const q = useStaffLeave(false, status || undefined);
   const decide = useMutation({
     mutationFn: (v: { id: string; approve: boolean }) => api(`/hr/leave/${v.id}/decide`, { method: "POST", body: { approve: v.approve } }),
-    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["hr"] }); toast.success(v.approve ? "Approved" : "Declined"); },
-    onError: (e) => toast.error(errText(e, "Could not save")),
+    onMutate: (v) => patchLists<StaffLeave>(qc, ["hr", "leave"], (x) => x.id === v.id, { status: v.approve ? "approved" : "rejected", can_decide: false }),
+    onSuccess: (_, v) => toast.success(v.approve ? "Approved" : "Declined"),
+    onError: (e, _v, undo) => { undo?.(); toast.error(errText(e, "Could not save")); },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["hr"] }),
   });
   return (
     <>

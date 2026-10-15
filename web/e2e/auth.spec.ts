@@ -89,6 +89,9 @@ test("forgot password responds the same for any email", async ({ page }) => {
 });
 
 test("login and dashboard have no serious accessibility violations", async ({ page }) => {
+  // Cards further down fade in as they scroll into view; with reduced motion they're simply shown, so axe measures
+  // the colours people actually see rather than a card that hasn't been scrolled to yet.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/login");
   const loginScan = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(loginScan.violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""))).toEqual([]);

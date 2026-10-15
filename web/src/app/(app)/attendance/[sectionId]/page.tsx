@@ -18,6 +18,7 @@ import { ApiError, api } from "@/lib/api/client";
 import type { AttendanceStatus, Roster } from "@/lib/api/types";
 import { formatDateTime, initials } from "@/lib/format";
 import { useRoster } from "@/lib/queries";
+import { celebrate } from "@/lib/celebrate";
 import { cn } from "@/lib/utils";
 
 type Mark = { status: AttendanceStatus | null; remark: string };
@@ -55,6 +56,7 @@ function Marking({ sectionId }: { sectionId: string }) {
       qc.invalidateQueries({ queryKey: ["attendance", "sections"] });
       qc.invalidateQueries({ queryKey: ["attendance", "overview"] });
       toast.success(`Attendance saved for ${data.label}`, { description: `${data.counts.present + data.counts.late} present · ${data.counts.absent} absent` });
+      if (data.counts.absent === 0 && data.counts.present + data.counts.late > 0) celebrate({ count: 60 }); // everyone's in today
     },
     onError: (e) => toast.error(e instanceof ApiError ? e.message : "Could not save attendance"),
   });

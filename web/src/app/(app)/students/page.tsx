@@ -1,8 +1,9 @@
 "use client";
 
-import { AlertTriangle, Download, GraduationCap, Plus, Search, Upload, Users } from "lucide-react";
+import { AlertTriangle, CalendarCheck, Copy, Download, GraduationCap, Plus, Search, Upload, UserRound, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { Suspense, useMemo, useState } from "react";
 import { DataTable, type Col } from "@/components/common/data-table";
 import { EmptyState } from "@/components/common/empty-state";
@@ -17,6 +18,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Student } from "@/lib/api/types";
 import { initials } from "@/lib/format";
 import { useDebounced } from "@/lib/hooks";
@@ -24,6 +26,17 @@ import { useClasses, useStudents } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 const STATUS: Record<string, string> = { all: "Any status", active: "Active", inactive: "Inactive", alumni: "Alumni" };
+function QuickAction({ href, label, icon: Icon }: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<Link href={href} aria-label={label} className={buttonVariants({ variant: "ghost", size: "icon-sm" })} />}>
+        <Icon className="size-4" />
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 const GENDER_TINT: Record<string, string> = {
   female: "bg-[oklch(0.93_0.05_340)] text-[oklch(0.45_0.15_340)] dark:bg-[oklch(0.35_0.08_340)] dark:text-[oklch(0.9_0.05_340)]",
   male: "bg-primary/10 text-primary",
@@ -33,6 +46,8 @@ const GENDER_TINT: Record<string, string> = {
 function StudentsPage() {
   const can = useCan();
   const manage = can("students.manage");
+  const canFees = can("fees.view");
+  const canAttendance = can("attendance.mark");
   const router = useRouter();
   const params = useSearchParams();
   const classes = useClasses();
@@ -78,7 +93,23 @@ function StudentsPage() {
         ),
     },
     { id: "status", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.status} /> },
-  ], []);
+    {
+      id: "actions",
+      header: () => <span className="sr-only">Quick actions</span>,
+      // Shown on hover or keyboard focus on larger screens, always on touch screens.
+      cell: ({ row: { original: s } }) => (
+        <div className="flex justify-end gap-0.5 transition-opacity md:opacity-0 md:group-hover/row:opacity-100 md:group-focus-within/row:opacity-100">
+          <QuickAction href={`/students/${s.id}`} label={`Open ${s.first_name}'s profile`} icon={UserRound} />
+          {canFees && <QuickAction href={`/fees?tab=invoices&q=${encodeURIComponent(s.admission_no)}`} label={`Fees for ${s.first_name}`} icon={Wallet} />}
+          {canAttendance && <QuickAction href={`/attendance/${s.section_id}`} label={`Attendance for ${s.class_name} – ${s.section_name}`} icon={CalendarCheck} />}
+          <Button variant="ghost" size="icon-sm" aria-label={`Copy admission number ${s.admission_no}`} title="Copy admission number"
+            onClick={() => navigator.clipboard?.writeText(s.admission_no).then(() => toast.success("Admission number copied", { description: s.admission_no }))}>
+            <Copy aria-hidden />
+          </Button>
+        </div>
+      ),
+    },
+  ], [canFees, canAttendance]);
 
   const noClasses = classes.data && classes.data.length === 0;
   const filtered = Boolean(q) || classId !== "all" || status !== "active";

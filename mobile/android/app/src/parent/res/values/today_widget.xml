@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="today_widget_label">Today at school</string>
+    <string name="today_widget_description">Your child\'s attendance today and the next fee due.</string>
+</resources>

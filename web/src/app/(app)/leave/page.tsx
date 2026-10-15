@@ -19,6 +19,7 @@ import { ApiError, api } from "@/lib/api/client";
 import type { LeaveRequest } from "@/lib/api/types";
 import { timeAgo } from "@/lib/format";
 import { useLeave, useMyAttendance } from "@/lib/queries";
+import { patchLists } from "@/lib/optimistic";
 import { cn } from "@/lib/utils";
 
 const KINDS: Record<string, string> = { sick: "Unwell", family: "Family function", travel: "Travel", other: "Other" };
@@ -88,8 +89,10 @@ function LeaveCard({ r, family }: { r: LeaveRequest; family: boolean }) {
   const done = () => qc.invalidateQueries({ queryKey: ["leave"] });
   const decide = useMutation({
     mutationFn: (approve: boolean) => api(`/leave/${r.id}/decide`, { method: "POST", body: { approve, note: note || null } }),
-    onSuccess: (_, approve) => { done(); qc.invalidateQueries({ queryKey: ["attendance"] }); toast.success(approve ? `Approved. ${r.days} day(s) marked as leave.` : "Declined"); },
-    onError: (e) => toast.error(errText(e, "Could not save")),
+    onMutate: (approve) => patchLists<LeaveRequest>(qc, ["leave"], (x) => x.id === r.id, { status: approve ? "approved" : "rejected" }),
+    onSuccess: (_, approve) => { qc.invalidateQueries({ queryKey: ["attendance"] }); toast.success(approve ? `Approved. ${r.days} day(s) marked as leave.` : "Declined"); },
+    onError: (e, _v, undo) => { undo?.(); toast.error(errText(e, "Could not save")); },
+    onSettled: done,
   });
   const cancel = useMutation({
     mutationFn: () => api(`/leave/${r.id}/cancel`, { method: "POST" }),

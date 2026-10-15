@@ -145,9 +145,9 @@ export function CustomBuilder({
                 </>
               );
             })()}
-            <p className="pt-1 text-xs text-muted-foreground">Includes up to {q.max_staff} staff accounts and {q.storage_gb} GB storage.</p>
           </dl>
         )}
+        {q && <p className="pt-1 text-xs text-muted-foreground">Includes up to {q.max_staff} staff accounts and {q.storage_gb} GB storage.</p>}
         <div className="mt-6">{renderCta({ modules: [...core, ...picked], students }, q)}</div>
       </aside>
     </div>

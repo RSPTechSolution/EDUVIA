@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/api/api_client.dart';
 import 'core/auth/auth_controller.dart';
 import 'core/router/app_router.dart';
+import 'core/auth/session.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode.dart';
 import 'shared/widgets/motion.dart';
@@ -19,11 +20,13 @@ class VidyanexaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final flavor = ref.watch(appConfigProvider).flavor;
+    final accent = ref.watch(meProvider.select((me) => me?.school?.brandColor));
     return MaterialApp.router(
       title: flavor.title,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      // The school's accent colour, once we know who's signed in.
+      theme: AppTheme.light(accent),
+      darkTheme: AppTheme.dark(accent),
       themeMode: ref.watch(themeModeProvider),
       scrollBehavior: const AppScrollBehavior(),
       routerConfig: ref.watch(routerProvider),

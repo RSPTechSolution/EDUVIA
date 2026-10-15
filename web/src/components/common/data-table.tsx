@@ -1,9 +1,9 @@
 "use client";
 
 import { flexRender, tableFeatures, useTable, type ColumnDef, type RowData } from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { LoadMore, useLoadMore } from "@/components/common/load-more";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PageMeta } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -35,24 +35,27 @@ const INTERACTIVE = "a, button, input, select, textarea, label, [role=menuitem],
 
 export function DataTable<T extends RowData>({ columns, data, meta, onPageChange, loading, refreshing, empty, caption, getRowId, rowHref }: DataTableProps<T>) {
   const router = useRouter();
+  // Paged lists grow with "Load more" instead of flipping pages: the next page is added under the rows already shown.
+  const list = useLoadMore(data, meta ?? undefined, (r) => (getRowId ? getRowId(r) : String((r as { id?: unknown }).id ?? JSON.stringify(r))));
+  const rows = meta ? list.rows : data;
+  const [wanted, setWanted] = useState(0);
+  const loadingMore = Boolean(meta && wanted > meta.page && (refreshing || loading));
+  const busy = loading && rows.length === 0;
   const table = useTable<typeof features, T>({
     features,
-    data,
+    data: rows,
     columns,
     getRowId: getRowId ? (row) => getRowId(row) : undefined,
   });
-  const pages = meta ? Math.max(1, Math.ceil(meta.total / meta.page_size)) : 1;
-  const from = meta && meta.total ? (meta.page - 1) * meta.page_size + 1 : 0;
-  const to = meta ? Math.min(meta.page * meta.page_size, meta.total) : data.length;
 
   return (
     <div className="relative overflow-hidden rounded-xl border bg-card shadow-xs" aria-busy={loading || refreshing || undefined}>
-      {refreshing && (
+      {refreshing && !loadingMore && (
         <div className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-primary/15" role="status" aria-label="Updating results">
           <div className="indeterminate-bar h-full w-1/3 rounded-full bg-primary" />
         </div>
       )}
-      <div className={cn("overflow-x-auto transition-opacity duration-200", refreshing && "pointer-events-none opacity-55")}>
+      <div className={cn("overflow-x-auto transition-opacity duration-200", refreshing && !loadingMore && "pointer-events-none opacity-55")}>
         <table className="w-full text-sm">
           <caption className="sr-only">{caption}</caption>
           <thead className="border-b bg-muted/40">
@@ -67,7 +70,7 @@ export function DataTable<T extends RowData>({ columns, data, meta, onPageChange
             ))}
           </thead>
           <tbody>
-            {loading ? (
+            {busy ? (
               Array.from({ length: 5 }).map((_, r) => (
                 <tr key={r} className="border-b last:border-0">
                   {columns.map((_, c) => (
@@ -85,7 +88,7 @@ export function DataTable<T extends RowData>({ columns, data, meta, onPageChange
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className={cn("border-b transition-colors last:border-0 hover:bg-muted/30", rowHref && "cursor-pointer")}
+                  className={cn("group/row border-b transition-colors last:border-0 hover:bg-muted/30", rowHref && "cursor-pointer")}
                   onClick={rowHref ? (e) => {
                     if ((e.target as HTMLElement).closest(INTERACTIVE) || window.getSelection()?.toString()) return;
                     const href = rowHref(row.original);
@@ -105,20 +108,15 @@ export function DataTable<T extends RowData>({ columns, data, meta, onPageChange
         </table>
       </div>
       {meta && meta.total > 0 && (
-        <div className="flex flex-col items-center justify-between gap-3 border-t px-4 py-3 sm:flex-row">
-          <p className="text-xs text-muted-foreground tabular" aria-live="polite">
-            Showing {from}–{to} of {meta.total}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={meta.page <= 1 || loading || refreshing} onClick={() => onPageChange?.(meta.page - 1)}>
-              <ChevronLeft aria-hidden />Previous
-            </Button>
-            <span className="text-xs text-muted-foreground tabular">Page {meta.page} of {pages}</span>
-            <Button variant="outline" size="sm" disabled={meta.page >= pages || loading || refreshing} onClick={() => onPageChange?.(meta.page + 1)}>
-              Next<ChevronRight aria-hidden />
-            </Button>
-          </div>
-        </div>
+        <LoadMore
+          className="border-t"
+          shown={rows.length}
+          total={meta.total}
+          hasMore={list.hasMore}
+          loading={loadingMore}
+          onLoadMore={() => { setWanted(list.nextPage); onPageChange?.(list.nextPage); }}
+          noun={caption.toLowerCase()}
+        />
       )}
     </div>
   );

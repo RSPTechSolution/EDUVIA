@@ -6,6 +6,7 @@ import { ArrowDownCircle, ArrowUpCircle, Banknote, FileDown, Landmark, Paperclip
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { LoadMore, useLoadMore } from "@/components/common/load-more";
 import { EmptyState } from "@/components/common/empty-state";
 import { Field } from "@/components/common/field";
 import { FileList } from "@/components/common/files";
@@ -171,6 +172,7 @@ function AccountsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const entries = useAccountEntries({ from, to, page, kind: kind === "all" ? undefined : kind, search: search.trim() || undefined });
+  const more = useLoadMore(entries.data?.data, entries.data?.meta, (e) => e.id);
   const [dialog, setDialog] = useState<{ open: boolean; kind: "income" | "expense"; entry: AccountEntry | null }>({ open: false, kind: "expense", entry: null });
   const [removing, setRemoving] = useState<AccountEntry | null>(null);
   const remove = useMutation({
@@ -236,7 +238,7 @@ function AccountsPage() {
             </div>
             <p className="ml-auto text-xs text-muted-foreground">Fee payments are listed under Fees › Receipts.</p>
           </div>
-          {entries.isLoading ? <Skeleton className="h-48 rounded-xl" /> : !entries.data?.data.length ? (
+          {entries.isLoading && !more.rows.length ? <Skeleton className="h-48 rounded-xl" /> : !more.rows.length ? (
             <EmptyState className="rounded-2xl border bg-card" title="No entries in this period" description="Record expenses such as salaries and bills, and income other than fees."
               action={manage && <Button onClick={() => setDialog({ open: true, kind: "expense", entry: null })}><Plus aria-hidden />Record an expense</Button>} />
           ) : (
@@ -250,7 +252,7 @@ function AccountsPage() {
                   <th scope="col"><span className="sr-only">Actions</span></th>
                 </tr></thead>
                 <tbody>
-                  {entries.data.data.map((e) => (
+                  {more.rows.map((e) => (
                     <tr key={e.id} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="px-4 py-2.5 whitespace-nowrap">{formatDate(e.date, "d MMM")}</td>
                       <td className="px-2 py-2.5 font-mono text-xs">{e.voucher_no}</td>
@@ -273,13 +275,7 @@ function AccountsPage() {
               </table>
             </div>
           )}
-          {entries.data?.meta && entries.data.meta.total > entries.data.meta.page_size && (
-            <div className="mt-4 flex items-center justify-center gap-2 text-sm">
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Newer</Button>
-              <span className="text-muted-foreground">Page {page} of {Math.ceil(entries.data.meta.total / entries.data.meta.page_size)}</span>
-              <Button variant="outline" size="sm" disabled={page * entries.data.meta.page_size >= entries.data.meta.total} onClick={() => setPage((p) => p + 1)}>Older</Button>
-            </div>
-          )}
+          <LoadMore shown={more.rows.length} total={more.total} hasMore={more.hasMore} loading={entries.isFetching && page > 1} onLoadMore={() => setPage(more.nextPage)} noun="entries" />
         </>
       )}
       {heads.data && <EntryDialog entry={dialog.entry} kind={dialog.kind} heads={heads.data} open={dialog.open} onOpenChange={(o) => setDialog((d) => ({ ...d, open: o }))} />}

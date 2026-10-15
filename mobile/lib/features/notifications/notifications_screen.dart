@@ -3,18 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../shared/paging.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../shared/widgets/common.dart';
 
 class AppNotification {
   AppNotification.fromJson(Map<String, dynamic> j)
-      : id = j['id'] as String,
-        kind = j['kind'] as String,
-        title = j['title'] as String,
-        body = j['body'] as String?,
-        link = j['link'] as String?,
-        read = j['read'] as bool,
-        createdAt = DateTime.parse(j['created_at'] as String).toLocal();
+    : id = j['id'] as String,
+      kind = j['kind'] as String,
+      title = j['title'] as String,
+      body = j['body'] as String?,
+      link = j['link'] as String?,
+      read = j['read'] as bool,
+      createdAt = DateTime.parse(j['created_at'] as String).toLocal();
   final String id;
   final String kind;
   final String title;
@@ -24,57 +25,56 @@ class AppNotification {
   final DateTime createdAt;
 
   IconData get icon => switch (kind) {
-        'notice' => Icons.campaign_outlined,
-        'homework' => Icons.menu_book_outlined,
-        'absent' => Icons.event_busy_outlined,
-        'fee_receipt' => Icons.receipt_long_outlined,
-        'results' => Icons.emoji_events_outlined,
-        'substitution' => Icons.swap_horiz_rounded,
-        'leave' => Icons.event_busy_outlined,
-        'online_test' => Icons.quiz_outlined,
-        'chat' => Icons.forum_outlined,
-        'transport' => Icons.directions_bus_outlined,
-        'payslip' => Icons.receipt_long_outlined,
-        'staff_leave' => Icons.event_busy_outlined,
-        'sos' => Icons.sos_outlined,
-        'ptm' => Icons.handshake_outlined,
-        'survey' => Icons.poll_outlined,
-        'live_class' => Icons.videocam_outlined,
-        'fee_reminder' => Icons.notifications_active_outlined,
-        'calendar' => Icons.event_note_outlined,
-        'enquiry' => Icons.person_add_alt_outlined,
-        _ => Icons.notifications_outlined,
-      };
+    'notice' => Icons.campaign_outlined,
+    'homework' => Icons.menu_book_outlined,
+    'absent' => Icons.event_busy_outlined,
+    'fee_receipt' => Icons.receipt_long_outlined,
+    'results' => Icons.emoji_events_outlined,
+    'substitution' => Icons.swap_horiz_rounded,
+    'leave' => Icons.event_busy_outlined,
+    'online_test' => Icons.quiz_outlined,
+    'chat' => Icons.forum_outlined,
+    'transport' => Icons.directions_bus_outlined,
+    'payslip' => Icons.receipt_long_outlined,
+    'staff_leave' => Icons.event_busy_outlined,
+    'sos' => Icons.sos_outlined,
+    'ptm' => Icons.handshake_outlined,
+    'survey' => Icons.poll_outlined,
+    'live_class' => Icons.videocam_outlined,
+    'fee_reminder' => Icons.notifications_active_outlined,
+    'calendar' => Icons.event_note_outlined,
+    'enquiry' => Icons.person_add_alt_outlined,
+    _ => Icons.notifications_outlined,
+  };
 }
 
 /// The web paths the API puts in notifications, mapped to screens in this app.
-String? appRouteFor(String? link) => link != null && link.startsWith('/messages') ? '/messages' : switch (link) {
-      '/notices' => '/notices',
-      '/my-homework' || '/homework' => '/homework',
-      '/my-attendance' || '/attendance' => '/attendance',
-      '/my-fees' || '/fees' => '/fees',
-      '/my-results' => '/results',
-      '/my-timetable' => '/timetable',
-      '/leave' => '/leave',
-      '/calendar' => '/calendar',
-      '/my-tests' => '/tests',
-      '/live-classes' => '/live',
-      '/ptm' => '/ptm',
-      '/my-transport' => '/bus',
-      '/my-leave' || '/my-payslips' || '/my-hr' => '/my-hr',
-      '/surveys' => '/surveys',
-      _ => null,
-    };
+String? appRouteFor(String? link) => link != null && link.startsWith('/messages')
+    ? '/messages'
+    : switch (link) {
+        '/notices' => '/notices',
+        '/my-homework' || '/homework' => '/homework',
+        '/my-attendance' || '/attendance' => '/attendance',
+        '/my-fees' || '/fees' => '/fees',
+        '/my-results' => '/results',
+        '/my-timetable' => '/timetable',
+        '/leave' => '/leave',
+        '/calendar' => '/calendar',
+        '/my-tests' => '/tests',
+        '/live-classes' => '/live',
+        '/ptm' => '/ptm',
+        '/my-transport' => '/bus',
+        '/my-leave' || '/my-payslips' || '/my-hr' => '/my-hr',
+        '/surveys' => '/surveys',
+        _ => null,
+      };
 
-final notificationsProvider = FutureProvider.autoDispose<List<AppNotification>>((ref) async {
-  final res = await ref.watch(apiClientProvider).get<List<AppNotification>>('/notifications', query: {'page_size': 50},
-      parse: (d) => [for (final x in (d as List).cast<Map>()) AppNotification.fromJson(x.cast())]);
-  return res.data;
-});
+final notificationsProvider = FutureProvider.autoDispose<PagedList<AppNotification>>(
+  (ref) => fetchPages(ref.watch(apiClientProvider), '/notifications', ref.watch(pagesProvider('notifications')), AppNotification.fromJson),
+);
 
 final unreadNotificationsProvider = FutureProvider.autoDispose<int>((ref) async {
-  final res = await ref.watch(apiClientProvider).get<int>('/notifications/unread-count',
-      parse: (d) => ((d as Map)['count'] as num).toInt());
+  final res = await ref.watch(apiClientProvider).get<int>('/notifications/unread-count', parse: (d) => ((d as Map)['count'] as num).toInt());
   return res.data;
 });
 
@@ -135,16 +135,19 @@ class NotificationsScreen extends ConsumerWidget {
     final s = statusColors(context);
     final unread = async.value?.where((n) => !n.read).length ?? 0;
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications'), actions: [
-        if (unread > 0)
-          TextButton(
-            onPressed: () async {
-              await ref.read(apiClientProvider).post<Object?>('/notifications/read-all');
-              _refresh(ref);
-            },
-            child: const Text('Mark all read'),
-          ),
-      ]),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        actions: [
+          if (unread > 0)
+            TextButton(
+              onPressed: () async {
+                await ref.read(apiClientProvider).post<Object?>('/notifications/read-all');
+                _refresh(ref);
+              },
+              child: const Text('Mark all read'),
+            ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(notificationsProvider.future),
         child: AsyncView(
@@ -152,18 +155,21 @@ class NotificationsScreen extends ConsumerWidget {
           loading: const SkeletonList(count: 8),
           onRetry: () => _refresh(ref),
           builder: (list) => list.isEmpty
-              ? ListView(children: const [
-                  EmptyPanel(
-                    icon: Icons.notifications_none_rounded,
-                    title: "You're all caught up",
-                    message: 'Notices, homework, absences, fee receipts and results will show here.',
-                  ),
-                ])
+              ? ListView(
+                  children: const [
+                    EmptyPanel(
+                      icon: Icons.notifications_none_rounded,
+                      title: "You're all caught up",
+                      message: 'Notices, homework, absences, fee receipts and results will show here.',
+                    ),
+                  ],
+                )
               : ListView.separated(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: list.length,
+                  itemCount: list.length + 1,
                   separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
                   itemBuilder: (context, i) {
+                    if (i == list.length) return LoadMoreTile(list: 'notifications', items: list, noun: 'notifications');
                     final n = list[i];
                     final danger = n.kind == 'absent';
                     return ListTile(
@@ -175,11 +181,14 @@ class NotificationsScreen extends ConsumerWidget {
                         child: Icon(n.icon, size: 20),
                       ),
                       title: Text(n.title, style: TextStyle(fontWeight: n.read ? FontWeight.w500 : FontWeight.w800)),
-                      subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        if (n.body != null) Text(n.body!, maxLines: 2, overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 2),
-                        Text(_when(n.createdAt), style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
-                      ]),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (n.body != null) Text(n.body!, maxLines: 2, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 2),
+                          Text(_when(n.createdAt), style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+                        ],
+                      ),
                       trailing: n.read ? null : Icon(Icons.circle, size: 10, color: scheme.primary, semanticLabel: 'Unread'),
                     );
                   },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -28,6 +29,8 @@ class AsyncView<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return value.when(
       skipLoadingOnRefresh: true,
+      // Loading more of a list (or any reload) keeps what's on screen instead of flashing back to a skeleton.
+      skipLoadingOnReload: true,
       data: builder,
       loading: () => loading ?? const SkeletonList(),
       error: (e, _) => ErrorPanel(message: e is ApiException ? e.message : 'Something went wrong.', onRetry: onRetry),
@@ -46,15 +49,22 @@ class ErrorPanel extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.cloud_off_rounded, size: 48, color: scheme.onSurfaceVariant),
-          const SizedBox(height: 12),
-          Text(message, textAlign: TextAlign.center, style: TextStyle(color: scheme.onSurfaceVariant)),
-          if (onRetry != null) ...[
-            const SizedBox(height: 16),
-            OutlinedButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh), label: const Text('Try again')),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 48, color: scheme.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 16),
+              OutlinedButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh), label: const Text('Try again')),
+            ],
           ],
-        ]),
+        ),
       ),
     );
   }
@@ -71,20 +81,26 @@ class EmptyPanel extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
-      child: Column(children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-          child: Icon(icon, size: 34, color: scheme.primary),
-        ),
-        const SizedBox(height: 14),
-        Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-        if (message != null) ...[
-          const SizedBox(height: 4),
-          Text(message!, textAlign: TextAlign.center, style: TextStyle(color: scheme.onSurfaceVariant)),
+      child: Column(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(icon, size: 34, color: scheme.primary),
+          ),
+          const SizedBox(height: 14),
+          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          if (message != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              message!,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
+          ],
         ],
-      ]),
+      ),
     );
   }
 }
@@ -124,10 +140,14 @@ class ChildSwitcher extends StatelessWidget {
                   border: Border.all(color: on ? scheme.primary : scheme.outline),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(names[i], style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(subtitles[i], style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
-                ]),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(names[i], style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(subtitles[i], style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+                  ],
+                ),
               ),
             ),
           );
@@ -146,13 +166,19 @@ class Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(99)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (icon != null) ...[Icon(icon, size: 12, color: color), const SizedBox(width: 3)],
-          Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
-        ]),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(99)),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon != null) ...[Icon(icon, size: 12, color: color), const SizedBox(width: 3)],
+        Text(
+          label,
+          style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Percentage with a plain-language threshold.
@@ -165,7 +191,11 @@ class PercentPill extends StatelessWidget {
     final s = statusColors(context);
     if (value == null) return Text('—', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant));
     final v = value!;
-    final color = v < 75 ? s.danger : v < 85 ? s.warning : s.success;
+    final color = v < 75
+        ? s.danger
+        : v < 85
+        ? s.warning
+        : s.success;
     return Pill(v < 75 ? '${_pct(v)} · low' : _pct(v), color: color);
   }
 }
@@ -184,7 +214,13 @@ class PercentRing extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = statusColors(context);
     final v = value ?? 0;
-    final color = value == null ? Colors.grey : v < 75 ? s.danger : v < 85 ? s.warning : s.success;
+    final color = value == null
+        ? Colors.grey
+        : v < 75
+        ? s.danger
+        : v < 85
+        ? s.warning
+        : s.success;
     return Semantics(
       label: value == null ? 'No attendance yet' : '${pct(value)} attendance $label',
       child: TweenAnimationBuilder<double>(
@@ -194,35 +230,41 @@ class PercentRing extends StatelessWidget {
         builder: (context, t, _) => SizedBox(
           width: size,
           height: size,
-          child: Stack(alignment: Alignment.center, children: [
-            SizedBox.expand(
-              child: CircularProgressIndicator(
-                value: t,
-                strokeWidth: size / 11,
-                strokeCap: StrokeCap.round,
-                color: color,
-                backgroundColor: color.withValues(alpha: 0.12),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox.expand(
+                child: CircularProgressIndicator(
+                  value: t,
+                  strokeWidth: size / 11,
+                  strokeCap: StrokeCap.round,
+                  color: color,
+                  backgroundColor: color.withValues(alpha: 0.12),
+                ),
               ),
-            ),
-            Column(mainAxisSize: MainAxisSize.min, children: [
-              Text(value == null ? '—' : '${(t * 100).toStringAsFixed(t * 100 == (t * 100).roundToDouble() ? 0 : 1)}%',
-                  style: TextStyle(fontSize: size / 5, fontWeight: FontWeight.w800)),
-              if (size >= 80) Text(label, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            ]),
-          ]),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    value == null ? '—' : '${(t * 100).toStringAsFixed(t * 100 == (t * 100).roundToDouble() ? 0 : 1)}%',
+                    style: TextStyle(fontSize: size / 5, fontWeight: FontWeight.w800),
+                  ),
+                  if (size >= 80) Text(label, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+/// A short message at the bottom, with a matching buzz: a light tap when something worked, a firm one for an error.
 void showSnack(BuildContext context, String message, {bool error = false}) {
+  error ? HapticFeedback.heavyImpact() : HapticFeedback.lightImpact();
   final scheme = Theme.of(context).colorScheme;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(
-      content: Text(message),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: error ? scheme.error : null,
-    ));
+    ..showSnackBar(SnackBar(content: Text(message), behavior: SnackBarBehavior.floating, backgroundColor: error ? scheme.error : null));
 }

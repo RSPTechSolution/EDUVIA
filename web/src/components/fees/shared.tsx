@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { ApiError, api } from "@/lib/api/client";
 import type { FeePayment, InvoiceRow } from "@/lib/api/types";
 import { inr } from "@/lib/format";
+import { celebrate } from "@/lib/celebrate";
 import { cn } from "@/lib/utils";
 
 export const METHODS: Record<string, { label: string; icon: React.ElementType }> = {
@@ -54,7 +55,7 @@ export function CollectDialog({ invoice, open, onOpenChange }: { invoice: Pick<I
     mutationFn: () => api<FeePayment>(`/fees/invoices/${invoice.id}/payments`, {
       method: "POST", body: { amount: Number(amount), method, reference: reference || null, note: note || null },
     }),
-    onSuccess: ({ data }) => { qc.invalidateQueries({ queryKey: ["fees"] }); setDone(data); },
+    onSuccess: ({ data }) => { qc.invalidateQueries({ queryKey: ["fees"] }); setDone(data); celebrate({ y: 0.3 }); },
     onError: (e) => setError(errorText(e, "Could not record the payment")),
   });
   const needsRef = method === "cheque" || method === "bank_transfer";
@@ -65,7 +66,7 @@ export function CollectDialog({ invoice, open, onOpenChange }: { invoice: Pick<I
           <div className="enter-pop py-4 text-center">
             <div
               className="pop-in mx-auto flex size-16 items-center justify-center rounded-full bg-success/12">
-              <CheckCircle2 className="size-9 text-success" aria-hidden />
+              <svg viewBox="0 0 24 24" className="success-tick size-9 text-success" aria-hidden><path d="m6 12.5 4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>
             <DialogTitle className="mt-4">{inr(done.amount)} received</DialogTitle>
             <DialogDescription className="mt-1">Receipt {done.receipt_no} · {invoice.student_name}</DialogDescription>
