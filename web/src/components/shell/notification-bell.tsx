@@ -44,7 +44,7 @@ export function NotificationBell() {
       <PopoverTrigger render={<Button variant="ghost" size="icon" className="relative" aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"} />}>
         <Bell className="size-[18px]" aria-hidden />
         {unread > 0 && (
-          <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white">
+          <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-background">
             {unread > 99 ? "99+" : unread}
           </span>
         )}

@@ -23,7 +23,7 @@ function ResultView({ r }: { r: AttemptResult }) {
         <h1 className="text-2xl font-bold">{r.title}</h1>
         <p className="mt-1 text-muted-foreground">{r.student_name}</p>
         {r.released ? (
-          <p className="mt-3 text-3xl font-extrabold tabular">{r.score ?? 0} <span className="text-lg font-medium text-muted-foreground">of {r.max_marks}{r.percent != null ? ` · ${r.percent}%` : ""}</span></p>
+          <p className="mt-3 text-3xl font-semibold tabular">{r.score ?? 0} <span className="text-lg font-medium text-muted-foreground">of {r.max_marks}{r.percent != null ? ` · ${r.percent}%` : ""}</span></p>
         ) : <p className="mt-3 text-sm">Submitted. Your teacher will release the results.</p>}
         {r.needs_marking && <p className="mt-1 text-sm text-warning">Some short answers are still being marked.</p>}
       </div>

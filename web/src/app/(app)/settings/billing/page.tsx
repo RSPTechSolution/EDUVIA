@@ -194,7 +194,7 @@ function BillingPage() {
               <p className="text-sm font-medium text-muted-foreground">Current plan</p>
               <StatusBadge tone={status.tone} label={status.label} />
             </div>
-            <p className="font-heading text-3xl font-extrabold">{s.plan.name}</p>
+            <p className="font-heading text-3xl font-semibold">{s.plan.name}</p>
             <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground tabular">{price.headline}</span>{price.unit}</p>
             <p className="text-xs text-muted-foreground">{price.withTax}</p>
             {s.current_period_end && s.status === "active" && <p className="pt-2 text-xs text-muted-foreground">Paid until {formatDate(s.current_period_end)}</p>}

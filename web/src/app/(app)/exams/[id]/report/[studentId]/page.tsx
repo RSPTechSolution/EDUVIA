@@ -37,7 +37,7 @@ export default function ReportCardPage({ params }: { params: Promise<{ id: strin
         <header className="flex items-center gap-4 border-b-2 border-slate-900 pb-4">
           <BrandMark size={52} tone="light" />
           <div className="flex-1">
-            <p className="text-xl font-extrabold">{c.school_name}</p>
+            <p className="text-xl font-semibold">{c.school_name}</p>
             {c.school_address && <p className="text-xs text-slate-500">{c.school_address}</p>}
           </div>
           <div className="text-right">
@@ -86,7 +86,7 @@ export default function ReportCardPage({ params }: { params: Promise<{ id: strin
           {[["Percentage", r.percent !== null ? `${r.percent}%` : "—"], ["Overall grade", r.grade ?? "—"], ["Rank in class", r.rank ? `${r.rank} of ${c.class_size}` : "—"], ["Attendance", c.attendance_percent !== null ? `${c.attendance_percent}%` : "—"]].map(([k, v]) => (
             <div key={k} className="rounded-xl bg-slate-50 p-3 text-center">
               <p className="text-xs text-slate-500">{k}</p>
-              <p className="text-xl font-extrabold tabular-nums">{v}</p>
+              <p className="text-xl font-semibold tabular-nums">{v}</p>
             </div>
           ))}
         </div>

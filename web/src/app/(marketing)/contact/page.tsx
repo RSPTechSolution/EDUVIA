@@ -27,8 +27,8 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
       <GlowBackdrop />
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div>
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">Contact</p>
-          <h1 className="mt-3 font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">Let&apos;s talk about your school</h1>
+          <p className="text-sm font-medium text-primary">Contact</p>
+          <h1 className="mt-3 font-heading text-4xl font-semibold tracking-tight sm:text-5xl">Let&apos;s talk about your school</h1>
           <p className="mt-5 text-lg text-muted-foreground">
             Tell us what you need and we&apos;ll get back to you. Prefer to try it yourself?{" "}
             <Link href="/signup" className="font-semibold text-primary hover:underline">Start a free trial</Link>.

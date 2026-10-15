@@ -35,7 +35,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
             // eslint-disable-next-line @next/next/no-img-element -- the school's own logo from the API
             <img src={school.logo_url} alt="" className="mx-auto mb-4 size-16 rounded-xl object-contain" />
           )}
-          <h1 className="font-heading text-3xl font-extrabold tracking-tight">{school.name}</h1>
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">{school.name}</h1>
           <p className="mt-2 text-muted-foreground">Admission enquiry{school.city ? ` · ${school.city}` : ""}</p>
         </header>
         <EnquiryForm slug={slug} classes={school.classes} />

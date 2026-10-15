@@ -53,7 +53,7 @@ function Detail({ id }: { id: string }) {
           </div>
           <div className="sm:text-right">
             <p className="text-xs text-muted-foreground">Balance</p>
-            <p className={`font-heading text-3xl font-extrabold tabular ${inv.overdue ? "text-destructive" : ""}`}>{inr(inv.balance)}</p>
+            <p className={`font-heading text-3xl font-semibold tabular ${inv.overdue ? "text-destructive" : ""}`}>{inr(inv.balance)}</p>
             <div className="mt-2 h-2 w-48 overflow-hidden rounded-full bg-muted sm:ml-auto" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Paid">
               <div className="h-full rounded-full bg-success transition-[width] duration-700" style={{ width: `${pct}%` }} />
             </div>

@@ -28,7 +28,7 @@ function Ring({ value }: { value: number | null }) {
           strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-heading text-3xl font-extrabold tabular">{value === null ? "—" : `${pct}%`}</span>
+        <span className="font-heading text-3xl font-semibold tabular">{value === null ? "—" : `${pct}%`}</span>
         <span className="text-xs text-muted-foreground">this year</span>
       </div>
     </div>

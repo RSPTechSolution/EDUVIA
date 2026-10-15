@@ -208,7 +208,7 @@ function StudentProfile({ id }: { id: string }) {
       <Link href="/students" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" aria-hidden />Students</Link>
 
       <FadeIn>
-        <div className="aurora relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.23_0.055_264)] via-[oklch(0.28_0.065_263)] to-[oklch(0.34_0.07_258)] p-6 text-white shadow-lg sm:p-8">
+        <div className="aurora relative overflow-hidden rounded-2xl bg-panel p-6 text-white shadow-lg sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <PhotoUpload
               fileId={s.photo_file_id}
@@ -216,19 +216,19 @@ function StudentProfile({ id }: { id: string }) {
               ownerId={s.id}
               canEdit={manage}
               onChanged={() => qc.invalidateQueries({ queryKey: ["student", s.id] })}
-              className="size-20 rounded-2xl bg-white/15 font-heading text-3xl font-extrabold ring-2 ring-white/30 backdrop-blur"
+              className="size-20 rounded-2xl bg-white/15 font-heading text-3xl font-semibold ring-2 ring-white/30 backdrop-blur"
               fallback={initials(`${s.first_name} ${s.last_name}`)}
             />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{s.first_name} {s.last_name}</h1>
+                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{s.first_name} {s.last_name}</h1>
                 <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-white/25">{s.status}</span>
               </div>
               <p className="mt-1 text-white/80">{s.class_name} · Section {s.section_name}{s.roll_no ? ` · Roll ${s.roll_no}` : ""}</p>
               <p className="mt-0.5 font-mono text-sm text-white/70">{s.admission_no}</p>
             </div>
             {manage && (
-              <button type="button" onClick={() => setEditing(true)} className="inline-flex h-9 items-center gap-2 self-start rounded-lg bg-white/15 px-3.5 text-sm font-medium ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 active:scale-[0.97]">
+              <button type="button" onClick={() => setEditing(true)} className="inline-flex h-9 items-center gap-2 self-start rounded-full bg-white/15 px-3.5 text-sm font-medium ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 active:scale-[0.97]">
                 <Pencil className="size-4" aria-hidden />Edit details
               </button>
             )}

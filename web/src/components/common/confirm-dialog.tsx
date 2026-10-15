@@ -26,7 +26,7 @@ export function ConfirmDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>Cancel</Button>
           <Button
             variant={destructive ? "destructive" : "default"}
-            className={destructive ? "bg-destructive text-white hover:bg-destructive/90" : undefined}
+            className={destructive ? "bg-destructive text-background hover:bg-destructive/90" : undefined}
             onClick={onConfirm}
             loading={pending}
           >

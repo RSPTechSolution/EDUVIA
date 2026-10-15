@@ -26,8 +26,8 @@ export default function AboutPage() {
       <section className="relative isolate overflow-hidden px-5 py-20 sm:px-8 lg:py-28">
         <GlowBackdrop />
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">About Vidyanexa</p>
-          <h1 className="mt-3 font-heading text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
+          <p className="text-sm font-medium text-primary">About Vidyanexa</p>
+          <h1 className="mt-3 font-heading text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             Less paperwork. More teaching.
           </h1>
           <p className="mt-6 text-lg text-pretty text-muted-foreground">
@@ -53,7 +53,7 @@ export default function AboutPage() {
 
       <Section>
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight">See it for yourself</h2>
+          <h2 className="text-3xl font-semibold tracking-tight">See it for yourself</h2>
           <p className="mt-4 text-lg text-muted-foreground">Start a free 14-day trial, or tell us about your school and we&apos;ll walk you through it.</p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/signup" className={buttonVariants({ size: "lg", className: "h-12 px-7 text-base" })}>Start free trial</Link>

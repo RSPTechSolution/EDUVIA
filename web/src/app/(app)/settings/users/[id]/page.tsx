@@ -107,12 +107,12 @@ function UserPage({ id }: { id: string }) {
     <>
       <Link href="/settings/users" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" aria-hidden />Users</Link>
 
-      <div className="aurora relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.23_0.055_264)] via-[oklch(0.28_0.065_263)] to-[oklch(0.34_0.07_258)] p-6 text-white shadow-lg sm:p-8">
+      <div className="aurora relative overflow-hidden rounded-2xl bg-panel p-6 text-white shadow-lg sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <span className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-white/15 font-heading text-3xl font-extrabold ring-2 ring-white/30">{initials(u.full_name)}</span>
+          <span className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-white/15 font-heading text-3xl font-semibold ring-2 ring-white/30">{initials(u.full_name)}</span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{u.full_name}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{u.full_name}</h1>
               <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold ring-1 ring-white/25">{roleLabel(u.role)}</span>
             </div>
             <p className="mt-1 truncate text-white/80">{u.email}</p>
@@ -126,7 +126,7 @@ function UserPage({ id }: { id: string }) {
                 { label: u.is_active ? "Deactivate" : "Reactivate", icon: u.is_active ? UserX : Power, onClick: () => setToggling(true) },
               ].map((b) => (
                 <button key={b.label} type="button" onClick={b.onClick}
-                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-white/15 px-3.5 text-sm font-medium ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 active:scale-[0.97]">
+                  className="inline-flex h-9 items-center gap-2 rounded-full bg-white/15 px-3.5 text-sm font-medium ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 active:scale-[0.97]">
                   <b.icon className="size-4" aria-hidden />{b.label}
                 </button>
               ))}

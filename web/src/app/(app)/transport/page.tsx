@@ -335,7 +335,7 @@ function TransportPage() {
           <TabsTrigger value="live">Live</TabsTrigger>
           <TabsTrigger value="routes">Routes</TabsTrigger>
           <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
-          <TabsTrigger value="sos">SOS{open > 0 && <span className="ml-1 rounded-full bg-destructive px-1.5 text-[10px] text-white">{open}</span>}</TabsTrigger>
+          <TabsTrigger value="sos">SOS{open > 0 && <span className="ml-1 rounded-full bg-destructive px-1.5 text-[10px] text-background">{open}</span>}</TabsTrigger>
         </TabsList>
       </Tabs>
       {tab === "live" && <LiveTab />}

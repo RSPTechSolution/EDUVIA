@@ -21,8 +21,8 @@ export default async function PricingPage() {
         <GlowBackdrop />
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold tracking-wide text-primary uppercase">Pricing</p>
-            <h1 className="mt-3 font-heading text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">School management software pricing: plans that grow with your school</h1>
+            <p className="text-sm font-medium text-primary">Pricing</p>
+            <h1 className="mt-3 font-heading text-4xl font-semibold tracking-tight text-balance sm:text-5xl">School management software pricing: plans that grow with your school</h1>
             <p className="mt-5 text-lg text-muted-foreground">
               Every plan includes the parent, staff and driver apps, daily backups and a {catalog.trial_days}-day free trial. Prices in INR, excluding GST.
             </p>

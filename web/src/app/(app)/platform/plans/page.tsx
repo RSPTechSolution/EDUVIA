@@ -132,7 +132,7 @@ function PlansPage() {
                 </div>
                 <StatusBadge status={p.is_active ? "active" : "inactive"} />
               </div>
-              <p className="mt-4"><span className="font-heading text-2xl font-extrabold tabular">{inr(p.price_monthly)}</span><span className="text-sm text-muted-foreground">/month · {inr(p.price_yearly)}/year</span></p>
+              <p className="mt-4"><span className="font-heading text-2xl font-semibold tabular">{inr(p.price_monthly)}</span><span className="text-sm text-muted-foreground">/month · {inr(p.price_yearly)}/year</span></p>
               <ul className="mt-4 space-y-1 text-sm text-muted-foreground">
                 <li>{limitText(p.max_students, "students")}</li>
                 <li>{limitText(p.max_staff, "staff accounts")}</li>

@@ -26,11 +26,11 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors outline-none",
+        "group flex h-10 items-center gap-3 rounded-full px-4 text-sm font-medium transition-colors outline-none",
         "focus-visible:ring-2 focus-visible:ring-sidebar-ring",
         active
-          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-          : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
+          : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         collapsed && "justify-center px-0",
       )}
     >
@@ -40,7 +40,7 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
       </span>
       {!collapsed && <span className="truncate">{item.label}</span>}
       {!collapsed && count > 0 && (
-        <span className="ml-auto rounded-full bg-destructive px-1.5 text-[11px] leading-5 font-bold text-white tabular">{count > 99 ? "99+" : count}</span>
+        <span className="ml-auto rounded-full bg-destructive px-1.5 text-[11px] leading-5 font-bold text-background tabular">{count > 99 ? "99+" : count}</span>
       )}
       {collapsed && <span className="sr-only">{item.label}</span>}
       {count > 0 && <span className="sr-only">, {count} unread</span>}
@@ -64,7 +64,7 @@ export function SidebarNav({ collapsed = false, onNavigate }: { collapsed?: bool
           {collapsed ? (
             <div className="mx-auto mb-2 h-px w-6 bg-sidebar-border" aria-hidden />
           ) : (
-            <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-wider text-sidebar-muted uppercase">{group.label}</p>
+            <p className="mb-1 px-4 text-xs font-medium text-sidebar-muted">{group.label}</p>
           )}
           <ul className="space-y-0.5">
             {group.items.map((item) => (
@@ -83,7 +83,7 @@ export function SidebarBrand({ collapsed = false }: { collapsed?: boolean }) {
   const me = useSession();
   return (
     <div className={cn("flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-border px-4", collapsed && "justify-center px-0")}>
-      <BrandMark size={30} tone="dark" />
+      <BrandMark size={30} />
       {!collapsed && (
         <div className="min-w-0 text-sidebar-foreground">
           <Wordmark />
@@ -105,9 +105,9 @@ function PlanChip({ collapsed }: { collapsed: boolean }) {
   return (
     <Link
       href="/settings/billing"
-      className="mx-3 mb-3 flex items-center gap-3 rounded-xl bg-gradient-to-br from-white/10 to-white/[0.03] p-3 ring-1 ring-white/10 transition hover:ring-white/25 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+      className="mx-3 mb-3 flex items-center gap-3 rounded-2xl bg-sidebar-accent p-3 transition-colors hover:bg-[color-mix(in_oklch,var(--sidebar-accent),var(--sidebar-foreground)_6%)] outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
     >
-      <span className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><CreditCard className="size-4" aria-hidden /></span>
+      <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><CreditCard className="size-4" aria-hidden /></span>
       <span className="min-w-0 leading-tight">
         <span className="block text-sm font-semibold text-sidebar-foreground">{me.school.plan.name} plan</span>
         <span className="block text-xs text-sidebar-muted">{trial ? `Trial · ${daysLeft} days left` : "Manage plan"}</span>
@@ -120,7 +120,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-dvh shrink-0 flex-col print:hidden bg-gradient-to-b from-sidebar via-sidebar to-[oklch(0.21_0.06_258)] transition-[width] duration-200 ease-out lg:flex dark:to-[oklch(0.12_0.03_258)]",
+        "sticky top-0 hidden h-dvh shrink-0 flex-col print:hidden border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out lg:flex",
         collapsed ? "w-[72px]" : "w-64",
       )}
       aria-label="Sidebar"
@@ -135,7 +135,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-expanded={!collapsed}
           className={cn(
-            "flex h-9 w-full items-center gap-3 rounded-lg px-3 text-sm text-sidebar-muted transition-colors outline-none",
+            "flex h-10 w-full items-center gap-3 rounded-full px-4 text-sm text-sidebar-muted transition-colors outline-none",
             "hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring",
             collapsed && "justify-center px-0",
           )}

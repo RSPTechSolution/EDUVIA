@@ -31,7 +31,7 @@ export function RolesDonut({ data }: { data: { role: string; count: number }[] }
       <div className="relative size-44 shrink-0" role="img" aria-label={`${total} people by role`}>
         <RolesPie slices={slices} />
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-heading text-3xl font-extrabold tabular">{total}</span>
+          <span className="font-heading text-3xl font-semibold tabular">{total}</span>
           <span className="text-xs text-muted-foreground">people</span>
         </div>
       </div>

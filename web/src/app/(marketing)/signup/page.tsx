@@ -20,7 +20,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
       <GlowBackdrop />
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 max-w-2xl">
-          <h1 className="font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">Start your free trial</h1>
+          <h1 className="font-heading text-4xl font-semibold tracking-tight sm:text-5xl">Start your free trial</h1>
           <p className="mt-4 text-lg text-muted-foreground">Your school will be ready in under a minute. Free for 14 days, no card needed.</p>
         </div>
         <SignupForm initialPlans={plans} query={query} />

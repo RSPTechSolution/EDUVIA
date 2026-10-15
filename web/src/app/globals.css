@@ -7,8 +7,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-heading: var(--font-jakarta);
+  --font-sans: var(--font-ui), system-ui, sans-serif;
+  --font-heading: var(--font-ui), system-ui, sans-serif;
   --font-brand: var(--font-cinzel), "Times New Roman", serif;
   --font-mono: var(--font-jetbrains);
 
@@ -25,6 +25,15 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-primary-container: var(--primary-container);
+  --color-primary-container-foreground: var(--primary-container-foreground);
+  --color-error-container: var(--error-container);
+  --color-error-container-foreground: var(--error-container-foreground);
+  --color-panel: var(--panel);
+  --color-panel-foreground: var(--panel-foreground);
+  --color-panel-muted: var(--panel-muted);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -67,100 +76,125 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Vidyanexa palette, taken from the logo: navy wordmark, blue -> teal -> green leaves, orange sun. */
+/* Theme version 2 ("Material"): Material 3 colour roles generated from the Vidyanexa navy.
+   The same values are in the Flutter app (mobile/lib/core/theme/app_theme.dart). Version 1 is the git tag theme-v1. */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
-  /* Vidyanexa: Ink Navy #15233F, Antique Gold #B8893C, Ivory #F7F2E8 (see brand/README.md). */
-  --brand-navy: oklch(0.255 0.058 264);
-  --brand-gold: oklch(0.65 0.105 74);
-  --brand-ivory: oklch(0.962 0.014 84);
-  /* Kept for illustrations: now in the navy, gold and lamp-glow family. */
-  --brand-teal: oklch(0.65 0.105 74);
-  --brand-green: oklch(0.83 0.1 82);
-  --brand-sun: oklch(0.72 0.12 68);
+  /* The crest's own colours (brand/README.md), for the logo and illustrations. */
+  --brand-navy: #15233f;
+  --brand-gold: #b8893c;
+  --brand-ivory: #f7f2e8;
+  --brand-teal: #00687a;
+  --brand-green: #e2be74;
+  --brand-sun: #c9963f;
 
-  --background: oklch(0.985 0.005 84);
-  --foreground: oklch(0.23 0.045 264);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.23 0.045 264);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.23 0.045 264);
-  --primary: oklch(0.29 0.065 264);
-  --primary-foreground: oklch(0.985 0.005 84);
-  --secondary: oklch(0.955 0.012 84);
-  --secondary-foreground: oklch(0.29 0.05 264);
-  --muted: oklch(0.955 0.012 84);
-  --muted-foreground: oklch(0.5 0.028 264);
-  --accent: oklch(0.95 0.028 82);
-  --accent-foreground: oklch(0.29 0.065 264);
-  --destructive: oklch(0.53 0.2 26);
-  --border: oklch(0.905 0.016 84);
-  --input: oklch(0.88 0.018 84);
-  --ring: oklch(0.65 0.105 74);
+  --background: #faf9fd;          /* surface */
+  --foreground: #1a1b21;          /* on surface */
+  --card: #ffffff;                /* surface container lowest */
+  --card-foreground: #1a1b21;
+  --popover: #f4f3fa;             /* surface container low */
+  --popover-foreground: #1a1b21;
+  --primary: #2f4a86;
+  --primary-foreground: #ffffff;
+  --primary-container: #d9e2ff;
+  --primary-container-foreground: #001944;
+  --secondary: #dce2f9;           /* secondary container */
+  --secondary-foreground: #141b2c;
+  --muted: #eeedf4;               /* surface container */
+  --muted-foreground: #45464f;    /* on surface variant */
+  --accent: #e9e7ef;              /* surface container high: hover and selected rows */
+  --accent-foreground: #1a1b21;
+  --destructive: #ba1a1a;
+  --error-container: #ffdad6;
+  --error-container-foreground: #410002;
+  --border: #c5c6d0;              /* outline variant */
+  --input: #757680;               /* outline */
+  --ring: #2f4a86;
 
-  --success: oklch(0.52 0.12 158);
-  --warning: oklch(0.55 0.13 62);
-  --info: oklch(0.5 0.09 230);
+  --success: #006d3d;
+  --warning: #8b5000;
+  --info: #00629e;
 
-  --chart-1: oklch(0.38 0.08 264);
-  --chart-2: oklch(0.65 0.105 74);
-  --chart-3: oklch(0.58 0.09 200);
-  --chart-4: oklch(0.8 0.1 82);
-  --chart-5: oklch(0.55 0.1 320);
-  --chart-6: oklch(0.6 0.15 25);
+  --chart-1: #2f4a86;
+  --chart-2: #b8893c;
+  --chart-3: #00687a;
+  --chart-4: #8e4585;
+  --chart-5: #006d3d;
+  --chart-6: #ba1a1a;
 
-  --sidebar: oklch(0.255 0.058 264);
-  --sidebar-foreground: oklch(0.93 0.015 84);
-  --sidebar-muted: oklch(0.74 0.03 264);
-  --sidebar-primary: oklch(0.7 0.105 76);
-  --sidebar-primary-foreground: oklch(0.22 0.05 264);
-  --sidebar-accent: oklch(0.31 0.06 264);
-  --sidebar-accent-foreground: oklch(0.98 0.008 84);
-  --sidebar-border: oklch(0.33 0.05 264);
-  --sidebar-ring: oklch(0.7 0.105 76);
+  /* Navigation drawer: a tonal surface with a secondary-container pill for the current page. */
+  --sidebar: #f4f3fa;
+  --sidebar-foreground: #1a1b21;
+  --sidebar-muted: #45464f;
+  --sidebar-primary: #dce2f9;
+  --sidebar-primary-foreground: #141b2c;
+  --sidebar-accent: #e9e7ef;
+  --sidebar-accent-foreground: #1a1b21;
+  --sidebar-border: #e3e2e9;
+  --sidebar-ring: #2f4a86;
+
+  /* A strong, solid panel for white text: sign-in side panel, call-to-action bands. */
+  --panel: #2f4a86;
+  --panel-foreground: #ffffff;
+  --panel-muted: #d9e2ff;
+
+  /* Frosted glass for floating bars and cards. */
+  --glass: rgb(255 255 255 / 0.72);
+  --glass-border: rgb(255 255 255 / 0.6);
 }
 
 .dark {
-  --background: oklch(0.175 0.035 264);
-  --foreground: oklch(0.94 0.012 84);
-  --card: oklch(0.215 0.04 264);
-  --card-foreground: oklch(0.94 0.012 84);
-  --popover: oklch(0.235 0.04 264);
-  --popover-foreground: oklch(0.94 0.012 84);
-  --primary: oklch(0.76 0.105 78);
-  --primary-foreground: oklch(0.2 0.05 264);
-  --secondary: oklch(0.27 0.04 264);
-  --secondary-foreground: oklch(0.92 0.012 84);
-  --muted: oklch(0.26 0.035 264);
-  --muted-foreground: oklch(0.73 0.022 264);
-  --accent: oklch(0.29 0.045 264);
-  --accent-foreground: oklch(0.86 0.08 80);
-  --destructive: oklch(0.7 0.17 25);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.76 0.105 78);
+  --background: #121318;
+  --foreground: #e3e2e9;
+  --card: #1a1b21;
+  --card-foreground: #e3e2e9;
+  --popover: #1e1f25;
+  --popover-foreground: #e3e2e9;
+  --primary: #b0c6ff;
+  --primary-foreground: #172e60;
+  --primary-container: #2f4578;
+  --primary-container-foreground: #d9e2ff;
+  --secondary: #3e4759;
+  --secondary-foreground: #dce2f9;
+  --muted: #1e1f25;
+  --muted-foreground: #c5c6d0;
+  --accent: #292a2f;
+  --accent-foreground: #e3e2e9;
+  --destructive: #ffb4ab;
+  --error-container: #93000a;
+  --error-container-foreground: #ffdad6;
+  --border: #45464f;
+  --input: #8f909a;
+  --ring: #b0c6ff;
 
-  --success: oklch(0.76 0.14 158);
-  --warning: oklch(0.8 0.13 75);
-  --info: oklch(0.76 0.09 225);
+  --success: #7ddb9f;
+  --warning: #ffb95c;
+  --info: #9acbff;
 
-  --chart-1: oklch(0.72 0.09 255);
-  --chart-2: oklch(0.76 0.105 78);
-  --chart-3: oklch(0.74 0.09 195);
-  --chart-4: oklch(0.86 0.08 85);
-  --chart-5: oklch(0.7 0.12 320);
-  --chart-6: oklch(0.72 0.15 25);
+  --chart-1: #b0c6ff;
+  --chart-2: #e2be74;
+  --chart-3: #5fd4ee;
+  --chart-4: #ffa9f0;
+  --chart-5: #7ddb9f;
+  --chart-6: #ffb4ab;
 
-  --sidebar: oklch(0.145 0.03 264);
-  --sidebar-foreground: oklch(0.92 0.012 84);
-  --sidebar-muted: oklch(0.7 0.022 264);
-  --sidebar-primary: oklch(0.76 0.105 78);
-  --sidebar-primary-foreground: oklch(0.2 0.05 264);
-  --sidebar-accent: oklch(0.23 0.04 264);
-  --sidebar-accent-foreground: oklch(0.98 0.008 84);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.76 0.105 78);
+  --sidebar: #1a1b21;
+  --sidebar-foreground: #e3e2e9;
+  --sidebar-muted: #c5c6d0;
+  --sidebar-primary: #3e4759;
+  --sidebar-primary-foreground: #dce2f9;
+  --sidebar-accent: #292a2f;
+  --sidebar-accent-foreground: #e3e2e9;
+  --sidebar-border: #292a2f;
+  --sidebar-ring: #b0c6ff;
+
+  --panel: #2f4578;
+  --panel-foreground: #ffffff;
+  --panel-muted: #d9e2ff;
+
+  --glass: rgb(30 31 37 / 0.62);
+  --glass-border: rgb(255 255 255 / 0.08);
 }
 
 @layer base {
@@ -169,7 +203,6 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv11", "ss01";
   }
   html {
     @apply font-sans;
@@ -181,11 +214,15 @@
 
 @layer utilities {
   .tabular { font-variant-numeric: tabular-nums; }
-  .brand-gradient-text {
-    background: linear-gradient(90deg, var(--brand-gold), oklch(0.8 0.1 82));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  /* Frosted glass: floating bars, cards over imagery. Falls back to a solid surface without backdrop-filter. */
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass { background: var(--card); }
   }
 }
 
@@ -266,9 +303,9 @@
   inset: -40%;
   z-index: -1;
   background:
-    radial-gradient(30% 40% at 20% 30%, oklch(0.72 0.11 78 / 0.32), transparent 70%),
-    radial-gradient(30% 40% at 80% 20%, oklch(0.5 0.08 255 / 0.4), transparent 70%),
-    radial-gradient(35% 45% at 60% 80%, oklch(0.82 0.09 82 / 0.22), transparent 70%);
+    radial-gradient(30% 40% at 85% 15%, rgb(217 226 255 / 0.28), transparent 70%),
+    radial-gradient(30% 40% at 10% 90%, rgb(0 25 68 / 0.35), transparent 70%),
+    radial-gradient(35% 45% at 60% 80%, rgb(226 190 116 / 0.12), transparent 70%);
   animation: aurora 18s ease-in-out infinite alternate;
 }
 @keyframes aurora {
@@ -277,9 +314,14 @@
   100% { transform: translate(-6%, 4%) rotate(-6deg); }
 }
 
-/* Cards that lift and glow on hover. */
+/* A product shot tilted in 3D that settles flat on hover (public pages). Transform only, so it never moves layout. */
+.stage-3d { perspective: 1600px; }
+.tilt-3d { transform: rotateX(12deg) rotateY(-14deg) rotateZ(1.5deg); transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.stage-3d:hover .tilt-3d { transform: rotateX(5deg) rotateY(-5deg) rotateZ(0deg); }
+
+/* Cards that lift on hover. */
 .card-lift { transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, border-color 200ms ease; }
-.card-lift:hover { transform: translateY(-3px); box-shadow: 0 14px 30px -14px color-mix(in oklch, var(--primary) 40%, transparent); border-color: color-mix(in oklch, var(--primary) 30%, var(--border)); }
+.card-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -12px rgb(0 0 0 / 0.18); border-color: color-mix(in oklch, var(--primary) 35%, var(--border)); }
 
 /* Decorative motion: drifting colour blobs, a faded grid, floating chips. */
 .blob { position: absolute; border-radius: 9999px; filter: blur(60px); pointer-events: none; animation: blob 22s ease-in-out infinite alternate; }

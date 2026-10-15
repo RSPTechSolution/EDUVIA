@@ -67,7 +67,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
             <CheckCircle2 className="size-8 text-emerald-600" aria-hidden />
             <div>
               <p className="text-xs text-emerald-800">Amount received · {METHODS[p.method]?.label ?? p.method}{p.reference && ` · ${p.reference}`}</p>
-              <p className="text-2xl font-extrabold tabular-nums text-emerald-900">{inr(p.amount)}</p>
+              <p className="text-2xl font-semibold tabular-nums text-emerald-900">{inr(p.amount)}</p>
             </div>
           </div>
           <div className="text-right text-sm">

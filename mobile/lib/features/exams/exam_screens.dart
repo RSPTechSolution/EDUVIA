@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../../core/api/api_client.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../shared/widgets/common.dart';
@@ -156,7 +157,7 @@ class ReportCardScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                gradient: const LinearGradient(colors: [Color(0xFF14295A), Color(0xFF1565D7)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                color: AppTheme.heroPanel(Theme.of(context).colorScheme),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${c['exam_name']} · ${c['academic_year']}', style: const TextStyle(color: Colors.white70)),

@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils";
 
 /** Status colours are reserved for these states and always shown with a label or icon. */
 export const STATUS: Record<AttendanceStatus, { label: string; short: string; icon: React.ElementType; chip: string; solid: string; dot: string }> = {
-  present: { label: "Present", short: "P", icon: Check, chip: "bg-success/12 text-success border-success/30", solid: "bg-success text-white border-success", dot: "bg-success" },
-  absent: { label: "Absent", short: "A", icon: X, chip: "bg-destructive/10 text-destructive border-destructive/30", solid: "bg-destructive text-white border-destructive", dot: "bg-destructive" },
-  late: { label: "Late", short: "L", icon: Clock, chip: "bg-warning/12 text-warning border-warning/35", solid: "bg-warning text-white border-warning", dot: "bg-warning" },
-  half_day: { label: "Half day", short: "½", icon: Minus, chip: "bg-info/12 text-info border-info/30", solid: "bg-info text-white border-info", dot: "bg-info" },
-  leave: { label: "Leave", short: "Lv", icon: CalendarOff, chip: "bg-muted text-muted-foreground border-border", solid: "bg-muted-foreground text-white border-muted-foreground", dot: "bg-muted-foreground" },
+  present: { label: "Present", short: "P", icon: Check, chip: "bg-success/12 text-success border-success/30", solid: "bg-success text-background border-success", dot: "bg-success" },
+  absent: { label: "Absent", short: "A", icon: X, chip: "bg-destructive/10 text-destructive border-destructive/30", solid: "bg-destructive text-background border-destructive", dot: "bg-destructive" },
+  late: { label: "Late", short: "L", icon: Clock, chip: "bg-warning/12 text-warning border-warning/35", solid: "bg-warning text-background border-warning", dot: "bg-warning" },
+  half_day: { label: "Half day", short: "½", icon: Minus, chip: "bg-info/12 text-info border-info/30", solid: "bg-info text-background border-info", dot: "bg-info" },
+  leave: { label: "Leave", short: "Lv", icon: CalendarOff, chip: "bg-muted text-muted-foreground border-border", solid: "bg-muted-foreground text-background border-muted-foreground", dot: "bg-muted-foreground" },
 };
 export const STATUS_ORDER: AttendanceStatus[] = ["present", "absent", "late", "half_day", "leave"];
 

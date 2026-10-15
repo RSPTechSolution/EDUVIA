@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, KeyRound, LogOut, Menu, Monitor, Moon, Search, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { ChevronRight, KeyRound, LogOut, Menu, Search } from "lucide-react";
 import { useSession } from "@/components/session-provider";
 import { signOut } from "@/lib/auth/sign-out";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,9 +10,10 @@ import { fileUrl } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/shell/notification-bell";
+import { ThemeMenu } from "@/components/shell/theme-menu";
 import { findNavItem } from "@/config/navigation";
 import { initials, roleLabel } from "@/lib/format";
 
@@ -40,25 +40,6 @@ function Breadcrumbs() {
         })}
       </ol>
     </nav>
-  );
-}
-
-function ThemeMenu() {
-  const { theme, setTheme } = useTheme();
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Change theme" />}>
-        <Sun className="size-[18px] dark:hidden" aria-hidden />
-        <Moon className="hidden size-[18px] dark:block" aria-hidden />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={(v) => setTheme(String(v))}>
-          <DropdownMenuRadioItem value="light"><Sun aria-hidden />Light</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="dark"><Moon aria-hidden />Dark</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="system"><Monitor aria-hidden />System</DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
 

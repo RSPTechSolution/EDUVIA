@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 const errText = (e: unknown, f: string) => (e instanceof ApiError ? (Object.values(e.fieldErrors)[0] ?? e.message) : f);
 const STATUSES = [["present", "Present"], ["absent", "Absent"], ["late", "Late"], ["half_day", "Half day"], ["leave", "Leave"]] as const;
-const TONE: Record<string, string> = { present: "bg-success text-white", late: "bg-warning text-white", absent: "bg-destructive text-white", half_day: "bg-info text-white", leave: "bg-primary text-primary-foreground" };
+const TONE: Record<string, string> = { present: "bg-success text-background", late: "bg-warning text-background", absent: "bg-destructive text-background", half_day: "bg-info text-background", leave: "bg-primary text-primary-foreground" };
 
 function ProfileSheet({ userId, onClose }: { userId: string | null; onClose: () => void }) {
   const qc = useQueryClient();

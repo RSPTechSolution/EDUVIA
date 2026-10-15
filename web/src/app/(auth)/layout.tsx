@@ -16,15 +16,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           its HTML is still arriving, and spacing items evenly would move what is already drawn as each piece lands. */}
       <section
         aria-hidden
-        className="relative hidden overflow-hidden bg-sidebar p-12 text-sidebar-foreground lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col"
+        className="relative hidden overflow-hidden bg-panel p-12 text-panel-foreground lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col"
       >
         <div className="grid-fade pointer-events-none absolute inset-0 text-white" />
-        <div className="blob -top-40 -right-40 size-[520px] bg-[radial-gradient(circle,oklch(0.7_0.11_78/0.28),transparent_65%)]" />
-        <div className="blob blob-delay -bottom-48 -left-32 size-[480px] bg-[radial-gradient(circle,oklch(0.45_0.08_255/0.45),transparent_65%)]" />
-        <div className="blob top-1/3 left-1/2 size-[360px] bg-[radial-gradient(circle,oklch(0.8_0.09_82/0.14),transparent_65%)]" />
+        <div className="blob -top-40 -right-40 size-[520px] bg-[radial-gradient(circle,rgb(217_226_255/0.22),transparent_65%)]" />
+        <div className="blob blob-delay -bottom-48 -left-32 size-[480px] bg-[radial-gradient(circle,rgb(0_25_68/0.35),transparent_65%)]" />
+        <div className="blob top-1/3 left-1/2 size-[360px] bg-[radial-gradient(circle,rgb(226_190_116/0.14),transparent_65%)]" />
         <div className="relative flex items-center gap-3">
           <BrandMark size={44} tone="dark" />
-          <Wordmark tagline className="text-sidebar-foreground [&_span:first-child]:text-2xl" />
+          <Wordmark tagline className="text-panel-foreground [&_span:first-child]:text-2xl" />
         </div>
         <div className="relative mt-16 max-w-md">
           <OrbitGraphic
@@ -36,7 +36,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </h2>
           <ul className="mt-8 space-y-4">
             {POINTS.map(({ icon: Icon, text }, i) => (
-              <li key={text} className="flex items-center gap-3 text-sidebar-foreground/90 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-3 [animation-fill-mode:both]" style={{ animationDelay: `${200 + i * 120}ms`, animationDuration: "600ms" }}>
+              <li key={text} className="flex items-center gap-3 text-panel-foreground/90 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-3 [animation-fill-mode:both]" style={{ animationDelay: `${200 + i * 120}ms`, animationDuration: "600ms" }}>
                 <span className="flex size-9 items-center justify-center rounded-lg bg-white/10">
                   <Icon className="size-[18px]" />
                 </span>
@@ -45,7 +45,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             ))}
           </ul>
         </div>
-        <p className="absolute bottom-12 left-12 text-xs text-sidebar-muted">© {new Date().getFullYear()} Vidyanexa</p>
+        <p className="absolute bottom-12 left-12 text-xs text-panel-muted">© {new Date().getFullYear()} Vidyanexa</p>
       </section>
       <main className="flex items-center justify-center bg-background px-5 py-12 sm:px-10">
         <div className="w-full max-w-sm">

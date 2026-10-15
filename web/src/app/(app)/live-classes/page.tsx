@@ -80,7 +80,7 @@ function LiveCard({ l }: { l: LiveClass }) {
       <div className="flex flex-wrap items-center gap-2">
         {l.subject_name && <span className={cn("rounded-md border px-2 py-0.5 text-xs font-semibold", colorOf(l.subject_color ?? "slate").cell)}>{l.subject_name}</span>}
         <span className="text-sm text-muted-foreground">{l.sections_label}</span>
-        {l.state === "live" && <span className="ml-auto rounded-full bg-success px-2 py-0.5 text-xs font-semibold text-white">Live now</span>}
+        {l.state === "live" && <span className="ml-auto rounded-full bg-success px-2 py-0.5 text-xs font-semibold text-background">Live now</span>}
         {l.state === "cancelled" && <span className="ml-auto rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">Cancelled</span>}
       </div>
       <p className="mt-1.5 font-semibold">{l.title}</p>

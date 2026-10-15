@@ -32,13 +32,13 @@ import { cn } from "@/lib/utils";
 function Hero({ subtitle, children }: { subtitle: string; children?: React.ReactNode }) {
   const me = useSession();
   return (
-    <div className="aurora relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.23_0.055_264)] via-[oklch(0.28_0.065_263)] to-[oklch(0.34_0.07_258)] p-6 text-white shadow-lg sm:p-8 dark:from-[oklch(0.22_0.05_264)] dark:via-[oklch(0.25_0.06_262)] dark:to-[oklch(0.3_0.065_258)]">
-      <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-[radial-gradient(closest-side,oklch(0.75_0.11_78/0.32),transparent)]" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 size-80 rounded-full bg-[radial-gradient(closest-side,oklch(0.55_0.08_255/0.35),transparent)]" />
+    <div className="aurora relative overflow-hidden rounded-2xl bg-panel p-6 text-white shadow-lg sm:p-8">
+      <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-[radial-gradient(closest-side,rgb(217_226_255/0.25),transparent)]" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 size-80 rounded-full bg-[radial-gradient(closest-side,rgb(0_25_68/0.3),transparent)]" />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm text-white/75">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
-          <h1 className="mt-1.5 text-2xl font-extrabold tracking-tight sm:text-3xl">{greeting()}, {me.full_name.split(" ")[0]}</h1>
+          <h1 className="mt-1.5 text-2xl font-semibold tracking-tight sm:text-3xl">{greeting()}, {me.full_name.split(" ")[0]}</h1>
           <p className="mt-1.5 text-white/80">{subtitle}</p>
         </div>
         {children && <div className="flex flex-wrap gap-2">{children}</div>}
@@ -47,7 +47,7 @@ function Hero({ subtitle, children }: { subtitle: string; children?: React.React
   );
 }
 
-const heroButton = "inline-flex h-9 items-center gap-2 rounded-lg bg-white/15 px-3.5 text-sm font-medium text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 outline-none focus-visible:ring-2 focus-visible:ring-white";
+const heroButton = "inline-flex h-9 items-center gap-2 rounded-full bg-white/15 px-3.5 text-sm font-medium text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 outline-none focus-visible:ring-2 focus-visible:ring-white";
 
 function WelcomeBanner() {
   const params = useSearchParams();

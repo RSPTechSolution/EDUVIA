@@ -1,6 +1,6 @@
 import {
   ArrowRight, BellRing, Bot, Bus, CalendarCheck, Check, ClipboardList, Cloud, FileLock2, GraduationCap, KeyRound,
-  Landmark, LayoutGrid, Library, MessageSquare, Rocket, ScrollText, ShieldCheck, Smartphone, Upload, UserCog, Wallet,
+  Landmark, Library, MessageSquare, Rocket, ScrollText, ShieldCheck, Smartphone, Upload, UserCog, Wallet,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -10,6 +10,7 @@ import { Faq, GlowBackdrop, PRICING_FAQ, Section, SectionHeading } from "@/compo
 import { buttonVariants } from "@/components/ui/button";
 import { getPlans } from "@/lib/api/public";
 import { inr } from "@/lib/format";
+import { withGst } from "@/lib/gst";
 import { JsonLd, SOFTWARE, faqPage, graph, pageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -89,8 +90,8 @@ const STEPS = [
 
 function HeroChip({ className, icon, tint, title, value }: { className: string; icon: React.ReactNode; tint: string; title: string; value: string }) {
   return (
-    <div aria-hidden className={cn("absolute z-10 hidden items-center gap-3 rounded-2xl border bg-card/90 px-4 py-3 shadow-xl backdrop-blur md:flex", className)}>
-      <span className={cn("flex size-9 items-center justify-center rounded-xl", tint)}>{icon}</span>
+    <div aria-hidden className={cn("glass absolute z-10 hidden items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_20px_40px_-12px_rgb(0_0_0/0.25)] md:flex", className)}>
+      <span className={cn("flex size-9 items-center justify-center rounded-full", tint)}>{icon}</span>
       <span className="text-left">
         <span className="block text-sm font-semibold">{title}</span>
         <span className="block text-xs text-muted-foreground">{value}</span>
@@ -106,55 +107,49 @@ export default async function HomePage() {
     <>
       <JsonLd data={graph(SOFTWARE, faqPage(HOME_FAQ))} />
       {/* Hero */}
-      <section className="relative isolate overflow-hidden px-5 pt-16 pb-20 sm:px-8 lg:pt-24">
+      <section className="relative isolate overflow-hidden px-5 pt-14 pb-20 sm:px-8 lg:pt-20 lg:pb-28">
         <GlowBackdrop />
-        <div className="mx-auto max-w-7xl">
-          <div className="mx-auto max-w-3xl text-center">
-            <Link href="/pricing" className="inline-flex items-center gap-2 rounded-full border bg-card/80 px-3.5 py-1.5 text-xs font-medium shadow-xs backdrop-blur hover:border-primary/40">
-              <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">NEW</span>
+        <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1fr_1.2fr]">
+          <div className="enter-stagger text-center lg:text-left">
+            <Link href="/pricing" className="inline-flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_6%)]">
               Build a custom plan with only the modules you need <ArrowRight className="size-3.5" aria-hidden />
             </Link>
-            <p className="mt-6 text-sm font-semibold tracking-wide text-primary uppercase">School management software for Indian schools</p>
-            <h1 className="mt-3 font-heading text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-6xl">
-              Run your whole school{" "}
-              <span className="shimmer-text bg-gradient-to-r from-primary via-[oklch(0.65_0.105_74)] to-primary bg-clip-text text-transparent">from one place</span>
+            <p className="mt-6 text-sm font-medium text-primary">School management software for Indian schools</p>
+            <h1 className="mt-3 font-heading text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl xl:text-6xl">
+              Run your whole school from one place
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-pretty text-muted-foreground sm:text-xl">
+            <p className="mx-auto mt-6 max-w-xl text-lg text-pretty text-muted-foreground lg:mx-0">
               A complete school ERP for admissions, attendance, fees, exams, transport and parent communication, in one secure platform with apps for parents, staff and drivers.
             </p>
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link href="/signup" className={buttonVariants({ size: "lg", className: "h-12 px-7 text-base shadow-lg shadow-primary/25" })}>
+            <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+              <Link href="/signup" className={buttonVariants({ size: "lg", className: "h-12 px-7 text-base" })}>
                 Start 14-day free trial <ArrowRight aria-hidden />
               </Link>
               <Link href="/pricing" className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 px-7 text-base" })}>
                 See pricing
               </Link>
             </div>
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-              {["No credit card needed", "Plans from ₹2,999/month", "Prices in INR"].map((t) => (
+            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground lg:justify-start">
+              {["No credit card needed", "Plans from ₹2,999/month + GST", "Prices in INR"].map((t) => (
                 <li key={t} className="flex items-center gap-1.5"><Check className="size-4 text-success" aria-hidden />{t}</li>
               ))}
             </ul>
           </div>
 
-          <div className="relative mx-auto mt-16 max-w-6xl">
-            <div className="absolute -inset-x-6 -top-6 -bottom-10 -z-10 rounded-[2rem] bg-gradient-to-b from-primary/20 via-primary/5 to-transparent blur-2xl" aria-hidden />
-            <HeroChip className="float-chip -top-6 -left-4 xl:-left-14" icon={<CalendarCheck className="size-4" />} tint="bg-success/15 text-success" title="Attendance marked" value="Class 5-A · 38/40 present" />
-            <HeroChip className="float-chip float-chip-2 top-1/3 -right-4 xl:-right-16" icon={<Wallet className="size-4" />} tint="bg-primary/15 text-primary" title="Fee received" value="₹12,500 · Receipt sent" />
-            <HeroChip className="float-chip float-chip-3 -bottom-6 left-1/4" icon={<Bus className="size-4" />} tint="bg-warning/15 text-warning" title="Bus 4 is 5 min away" value="Parents notified" />
-            <div className="overflow-hidden rounded-2xl border bg-card shadow-2xl ring-1 ring-black/5">
-              <div className="flex h-9 items-center gap-1.5 border-b bg-muted/60 px-4" aria-hidden>
-                <span className="size-2.5 rounded-full bg-[#ff5f57]" /><span className="size-2.5 rounded-full bg-[#febc2e]" /><span className="size-2.5 rounded-full bg-[#28c840]" />
-              </div>
-              <Image src="/marketing/dashboard-light.png" alt="The Vidyanexa school dashboard showing sign-in activity, people by role and plan usage" width={1440} height={900} priority sizes="(min-width: 1200px) 1152px, calc(100vw - 40px)" className="block w-full dark:hidden" />
-              <Image src="/marketing/dashboard-dark.png" alt="The Vidyanexa school dashboard in dark mode" width={1440} height={900} loading="lazy" sizes="(min-width: 1200px) 1152px, calc(100vw - 40px)" className="hidden w-full dark:block" />
+          <div className="stage-3d relative mx-auto w-full max-w-3xl lg:max-w-none">
+            <HeroChip className="float-chip -top-8 left-2 xl:-left-6" icon={<CalendarCheck className="size-4" />} tint="bg-primary-container text-primary-container-foreground" title="Attendance marked" value="Class 5-A · 38/40 present" />
+            <HeroChip className="float-chip float-chip-2 top-1/3 -right-2 xl:-right-8" icon={<Wallet className="size-4" />} tint="bg-secondary text-secondary-foreground" title="Fee received" value="₹12,500 · Receipt sent" />
+            <HeroChip className="float-chip float-chip-3 -bottom-8 left-[20%]" icon={<Bus className="size-4" />} tint="bg-primary-container text-primary-container-foreground" title="Bus 4 is 5 min away" value="Parents notified" />
+            <div className="tilt-3d overflow-hidden rounded-2xl border bg-card shadow-[0_40px_80px_-24px_rgb(0_0_0/0.35)]">
+              <Image src="/marketing/dashboard-light.png" alt="The Vidyanexa school dashboard showing today's attendance, fee collection and notices" width={1440} height={900} priority sizes="(min-width: 1280px) 720px, (min-width: 1024px) 55vw, calc(100vw - 40px)" className="block w-full dark:hidden" />
+              <Image src="/marketing/dashboard-dark.png" alt="The Vidyanexa school dashboard in dark mode" width={1440} height={900} loading="lazy" sizes="(min-width: 1280px) 720px, (min-width: 1024px) 55vw, calc(100vw - 40px)" className="hidden w-full dark:block" />
             </div>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <Section id="features" className="bg-muted/30">
+      <Section id="features" className="bg-popover">
         <SectionHeading
           eyebrow="Everything in one platform"
           title="Sixteen modules. One login. No spreadsheets."
@@ -162,8 +157,8 @@ export default async function HomePage() {
         />
         <div className="mt-16 grid gap-6 md:grid-cols-2">
           {FEATURE_GROUPS.map((g) => (
-            <div key={g.title} className="rounded-2xl border bg-card p-7 shadow-xs">
-              <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{g.title}</p>
+            <div key={g.title} className="card-lift rounded-2xl border bg-card p-7">
+              <p className="text-sm font-medium text-muted-foreground">{g.title}</p>
               <ul className="mt-5 space-y-5">
                 {g.items.map(({ href, icon: Icon, name, text }) => (
                   <li key={name} className="flex gap-4">
@@ -202,7 +197,7 @@ export default async function HomePage() {
                 ["Vidyanexa Driver", "for school bus drivers"],
               ].map(([name, who]) => (
                 <li key={name} className="flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Smartphone className="size-4.5" aria-hidden /></span>
+                  <span className="flex size-9 items-center justify-center rounded-full bg-primary-container text-primary-container-foreground"><Smartphone className="size-4.5" aria-hidden /></span>
                   <span><span className="font-semibold">{name}</span> <span className="text-muted-foreground">{who}</span></span>
                 </li>
               ))}
@@ -211,7 +206,7 @@ export default async function HomePage() {
           <div className="relative mx-auto w-full max-w-sm">
             <OrbitGraphic className="absolute top-1/2 left-1/2 -z-10 w-[150%] max-w-none -translate-x-1/2 -translate-y-1/2"
               icons={[<CalendarCheck key="a" />, <Wallet key="b" />, <Bus key="c" />, <MessageSquare key="d" />, <GraduationCap key="e" />, <BellRing key="f" />]} />
-            <div className="overflow-hidden rounded-[2.5rem] border-8 border-foreground/90 bg-card shadow-2xl">
+            <div className="overflow-hidden rounded-[2.5rem] border-8 border-[#1a1b21] bg-card shadow-[0_40px_80px_-24px_rgb(0_0_0/0.35)] dark:border-[#34343a]">
               <Image src="/marketing/app-parent.png" alt="The Vidyanexa parent app home screen" width={412} height={860} sizes="384px" className="block w-full" />
             </div>
           </div>
@@ -219,18 +214,18 @@ export default async function HomePage() {
       </Section>
 
       {/* Security */}
-      <Section className="bg-sidebar text-sidebar-foreground">
+      <Section className="bg-panel text-panel-foreground">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold tracking-wide text-[oklch(0.82_0.09_82)] uppercase">Security & privacy</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Your students&apos; data deserves serious protection</h2>
-          <p className="mt-4 text-lg text-sidebar-foreground/80">Built with India&apos;s Digital Personal Data Protection Act in mind, from the database up.</p>
+          <p className="text-sm font-medium text-panel-muted">Security & privacy</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-panel-foreground sm:text-4xl">Your students&apos; data deserves serious protection</h2>
+          <p className="mt-4 text-lg text-panel-foreground/85">Built with India&apos;s Digital Personal Data Protection Act in mind, from the database up.</p>
         </div>
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {SECURITY.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
-              <Icon className="size-6 text-[oklch(0.82_0.09_82)]" aria-hidden />
-              <p className="mt-4 font-semibold text-white">{title}</p>
-              <p className="mt-1.5 text-sm text-sidebar-foreground/75">{text}</p>
+            <div key={title} className="card-lift rounded-2xl border border-white/15 bg-white/[0.07] p-6 backdrop-blur">
+              <Icon className="size-6 text-panel-muted" aria-hidden />
+              <p className="mt-4 font-semibold text-panel-foreground">{title}</p>
+              <p className="mt-1.5 text-sm text-panel-foreground/80">{text}</p>
             </div>
           ))}
         </div>
@@ -241,9 +236,9 @@ export default async function HomePage() {
         <SectionHeading eyebrow="Getting started" title="Live in days, not months" />
         <ol className="mt-14 grid gap-6 md:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, text }, i) => (
-            <li key={title} className="relative rounded-2xl border bg-card p-7 shadow-xs">
-              <span className="absolute top-6 right-6 font-heading text-5xl font-extrabold text-muted/80" aria-hidden>{i + 1}</span>
-              <span className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Icon className="size-5" aria-hidden /></span>
+            <li key={title} className="card-lift relative rounded-2xl border bg-card p-7">
+              <span className="absolute top-6 right-6 font-heading text-5xl font-semibold text-muted" aria-hidden>{i + 1}</span>
+              <span className="flex size-11 items-center justify-center rounded-full bg-primary-container text-primary-container-foreground"><Icon className="size-5" aria-hidden /></span>
               <p className="mt-5 text-lg font-semibold">{title}</p>
               <p className="mt-1.5 text-muted-foreground">{text}</p>
             </li>
@@ -253,19 +248,20 @@ export default async function HomePage() {
 
       {/* Pricing teaser */}
       {plans.length > 0 && (
-        <Section className="bg-muted/30">
-          <SectionHeading eyebrow="Pricing" title="Simple plans in rupees" description="Start on any plan free for 14 days. Pay yearly and get two months free." />
+        <Section className="bg-popover">
+          <SectionHeading eyebrow="Pricing" title="Simple plans in rupees" description="Prices exclude GST at 18%; the total with GST is shown under each price. Start on any plan free for 14 days." />
           <div className="mt-14 grid gap-5 md:grid-cols-3">
             {plans.map((p) => (
               <Link
                 key={p.code}
                 href={`/pricing#plan-${p.code}`}
-                className={cn("group rounded-2xl border bg-card p-7 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md", p.highlight && "border-primary/50 ring-1 ring-primary/30")}
+                className={cn("group card-lift rounded-2xl border bg-card p-7", p.highlight && "border-transparent bg-primary-container text-primary-container-foreground")}
               >
-                <p className="flex items-center justify-between text-lg font-bold">{p.name}{p.highlight && <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs text-primary">Most popular</span>}</p>
-                <p className="mt-3"><span className="font-heading text-3xl font-extrabold tabular">{inr(p.price_monthly)}</span><span className="text-sm text-muted-foreground">/month</span></p>
-                <p className="mt-2 text-sm text-muted-foreground">{p.max_students === null ? "Unlimited students" : `Up to ${p.max_students.toLocaleString("en-IN")} students`} · {p.modules.length} modules</p>
-                <p className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary">Compare plans <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden /></p>
+                <p className="flex items-center justify-between text-lg font-semibold">{p.name}{p.highlight && <span className="rounded-lg bg-primary px-2.5 py-0.5 text-xs text-primary-foreground">Most popular</span>}</p>
+                <p className="mt-3"><span className="font-heading text-3xl font-semibold tabular">{inr(p.price_monthly)}</span><span className={cn("text-sm", !p.highlight && "text-muted-foreground")}>/month + GST</span></p>
+                <p className={cn("text-sm", !p.highlight && "text-muted-foreground")}>{inr(withGst(p.price_monthly).total)} a month with GST</p>
+                <p className={cn("mt-2 text-sm", !p.highlight && "text-muted-foreground")}>{p.max_students === null ? "Unlimited students" : `Up to ${p.max_students.toLocaleString("en-IN")} students`} · {p.modules.length} modules</p>
+                <p className={cn("mt-5 inline-flex items-center gap-1 text-sm font-semibold", !p.highlight && "text-primary")}>Compare plans <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden /></p>
               </Link>
             ))}
           </div>
@@ -283,13 +279,14 @@ export default async function HomePage() {
 
       {/* CTA */}
       <section className="px-5 pb-24 sm:px-8">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-gradient-to-br from-[oklch(0.21_0.05_264)] via-[oklch(0.27_0.062_264)] to-[oklch(0.35_0.07_258)] px-8 py-16 text-center text-white shadow-xl sm:px-16">
-          <LayoutGrid className="absolute -top-10 -right-10 size-64 text-white/5" aria-hidden />
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Ready to bring your school onto Vidyanexa?</h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-white/85">Start free for 14 days. Set up takes a minute; no card needed.</p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/signup" className="inline-flex h-12 items-center justify-center rounded-lg bg-white px-7 text-base font-semibold text-[oklch(0.25_0.058_264)] shadow-sm transition hover:bg-white/90 outline-none focus-visible:ring-3 focus-visible:ring-white/60">Start free trial</Link>
-            <Link href="/contact" className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 border-white/40 bg-transparent px-7 text-base text-white hover:bg-white/10 hover:text-white" })}>Talk to us</Link>
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-panel px-8 py-16 text-center text-panel-foreground sm:px-16">
+          <div aria-hidden className="float-chip absolute -top-24 -right-16 size-80 rounded-full bg-[radial-gradient(circle,rgb(217_226_255/0.3),transparent_70%)]" />
+          <div aria-hidden className="float-chip float-chip-2 absolute -bottom-28 -left-16 size-72 rounded-full bg-[radial-gradient(circle,rgb(226_190_116/0.18),transparent_70%)]" />
+          <h2 className="relative text-3xl font-semibold tracking-tight sm:text-4xl">Ready to bring your school onto Vidyanexa?</h2>
+          <p className="relative mx-auto mt-4 max-w-xl text-lg text-panel-foreground/85">Start free for 14 days. Set up takes a minute; no card needed.</p>
+          <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/signup" className="inline-flex h-12 items-center justify-center rounded-full bg-white px-7 text-base font-semibold text-[#2f4a86] transition hover:bg-white/90 outline-none focus-visible:ring-3 focus-visible:ring-white/60">Start free trial</Link>
+            <Link href="/contact" className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 border-white/50 bg-transparent px-7 text-base text-white hover:bg-white/10 hover:text-white" })}>Talk to us</Link>
           </div>
         </div>
       </section>

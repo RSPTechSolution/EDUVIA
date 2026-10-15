@@ -6,7 +6,7 @@ export function LegalPage({
     <div className="px-5 py-16 sm:px-8 lg:py-20">
       <div className="mx-auto max-w-6xl">
         <header className="max-w-3xl">
-          <h1 className="font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">{title}</h1>
+          <h1 className="font-heading text-4xl font-semibold tracking-tight sm:text-5xl">{title}</h1>
           <p className="mt-3 text-sm text-muted-foreground">Last updated {updated}</p>
           <div className="mt-6 text-lg text-muted-foreground">{intro}</div>
         </header>

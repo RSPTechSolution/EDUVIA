@@ -28,8 +28,8 @@ export default function FeaturesPage() {
       <section className="relative isolate overflow-hidden px-5 pt-16 pb-12 sm:px-8 lg:pt-24">
         <GlowBackdrop />
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">Features</p>
-          <h1 className="mt-3 font-heading text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">School ERP features for every office in your school</h1>
+          <p className="text-sm font-medium text-primary">Features</p>
+          <h1 className="mt-3 font-heading text-4xl font-semibold tracking-tight text-balance sm:text-5xl">School ERP features for every office in your school</h1>
           <p className="mt-5 text-lg text-pretty text-muted-foreground">
             Vidyanexa brings admissions, attendance, fees, exams, transport, HR, library, hostel and campus security into one school management system,
             with apps for parents, staff and drivers. Switch on only the modules you need.

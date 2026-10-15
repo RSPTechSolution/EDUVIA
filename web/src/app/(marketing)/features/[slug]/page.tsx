@@ -44,8 +44,8 @@ export default async function FeaturePage({ params }: { params: Promise<{ slug: 
               <li aria-current="page" className="font-medium text-foreground">{f.name}</li>
             </ol>
           </nav>
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">{f.name}</p>
-          <h1 className="mt-3 max-w-4xl font-heading text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">{f.h1}</h1>
+          <p className="text-sm font-medium text-primary">{f.name}</p>
+          <h1 className="mt-3 max-w-4xl font-heading text-4xl font-semibold tracking-tight text-balance sm:text-5xl">{f.h1}</h1>
           <p className="mt-6 max-w-3xl text-lg text-pretty text-muted-foreground">{f.lead}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/signup" className={buttonVariants({ size: "lg", className: "h-11 px-6" })}>Start 14-day free trial</Link>

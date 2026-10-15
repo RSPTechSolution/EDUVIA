@@ -48,7 +48,7 @@ export function AppShell({ me, collapsed: initiallyCollapsed, platform, bannerHi
   // The school's own colour, on the whole document so dialogs and menus (rendered in portals) match. It's in the server
   // HTML, so the page never flashes the default navy first. Navy is the default theme, which already adapts to dark mode.
   const brand = me.school?.brand_color;
-  const brandCss = brand && HEX.test(brand) && brand.toLowerCase() !== "#15233f" ? `:root{--primary:${brand};--ring:${brand};--sidebar-primary:${brand}}` : null;
+  const brandCss = brand && HEX.test(brand) && brand.toLowerCase() !== "#15233f" ? `:root{--primary:${brand};--ring:${brand}}` : null;
 
   // Accounts created with a temporary password must set their own first.
   useEffect(() => {

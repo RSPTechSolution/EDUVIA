@@ -120,7 +120,7 @@ export function CustomBuilder({
       <aside className="h-fit rounded-2xl border bg-card p-6 shadow-md lg:sticky lg:top-24" aria-live="polite">
         <p className="text-sm font-semibold text-muted-foreground">Your custom plan</p>
         <p className="mt-2 flex items-baseline gap-1.5">
-          <span className="font-heading text-4xl font-extrabold tracking-tight tabular">{shown !== null ? inr(shown) : "—"}</span>
+          <span className="font-heading text-4xl font-semibold tracking-tight tabular">{shown !== null ? inr(shown) : "—"}</span>
           <span className="text-sm text-muted-foreground">/month + GST</span>
           {quote.isFetching && <Loader2 className="ml-1 size-4 animate-spin text-muted-foreground" aria-label="Updating price" />}
         </p>

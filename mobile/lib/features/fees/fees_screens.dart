@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../../core/api/api_client.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/auth/session.dart';
@@ -133,8 +134,7 @@ class _DueHero extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(colors: [Color(0xFF14295A), Color(0xFF1565D7), Color(0xFF0E8FA8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-        boxShadow: [BoxShadow(color: const Color(0xFF1565D7).withValues(alpha: 0.3), blurRadius: 18, offset: const Offset(0, 8))],
+        color: AppTheme.heroPanel(Theme.of(context).colorScheme),
       ),
       child: Stack(children: [
         const Positioned(right: -10, bottom: -18, child: Icon(Icons.account_balance_wallet_rounded, size: 110, color: Colors.white10)),

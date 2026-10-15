@@ -53,7 +53,7 @@ export default function MyResultsPage() {
                           <span className="mt-1 block text-sm">{e.rank ? <>Rank <span className="font-semibold">{e.rank}</span> of {e.class_size}</> : null}</span>
                         </span>
                         <span className="text-right">
-                          <span className="block font-heading text-2xl font-extrabold tabular">{e.percent ?? "—"}%</span>
+                          <span className="block font-heading text-2xl font-semibold tabular">{e.percent ?? "—"}%</span>
                           <GradeBadge grade={e.grade} />
                         </span>
                         <ChevronRight className="size-5 text-muted-foreground" aria-hidden />

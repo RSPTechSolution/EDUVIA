@@ -41,8 +41,8 @@ export function PricingView({ plans, catalog }: { plans: Plan[]; catalog: Pricin
 
       <section id="custom" className="scroll-mt-24 pt-24" aria-labelledby="custom-heading">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">Custom plan</p>
-          <h2 id="custom-heading" className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Pay only for what your school uses</h2>
+          <p className="text-sm font-medium text-primary">Custom plan</p>
+          <h2 id="custom-heading" className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Pay only for what your school uses</h2>
           <p className="mt-4 text-lg text-muted-foreground">Choose your modules and student count. The price updates as you go.</p>
         </div>
         <div className="mt-12">

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { BrandMark, Wordmark } from "@/components/brand/logo";
 import { buttonVariants } from "@/components/ui/button";
+import { ThemeMenu } from "@/components/shell/theme-menu";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
   const active = (href: string) => !href.startsWith("/#") && (pathname === href || pathname.startsWith(`${href}/`));
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+    <header className="glass sticky top-0 z-40 border-x-0 border-t-0 border-b-border/70">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-5 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Vidyanexa home">
           <BrandMark size={32} />
@@ -35,8 +36,8 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
               href={l.href}
               aria-current={active(l.href) ? "page" : undefined}
               className={cn(
-                "rounded-lg px-3 py-2 text-sm font-medium transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
-                active(l.href) ? "text-foreground" : "text-muted-foreground",
+                "rounded-full px-3.5 py-2 text-sm font-medium transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+                active(l.href) ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-accent",
               )}
             >
               {l.label}
@@ -44,17 +45,19 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
           ))}
         </nav>
         <div className="ml-auto hidden items-center gap-2 md:flex">
+          <ThemeMenu />
           {signedIn ? (
-            <Link href="/dashboard" className={buttonVariants({ className: "h-9 px-4" })}>Open dashboard</Link>
+            <Link href="/dashboard" className={buttonVariants({ className: "h-10 px-5" })}>Open dashboard</Link>
           ) : (
             <>
-              <Link href="/login" className={buttonVariants({ variant: "ghost", className: "h-9 px-4" })}>Sign in</Link>
-              <Link href="/signup" className={buttonVariants({ className: "h-9 px-4 shadow-sm" })}>Start free trial</Link>
+              <Link href="/login" className={buttonVariants({ variant: "ghost", className: "h-10 px-4 text-primary" })}>Sign in</Link>
+              <Link href="/signup" className={buttonVariants({ className: "h-10 px-5" })}>Start free trial</Link>
             </>
           )}
         </div>
         <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger render={<button type="button" className="ml-auto inline-flex size-10 items-center justify-center rounded-lg outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring md:hidden" aria-label="Open menu" />}>
+          <div className="ml-auto flex items-center md:hidden"><ThemeMenu /></div>
+        <SheetTrigger render={<button type="button" className="inline-flex size-10 items-center justify-center rounded-full outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring md:hidden" aria-label="Open menu" />}>
             <Menu className="size-5" aria-hidden />
           </SheetTrigger>
           <SheetContent side="right" className="w-72 p-6">

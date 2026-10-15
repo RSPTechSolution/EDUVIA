@@ -77,7 +77,7 @@ export function PlanCards({
             </div>
             <p className="mt-1.5 min-h-10 text-sm text-muted-foreground">{plan.tagline}</p>
             <p className="mt-6 flex items-baseline gap-1.5">
-              <span className="font-heading text-4xl font-extrabold tracking-tight tabular">{price.headline}</span>
+              <span className="font-heading text-4xl font-semibold tracking-tight tabular">{price.headline}</span>
               <span className="text-sm text-muted-foreground">{price.unit}</span>
             </p>
             <p className="mt-1 text-xs text-muted-foreground">{price.total}</p>

@@ -61,6 +61,11 @@ export const WEBSITE = {
   publisher: { "@id": `${SITE_URL}/#organization` },
 };
 
+/** A monthly price quoted without GST (18% is added on the invoice). */
+const monthly = (price: string) => ({
+  "@type": "UnitPriceSpecification", price, priceCurrency: "INR", unitText: "MONTH", referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitCode: "MON" }, valueAddedTaxIncluded: false,
+});
+
 /** The product, with the public plan prices (INR per month, excluding GST), for rich results. */
 export const SOFTWARE = {
   "@type": "SoftwareApplication",
@@ -81,9 +86,9 @@ export const SOFTWARE = {
     highPrice: "17999",
     offerCount: 3,
     offers: [
-      { "@type": "Offer", name: "Basic", price: "2999", priceCurrency: "INR", url: `${SITE_URL}/pricing` },
-      { "@type": "Offer", name: "Pro", price: "7999", priceCurrency: "INR", url: `${SITE_URL}/pricing` },
-      { "@type": "Offer", name: "Max", price: "17999", priceCurrency: "INR", url: `${SITE_URL}/pricing` },
+      { "@type": "Offer", name: "Basic", price: "2999", priceCurrency: "INR", url: `${SITE_URL}/pricing`, priceSpecification: monthly("2999") },
+      { "@type": "Offer", name: "Pro", price: "7999", priceCurrency: "INR", url: `${SITE_URL}/pricing`, priceSpecification: monthly("7999") },
+      { "@type": "Offer", name: "Max", price: "17999", priceCurrency: "INR", url: `${SITE_URL}/pricing`, priceSpecification: monthly("17999") },
     ],
   },
 };

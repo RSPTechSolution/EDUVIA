@@ -1,9 +1,10 @@
-import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { JetBrains_Mono, Lexend } from "next/font/google";
 import localFont from "next/font/local";
 
-export const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+// Theme version 2: one typeface for text and headings. This is the only place to change it;
+// globals.css reads it through --font-ui (body) and --font-heading.
 // A variable font: one file covers every weight, so headings get their face sooner and reflow less.
-export const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", display: "swap" });
+export const ui = Lexend({ subsets: ["latin"], variable: "--font-ui", display: "swap", adjustFontFallback: true });
 // Only used for codes and figures deep inside the app, so it isn't preloaded on every page.
 export const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap", preload: false });
 

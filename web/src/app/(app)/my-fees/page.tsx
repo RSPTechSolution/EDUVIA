@@ -86,9 +86,9 @@ export default function MyFeesPage() {
       ) : (
         <>
           <FadeIn>
-            <div className="aurora relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.23_0.055_264)] via-[oklch(0.28_0.065_263)] to-[oklch(0.34_0.07_258)] p-6 text-white shadow-lg">
+            <div className="aurora relative mb-6 overflow-hidden rounded-2xl bg-panel p-6 text-white shadow-lg">
               <p className="text-sm text-white/80">Total due{data.children.length > 1 ? " for all children" : ""}</p>
-              <p className="mt-1 font-heading text-4xl font-extrabold tabular">{inr(data.total_due)}</p>
+              <p className="mt-1 font-heading text-4xl font-semibold tabular">{inr(data.total_due)}</p>
               <p className="mt-2 text-sm text-white/80">
                 {data.total_due === 0 ? "All paid up. Thank you!" : data.children.some((c) => c.overdue > 0) ? `${inr(data.children.reduce((n, c) => n + c.overdue, 0))} is overdue.` : "Nothing overdue."}
               </p>

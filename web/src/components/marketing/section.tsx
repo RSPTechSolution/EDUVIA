@@ -14,8 +14,8 @@ export function SectionHeading({
 }: { eyebrow?: string; title: React.ReactNode; description?: React.ReactNode; align?: "center" | "left" }) {
   return (
     <div className={cn("max-w-3xl", align === "center" && "mx-auto text-center")}>
-      {eyebrow && <p className="text-sm font-semibold tracking-wide text-primary uppercase">{eyebrow}</p>}
-      <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">{title}</h2>
+      {eyebrow && <p className="text-sm font-medium text-primary">{eyebrow}</p>}
+      <h2 className="mt-3 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">{title}</h2>
       {description && <p className="mt-4 text-lg text-pretty text-muted-foreground">{description}</p>}
     </div>
   );
@@ -23,7 +23,7 @@ export function SectionHeading({
 
 export function Faq({ items }: { items: { q: string; a: React.ReactNode }[] }) {
   return (
-    <Accordion className="mx-auto max-w-3xl divide-y rounded-2xl border bg-card px-6 shadow-xs">
+    <Accordion className="mx-auto max-w-3xl divide-y rounded-2xl border bg-card px-6">
       {items.map((it) => (
         <AccordionItem key={it.q} value={it.q} className="border-0">
           <AccordionTrigger className="py-5 text-left text-base font-semibold hover:no-underline">{it.q}</AccordionTrigger>
@@ -39,11 +39,10 @@ export function GlowBackdrop({ className }: { className?: string }) {
   return (
     <div aria-hidden className={cn("pointer-events-none absolute inset-0 -z-10 overflow-hidden", className)}>
       <div className="absolute -top-40 left-1/2 h-[560px] w-[1100px] -translate-x-1/2">
-        <div className="blob inset-0 bg-[radial-gradient(closest-side,oklch(0.88_0.06_82/0.55),transparent)] dark:bg-[radial-gradient(closest-side,oklch(0.4_0.08_258/0.45),transparent)]" />
+        <div className="blob inset-0 bg-[radial-gradient(closest-side,rgb(217_226_255/0.7),transparent)] dark:bg-[radial-gradient(closest-side,rgb(47_69_120/0.45),transparent)]" />
       </div>
-      <div className="blob blob-delay top-40 -right-40 h-[420px] w-[520px] bg-[radial-gradient(closest-side,oklch(0.92_0.035_84/0.6),transparent)] dark:bg-[radial-gradient(closest-side,oklch(0.55_0.08_78/0.18),transparent)]" />
-      <div className="blob top-[28rem] -left-48 h-[380px] w-[480px] bg-[radial-gradient(closest-side,oklch(0.85_0.04_255/0.35),transparent)] dark:bg-[radial-gradient(closest-side,oklch(0.35_0.06_258/0.3),transparent)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_at_top,black_20%,transparent_70%)] bg-[size:56px_56px] opacity-60" />
+      <div className="blob blob-delay top-40 -right-40 h-[420px] w-[520px] bg-[radial-gradient(closest-side,rgb(220_226_249/0.55),transparent)] dark:bg-[radial-gradient(closest-side,rgb(176_198_255/0.12),transparent)]" />
+      <div className="blob top-[28rem] -left-48 h-[380px] w-[480px] bg-[radial-gradient(closest-side,rgb(47_74_134/0.12),transparent)] dark:bg-[radial-gradient(closest-side,rgb(62_71_89/0.35),transparent)]" />
     </div>
   );
 }

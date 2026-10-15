@@ -1,33 +1,98 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// The Vidyanexa palette (brand/README.md): Ink Navy, Antique Gold and Ivory. Same as the web app.
+/// Theme version 2: Material 3 roles from the Vidyanexa navy, the same values as the web app (web/src/app/globals.css).
 class Brand {
-  static const primary = Color(0xFF15233F); // Ink Navy
-  static const primaryDark = Color(0xFFD9AE62); // gold leads in dark mode
-  static const navy = Color(0xFF15233F);
-  static const gold = Color(0xFFB8893C);
-  static const ivory = Color(0xFFF7F2E8);
-  static const success = Color(0xFF067D4D);
-  static const successDark = Color(0xFF54CC8E);
-  static const warning = Color(0xFFA65D00);
-  static const warningDark = Color(0xFFEEB154);
-  static const info = Color(0xFF057688);
-  static const danger = Color(0xFFC51D24);
-  static const dangerDark = Color(0xFFF66D67);
-  static const teal = Color(0xFFB8893C); // illustrations now use the gold family
-  static const green = Color(0xFFE2BE74);
-  static const sun = Color(0xFFC9963F);
+  static const navy = Color(0xFF15233F); // the crest's Ink Navy
+  static const gold = Color(0xFFB8893C); // the crest's Antique Gold
 
-  static const bgLight = Color(0xFFFBF8F2);
-  static const fg = Color(0xFF16213A);
-  static const muted = Color(0xFF5B6478);
-  static const border = Color(0xFFE6DECD);
-  static const bgDark = Color(0xFF0E1729);
-  static const cardDark = Color(0xFF15233F);
-  static const fgDark = Color(0xFFF2ECDF);
-  static const mutedDark = Color(0xFFA9B0C0);
+  static const success = Color(0xFF006D3D);
+  static const successDark = Color(0xFF7DDB9F);
+  static const warning = Color(0xFF8B5000);
+  static const warningDark = Color(0xFFFFB95C);
+  static const info = Color(0xFF00629E);
+  static const infoDark = Color(0xFF9ACBFF);
+  static const danger = Color(0xFFBA1A1A);
+  static const dangerDark = Color(0xFFFFB4AB);
 }
+
+/// The single place the app's typeface is chosen. Swap the builder to change it everywhere.
+TextTheme _fontTheme(TextTheme base) => GoogleFonts.lexendTextTheme(base);
+
+const _light = ColorScheme(
+  brightness: Brightness.light,
+  primary: Color(0xFF2F4A86),
+  onPrimary: Color(0xFFFFFFFF),
+  primaryContainer: Color(0xFFD9E2FF),
+  onPrimaryContainer: Color(0xFF001944),
+  secondary: Color(0xFF575E71),
+  onSecondary: Color(0xFFFFFFFF),
+  secondaryContainer: Color(0xFFDCE2F9),
+  onSecondaryContainer: Color(0xFF141B2C),
+  tertiary: Color(0xFF785A00),
+  onTertiary: Color(0xFFFFFFFF),
+  tertiaryContainer: Color(0xFFFFDEA6),
+  onTertiaryContainer: Color(0xFF261900),
+  error: Color(0xFFBA1A1A),
+  onError: Color(0xFFFFFFFF),
+  errorContainer: Color(0xFFFFDAD6),
+  onErrorContainer: Color(0xFF410002),
+  surface: Color(0xFFFAF9FD),
+  onSurface: Color(0xFF1A1B21),
+  onSurfaceVariant: Color(0xFF45464F),
+  outline: Color(0xFF757680),
+  outlineVariant: Color(0xFFC5C6D0),
+  surfaceContainerLowest: Color(0xFFFFFFFF),
+  surfaceContainerLow: Color(0xFFF4F3FA),
+  surfaceContainer: Color(0xFFEEEDF4),
+  surfaceContainerHigh: Color(0xFFE9E7EF),
+  surfaceContainerHighest: Color(0xFFE3E2E9),
+  surfaceDim: Color(0xFFDAD9E0),
+  surfaceBright: Color(0xFFFAF9FD),
+  inverseSurface: Color(0xFF2F3036),
+  onInverseSurface: Color(0xFFF1F0F7),
+  inversePrimary: Color(0xFFB0C6FF),
+  shadow: Color(0xFF000000),
+  scrim: Color(0xFF000000),
+);
+
+const _dark = ColorScheme(
+  brightness: Brightness.dark,
+  primary: Color(0xFFB0C6FF),
+  onPrimary: Color(0xFF172E60),
+  primaryContainer: Color(0xFF2F4578),
+  onPrimaryContainer: Color(0xFFD9E2FF),
+  secondary: Color(0xFFC0C6DC),
+  onSecondary: Color(0xFF2A3042),
+  secondaryContainer: Color(0xFF3E4759),
+  onSecondaryContainer: Color(0xFFDCE2F9),
+  tertiary: Color(0xFFE2BE74),
+  onTertiary: Color(0xFF3F2E00),
+  tertiaryContainer: Color(0xFF5D4200),
+  onTertiaryContainer: Color(0xFFFFDEA6),
+  error: Color(0xFFFFB4AB),
+  onError: Color(0xFF690005),
+  errorContainer: Color(0xFF93000A),
+  onErrorContainer: Color(0xFFFFDAD6),
+  surface: Color(0xFF121318),
+  onSurface: Color(0xFFE3E2E9),
+  onSurfaceVariant: Color(0xFFC5C6D0),
+  outline: Color(0xFF8F909A),
+  outlineVariant: Color(0xFF45464F),
+  surfaceContainerLowest: Color(0xFF0D0E13),
+  surfaceContainerLow: Color(0xFF1A1B21),
+  surfaceContainer: Color(0xFF1E1F25),
+  surfaceContainerHigh: Color(0xFF292A2F),
+  surfaceContainerHighest: Color(0xFF34343A),
+  surfaceDim: Color(0xFF121318),
+  surfaceBright: Color(0xFF38393F),
+  inverseSurface: Color(0xFFE3E2E9),
+  onInverseSurface: Color(0xFF2F3036),
+  inversePrimary: Color(0xFF2F4A86),
+  shadow: Color(0xFF000000),
+  scrim: Color(0xFF000000),
+);
 
 /// Status colours that adapt to the theme.
 @immutable
@@ -40,7 +105,7 @@ class StatusColors extends ThemeExtension<StatusColors> {
   final Color danger;
 
   static const light = StatusColors(success: Brand.success, warning: Brand.warning, info: Brand.info, danger: Brand.danger);
-  static const dark = StatusColors(success: Brand.successDark, warning: Brand.warningDark, info: Color(0xFF5CC3D6), danger: Brand.dangerDark);
+  static const dark = StatusColors(success: Brand.successDark, warning: Brand.warningDark, info: Brand.infoDark, danger: Brand.dangerDark);
 
   @override
   StatusColors copyWith({Color? success, Color? warning, Color? info, Color? danger}) => StatusColors(
@@ -63,85 +128,96 @@ class StatusColors extends ThemeExtension<StatusColors> {
 }
 
 class AppTheme {
-  static ThemeData light() => _build(Brightness.light);
-  static ThemeData dark() => _build(Brightness.dark);
+  static ThemeData light() => _build(_light);
+  static ThemeData dark() => _build(_dark);
 
-  static ThemeData _build(Brightness brightness) {
-    final isDark = brightness == Brightness.dark;
-    final scheme = ColorScheme.fromSeed(
-      seedColor: Brand.primary,
-      brightness: brightness,
-      primary: isDark ? Brand.primaryDark : Brand.primary,
-      onPrimary: isDark ? Brand.navy : Brand.ivory,
-      secondary: Brand.gold,
-      onSecondary: Brand.navy,
-      error: isDark ? Brand.dangerDark : Brand.danger,
-      surface: isDark ? Brand.cardDark : Colors.white,
-      onSurface: isDark ? Brand.fgDark : Brand.fg,
-      onSurfaceVariant: isDark ? Brand.mutedDark : Brand.muted,
-      outline: isDark ? const Color(0x33FFFFFF) : Brand.border,
-      outlineVariant: isDark ? const Color(0x1FFFFFFF) : Brand.border,
-    );
+  /// A strong, solid panel that keeps white text readable in both modes (summary cards such as fees due).
+  static Color heroPanel(ColorScheme s) => s.brightness == Brightness.dark ? s.primaryContainer : s.primary;
 
-    final body = GoogleFonts.interTextTheme(ThemeData(brightness: brightness).textTheme);
-    final heading = GoogleFonts.plusJakartaSansTextTheme(body);
-    final textTheme = body.copyWith(
-      displaySmall: heading.displaySmall?.copyWith(fontWeight: FontWeight.w700),
-      headlineLarge: heading.headlineLarge?.copyWith(fontWeight: FontWeight.w700),
-      headlineMedium: heading.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-      headlineSmall: heading.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
-      titleLarge: heading.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+  static ThemeData _build(ColorScheme scheme) {
+    final isDark = scheme.brightness == Brightness.dark;
+    final base = _fontTheme(ThemeData(brightness: scheme.brightness).textTheme);
+    final textTheme = base.copyWith(
+      displaySmall: base.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+      headlineLarge: base.headlineLarge?.copyWith(fontWeight: FontWeight.w600),
+      headlineMedium: base.headlineMedium?.copyWith(fontWeight: FontWeight.w600),
+      headlineSmall: base.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+      titleLarge: base.titleLarge?.copyWith(fontWeight: FontWeight.w500),
     ).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
 
-    final radius = BorderRadius.circular(12);
+    final cardColor = isDark ? scheme.surfaceContainerLow : scheme.surfaceContainerLowest;
+    OutlineInputBorder field(Color c, [double w = 1]) =>
+        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c, width: w));
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      brightness: brightness,
-      scaffoldBackgroundColor: isDark ? Brand.bgDark : Brand.bgLight,
+      brightness: scheme.brightness,
+      scaffoldBackgroundColor: scheme.surface,
       textTheme: textTheme,
       extensions: [isDark ? StatusColors.dark : StatusColors.light],
       appBarTheme: AppBarTheme(
-        backgroundColor: isDark ? Brand.bgDark : Brand.bgLight,
+        backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 0.5,
+        scrolledUnderElevation: 2,
         centerTitle: false,
-        titleTextStyle: textTheme.titleLarge?.copyWith(fontSize: 20),
+        titleTextStyle: textTheme.titleLarge?.copyWith(fontSize: 22, fontWeight: FontWeight.w400),
       ),
       cardTheme: CardThemeData(
-        color: scheme.surface,
+        color: cardColor,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: radius, side: BorderSide(color: scheme.outlineVariant)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: scheme.outlineVariant)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? Brand.bgDark : Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: scheme.outline)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: scheme.outline)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: scheme.primary, width: 2)),
+        fillColor: cardColor,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: field(scheme.outline),
+        enabledBorder: field(scheme.outline),
+        focusedBorder: field(scheme.primary, 2),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: const StadiumBorder(),
           textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: const StadiumBorder(),
+          side: BorderSide(color: scheme.outline),
         ),
       ),
+      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(shape: const StadiumBorder())),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        selectedColor: scheme.secondaryContainer,
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: scheme.primaryContainer,
+        foregroundColor: scheme.onPrimaryContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surface,
-        indicatorColor: (isDark ? Brand.gold : Brand.gold).withValues(alpha: isDark ? 0.22 : 0.18),
+        backgroundColor: scheme.surfaceContainer,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: scheme.secondaryContainer,
         labelTextStyle: WidgetStatePropertyAll(textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600)),
       ),
+      dialogTheme: DialogThemeData(backgroundColor: scheme.surfaceContainerHigh, surfaceTintColor: Colors.transparent),
+      bottomSheetTheme: BottomSheetThemeData(backgroundColor: scheme.surfaceContainerLow, surfaceTintColor: Colors.transparent),
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+      pageTransitionsTheme: const PageTransitionsTheme(builders: {
+        TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      }),
     );
   }
 }
